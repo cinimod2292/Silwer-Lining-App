@@ -147,34 +147,44 @@ def send_booking_confirmation_email(booking: dict):
         <body style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDFCF8;">
             <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #C6A87C;">
                 <h1 style="color: #2D2A26; font-size: 28px; margin: 0;">Silwer Lining Photography</h1>
-                <p style="color: #8A847C; margin-top: 8px;">Capturing Life's Beautiful Moments</p>
+                <p style="color: #8A847C; margin-top: 8px;">More than photos — capturing the glow, the love and the memory</p>
             </div>
             
             <div style="padding: 30px 0;">
-                <h2 style="color: #2D2A26; font-size: 22px;">Booking Confirmation</h2>
+                <h2 style="color: #2D2A26; font-size: 22px;">Booking Request Received</h2>
                 <p style="color: #2D2A26; line-height: 1.8;">Dear {booking['client_name']},</p>
-                <p style="color: #2D2A26; line-height: 1.8;">Thank you for booking a photography session with us! We're excited to capture your special moments.</p>
+                <p style="color: #2D2A26; line-height: 1.8;">Thank you for your booking request! We're excited to capture your special moments.</p>
                 
                 <div style="background-color: #F5F2EE; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <h3 style="color: #2D2A26; margin-top: 0;">Booking Details</h3>
                     <p style="margin: 8px 0;"><strong>Session Type:</strong> {booking['session_type'].title()}</p>
                     <p style="margin: 8px 0;"><strong>Package:</strong> {booking['package_name']}</p>
-                    <p style="margin: 8px 0;"><strong>Date:</strong> {booking['booking_date']}</p>
-                    <p style="margin: 8px 0;"><strong>Time:</strong> {booking['booking_time']}</p>
+                    <p style="margin: 8px 0;"><strong>Requested Date:</strong> {booking['booking_date']}</p>
+                    <p style="margin: 8px 0;"><strong>Requested Time:</strong> {booking['booking_time']}</p>
                     {f"<p style='margin: 8px 0;'><strong>Notes:</strong> {booking['notes']}</p>" if booking.get('notes') else ""}
                 </div>
                 
-                <p style="color: #2D2A26; line-height: 1.8;">We will contact you shortly to confirm the details and discuss any preparations for your session.</p>
-                <p style="color: #2D2A26; line-height: 1.8;">If you have any questions, please don't hesitate to reach out.</p>
+                <p style="color: #2D2A26; line-height: 1.8;"><strong>Next Steps:</strong></p>
+                <p style="color: #2D2A26; line-height: 1.8;">We will contact you shortly to confirm availability and send your invoice. Remember, a 50% deposit is required to secure your booking.</p>
+                
+                <p style="color: #2D2A26; line-height: 1.8; margin-top: 20px;">
+                    <strong>Studio Location:</strong><br>
+                    Helderkruin, Roodepoort<br>
+                    Johannesburg, Gauteng
+                </p>
+                
+                <p style="color: #2D2A26; line-height: 1.8;">If you have any questions, please don't hesitate to reach out via WhatsApp at 063 699 9703 or email info@silwerlining.co.za</p>
                 
                 <p style="color: #2D2A26; line-height: 1.8; margin-top: 30px;">
                     Warm regards,<br>
-                    <strong>Silwer Lining Photography</strong>
+                    <strong>Nadia</strong><br>
+                    Silwer Lining Photography
                 </p>
             </div>
             
             <div style="border-top: 1px solid #E6E2DD; padding-top: 20px; text-align: center; color: #8A847C; font-size: 12px;">
-                <p>© 2024 Silwer Lining Photography. All rights reserved.</p>
+                <p>© 2026 Silwer Lining Photography. All rights reserved.</p>
+                <p>Helderkruin, Roodepoort, Johannesburg</p>
             </div>
         </body>
         </html>

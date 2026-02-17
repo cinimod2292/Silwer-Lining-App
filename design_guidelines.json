@@ -1,0 +1,173 @@
+{
+  "brand_identity": {
+    "name": "Silwer Lining Photography",
+    "tone": "Luxury, Warm, Intimate, Timeless, Professional",
+    "target_audience": "Expecting mothers, new parents, families, high-end clients",
+    "design_philosophy": "Minimalist elegance with warm, earthy undertones. Focus on negative space and high-quality imagery."
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Playfair Display, serif",
+      "weights": ["400", "600", "700"],
+      "usage": "All section titles, hero text, and package names. Use italic variants for emphasis.",
+      "letter_spacing": "tracking-tight"
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "weights": ["300", "400", "500"],
+      "usage": "Paragraphs, navigation, buttons, and pricing details.",
+      "letter_spacing": "tracking-wide"
+    },
+    "accents": {
+      "font_family": "Cormorant Garamond, serif",
+      "usage": "Testimonials, quotes, and subtle decorative text."
+    }
+  },
+  "colors": {
+    "palette": {
+      "background": "#FDFCF8",
+      "foreground": "#2D2A26",
+      "primary": "#C6A87C",
+      "primary_foreground": "#FFFFFF",
+      "secondary": "#E6E2DD",
+      "secondary_foreground": "#2D2A26",
+      "muted": "#F5F2EE",
+      "muted_foreground": "#8A847C",
+      "accent": "#D4C5B0",
+      "accent_foreground": "#2D2A26",
+      "border": "#E6E2DD",
+      "input": "#E6E2DD",
+      "ring": "#C6A87C"
+    },
+    "usage_rules": {
+      "background": "Use #FDFCF8 for the main background. Avoid pure white (#FFFFFF) except for image borders or specific cards.",
+      "text": "Use #2D2A26 for primary text. Never use pure black (#000000).",
+      "primary": "Use #C6A87C for CTAs, active states, and key highlights. Use sparingly to maintain luxury feel.",
+      "gradients": "Do not use gradients. Rely on solid, warm tones and texture."
+    }
+  },
+  "layout": {
+    "spacing": {
+      "container_padding": "px-6 md:px-12 lg:px-24",
+      "section_spacing": "py-20 md:py-32",
+      "grid_gap": "gap-8 md:gap-12"
+    },
+    "grid_system": {
+      "portfolio": "Masonry or Asymmetrical Grid. Avoid uniform squares. Mix portrait (aspect-ratio 3/4) and landscape (aspect-ratio 4/3) images.",
+      "pricing": "3-column grid for packages. Center the 'Most Popular' option and scale it slightly larger.",
+      "bento": "Use for 'Services' or 'About' highlights. Mix text blocks with image blocks."
+    },
+    "container_width": "max-w-7xl mx-auto"
+  },
+  "components": {
+    "buttons": {
+      "style": "Pill-shaped (rounded-full) or Soft Rectangle (rounded-lg).",
+      "variants": {
+        "default": "bg-primary text-white hover:bg-primary/90 transition-all duration-300 shadow-md hover:shadow-lg",
+        "outline": "border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all duration-300",
+        "ghost": "text-primary hover:bg-primary/10"
+      }
+    },
+    "cards": {
+      "style": "Minimalist. White or very light beige background. Soft shadow (shadow-sm).",
+      "border_radius": "rounded-xl",
+      "hover_effect": "translate-y-[-4px] transition-transform duration-300 shadow-md"
+    },
+    "inputs": {
+      "style": "Flat, minimal borders. Background transparent or #FFFFFF.",
+      "focus": "ring-1 ring-primary border-primary"
+    },
+    "navigation": {
+      "style": "Sticky header with glassmorphism (bg-background/80 backdrop-blur-md).",
+      "links": "Uppercase, tracking-widest, text-sm. Hover: text-primary underline-offset-4."
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use for overlays, sticky headers, and toast notifications. Class: bg-white/70 backdrop-blur-lg border border-white/20.",
+    "shadows": "Soft, diffuse shadows. shadow-[0_8px_30px_rgb(0,0,0,0.04)].",
+    "textures": "Optional: Subtle grain overlay on the background to add warmth and tactility.",
+    "animations": {
+      "fade_in": "animate-in fade-in duration-700 slide-in-from-bottom-4",
+      "hover_lift": "transition-transform duration-300 hover:-translate-y-1"
+    }
+  },
+  "media": {
+    "image_style": "High quality, warm toning. No harsh filters. Use 'object-cover' for all containers.",
+    "border_radius": "rounded-lg for standard images. rounded-none for full-width hero sections.",
+    "aspect_ratios": {
+      "portrait": "aspect-[3/4]",
+      "landscape": "aspect-[16/9]",
+      "square": "aspect-square"
+    }
+  },
+  "image_urls": {
+    "hero": {
+      "url": "https://images.unsplash.com/photo-1760633549204-f652cef723af",
+      "alt": "Family walking in warm sunset light"
+    },
+    "maternity": [
+      {
+        "url": "https://images.unsplash.com/photo-1765447551791-b3581cce8207",
+        "alt": "Artistic maternity portrait in warm light"
+      }
+    ],
+    "newborn": [
+      {
+        "url": "https://images.unsplash.com/photo-1644418657862-4ec86e44d6dc",
+        "alt": "Newborn baby sleeping on blanket"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1761891950106-3276efeef9d1",
+        "alt": "Newborn in yellow outfit"
+      }
+    ],
+    "family": [
+      {
+        "url": "https://images.unsplash.com/photo-1760633549190-6f184e88d640",
+        "alt": "Happy baby in sunlit meadow"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1761400306487-09e8dad8179f",
+        "alt": "Family silhouette at sunset"
+      }
+    ],
+    "individual": [
+      {
+        "url": "https://images.unsplash.com/photo-1664837024902-5ace3976f806",
+        "alt": "Artistic individual portrait"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1601561956009-2537dfe81266",
+        "alt": "Man in white shirt portrait"
+      }
+    ],
+    "about_me": {
+      "photographer": "https://images.unsplash.com/photo-1766228185748-06b625e7ba6a",
+      "studio": "https://images.unsplash.com/photo-1761395105130-c77ea4a8e3ab"
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure text meets WCAG AA standards. Use darker shades of the primary color for text if needed.",
+    "focus_states": "Visible focus rings on all interactive elements.",
+    "alt_text": "All images must have descriptive alt text."
+  },
+  "instructions_to_main_agent": [
+    "1. Install 'Playfair Display' and 'Manrope' from Google Fonts or Fontsource.",
+    "2. Update 'tailwind.config.js' with the custom color palette and font families.",
+    "3. Create a 'Layout' component that wraps pages with the sticky header and footer.",
+    "4. Use 'framer-motion' for subtle entrance animations (fade-in, slide-up) on scroll.",
+    "5. Build the Booking System using a custom calendar component (based on Shadcn Calendar) that allows date/time selection.",
+    "6. Ensure the 'Portfolio' page uses a filterable masonry grid.",
+    "7. The 'Admin Dashboard' should be clean and functional, using a sidebar layout.",
+    "8. Use 'lucide-react' for icons (thin stroke width to match elegance).",
+    "9. Implement the 'Contact' form using Shadcn Form components with Zod validation."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Do not use generic centered layouts. Use asymmetry.",
+    "Use 2-3x more spacing than typical designs.",
+    "Every interaction needs micro-animations.",
+    "Use 'sonner' for toasts.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports."
+  ]
+}

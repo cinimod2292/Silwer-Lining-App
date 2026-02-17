@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowRight, Star, Camera, Heart, Users, Baby } from "lucide-react";
+import { ArrowRight, Star, Heart, Users, Baby, Sparkles, Gift, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -18,36 +18,96 @@ const HomePage = () => {
   const fetchPortfolio = async () => {
     try {
       const res = await axios.get(`${API}/portfolio?featured_only=true`);
-      setFeaturedImages(res.data.slice(0, 6));
+      if (res.data.length > 0) {
+        setFeaturedImages(res.data.slice(0, 6));
+      } else {
+        setFeaturedImages(defaultFeaturedImages);
+      }
     } catch (e) {
-      // Use default images if no portfolio items
-      setFeaturedImages([
-        { id: "1", image_url: "https://images.unsplash.com/photo-1760633549204-f652cef723af", title: "Family Portrait", category: "family" },
-        { id: "2", image_url: "https://images.unsplash.com/photo-1644418657862-4ec86e44d6dc", title: "Newborn Dreams", category: "newborn" },
-        { id: "3", image_url: "https://images.unsplash.com/photo-1765447551791-b3581cce8207", title: "Maternity Glow", category: "maternity" },
-        { id: "4", image_url: "https://images.unsplash.com/photo-1664837024902-5ace3976f806", title: "Individual Portrait", category: "individual" },
-      ]);
+      setFeaturedImages(defaultFeaturedImages);
     }
   };
 
   const fetchTestimonials = async () => {
     try {
       const res = await axios.get(`${API}/testimonials`);
-      setTestimonials(res.data.slice(0, 3));
+      if (res.data.length > 0) {
+        setTestimonials(res.data.slice(0, 6));
+      } else {
+        setTestimonials(defaultTestimonials);
+      }
     } catch (e) {
-      setTestimonials([
-        { id: "1", client_name: "Sarah M.", content: "The most magical experience! The photos captured every precious moment perfectly.", rating: 5, session_type: "newborn" },
-        { id: "2", client_name: "Jennifer L.", content: "Absolutely stunning maternity photos. I felt so comfortable and beautiful.", rating: 5, session_type: "maternity" },
-        { id: "3", client_name: "The Anderson Family", content: "Our family photos turned out beyond our expectations. Pure joy captured!", rating: 5, session_type: "family" },
-      ]);
+      setTestimonials(defaultTestimonials);
     }
   };
 
+  // Real images from silwerlining.co.za
+  const defaultFeaturedImages = [
+    { id: "1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/6wok7k/_DSC5179-a4f71fe2-1500.jpg", title: "Maternity Elegance", category: "maternity" },
+    { id: "2", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/64qae3/_DSC2696_1-6b4a07cb-1500.jpg", title: "Newborn Dreams", category: "newborn" },
+    { id: "3", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/WDdooa/SILWERLININGPHOTOGRAPHY-LUMI50-591942a0-1500.jpg", title: "Baby Birthday", category: "baby-birthday" },
+    { id: "4", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/Ayr5KK/MONGALEFAMILYPHOTOS6-e9c3fdd0-1500.jpg", title: "Family Portrait", category: "family" },
+  ];
+
+  // Real testimonials from silwerlining.co.za
+  const defaultTestimonials = [
+    { 
+      id: "1", 
+      client_name: "Tracey", 
+      content: "Dear Nadia, I am absolutely thrilled with my pictures! I can't express how grateful I am for the incredible work you've done. The final results exceeded my expectations, and I am truly in love with every single shot. Thank you so much for your dedication and talent. I will forever cherish these memories!", 
+      rating: 5, 
+      session_type: "maternity",
+      image_url: "https://images-pw.pixieset.com/elementfield/anDwMDM/_DSC9449-16b529a8-1500.JPG"
+    },
+    { 
+      id: "2", 
+      client_name: "Thandiwe", 
+      content: "Awwww Nads! These are absolutely gorgeous! Literally in tears 🥹 Thank you so much for your services. I'll definitely be seeing you soon!", 
+      rating: 5, 
+      session_type: "maternity",
+      image_url: "https://images-pw.pixieset.com/elementfield/Q0WZqp7/6-3b2695ce-1500.jpg"
+    },
+    { 
+      id: "3", 
+      client_name: "Keke", 
+      content: "THEY ARE ABSOLUTELY BEAUTIFUL 😭😭, we love every single one of them and honestly can not thank you enough for the amazing work.", 
+      rating: 5, 
+      session_type: "maternity",
+      image_url: "https://images-pw.pixieset.com/elementfield/493211912/25-d88898f9.jpg"
+    },
+    { 
+      id: "4", 
+      client_name: "Jaquerene", 
+      content: "Thank you so much for the beautiful photos. Can't believe it's actually me. We are so extremely happy with the outcome. Will definitely recommend you to others. May God bless you and your business as you make mommies' dreams come true.", 
+      rating: 5, 
+      session_type: "maternity",
+      image_url: "https://images-pw.pixieset.com/elementfield/893211912/2-1917f955.JPG"
+    },
+    { 
+      id: "5", 
+      client_name: "Landi, Christo & Kahleb", 
+      content: "Ag vreeslik dankie! Ons is so happy - dit het so mooi uitgekom! Ons gaan mekaar beslis weer sien vir shoots. Hierdie is kosbare memories, dankie dat jy dit so special gemaak het.", 
+      rating: 5, 
+      session_type: "baby-birthday",
+      image_url: "https://images-pw.pixieset.com/elementfield/204211912/3-ddd5aa05.JPG"
+    },
+    { 
+      id: "6", 
+      client_name: "Jimaysha", 
+      content: "Just wanted to say I absolutely love the pictures and I am extremely happy with how they all came out. Thank you for everything and for being so patient with us lol. We will definitely be back soon.", 
+      rating: 5, 
+      session_type: "newborn",
+      image_url: "https://images-pw.pixieset.com/elementfield/675463912/4-28667fc2.JPG"
+    },
+  ];
+
   const services = [
-    { icon: Baby, title: "Newborn", description: "Delicate portraits capturing your baby's first precious moments" },
-    { icon: Heart, title: "Maternity", description: "Celebrating the beauty and anticipation of motherhood" },
-    { icon: Users, title: "Family", description: "Timeless portraits that tell your family's unique story" },
-    { icon: Camera, title: "Individual", description: "Professional portraits that showcase your authentic self" },
+    { icon: Heart, title: "Maternity", description: "Celebrating the beauty and anticipation of motherhood", image: "https://images-pw.pixieset.com/site/Nzv0dL/6wok7k/_DSC5179-a4f71fe2-1500.jpg", link: "/portfolio?category=maternity" },
+    { icon: Baby, title: "Newborn", description: "Delicate portraits capturing your baby's first precious moments", image: "https://images-pw.pixieset.com/site/Nzv0dL/64qae3/_DSC2696_1-6b4a07cb-1500.jpg", link: "/portfolio?category=newborn" },
+    { icon: Sparkles, title: "Baby Birthday", description: "Milestone celebrations and cake smash sessions", image: "https://images-pw.pixieset.com/site/Nzv0dL/WDdooa/SILWERLININGPHOTOGRAPHY-LUMI50-591942a0-1500.jpg", link: "/portfolio?category=baby-birthday" },
+    { icon: Users, title: "Family", description: "Timeless portraits that tell your family's unique story", image: "https://images-pw.pixieset.com/site/Nzv0dL/Ayr5KK/MONGALEFAMILYPHOTOS6-e9c3fdd0-1500.jpg", link: "/portfolio?category=family" },
+    { icon: Gift, title: "Adult Birthday", description: "Celebrate your milestones with stunning portraits", image: "https://images-pw.pixieset.com/site/Nzv0dL/WomqQY/_DSC7012-34e9895c-1500.jpg", link: "/portfolio?category=adult-birthday" },
+    { icon: Camera, title: "Brand/Product", description: "Professional product and brand photography", image: "https://images-pw.pixieset.com/site/Nzv0dL/70GxyA/_DSC6154-17ae8b12-1500.jpg", link: "/portfolio?category=brand-product" },
   ];
 
   return (
@@ -56,8 +116,8 @@ const HomePage = () => {
       <section className="relative min-h-[90vh] flex items-center" data-testid="hero-section">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1760633549204-f652cef723af"
-            alt="Family in golden light"
+            src="https://images-pw.pixieset.com/elementfield/1znyRr9/White-Fabric-Podium-1-84dab3dc-1500.jpg"
+            alt="Silwer Lining Photography Studio"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-warm-cream/95 via-warm-cream/70 to-transparent" />
@@ -66,15 +126,15 @@ const HomePage = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
           <div className="max-w-2xl">
             <p className="text-primary font-medium tracking-widest uppercase text-sm mb-4 animate-fade-in-up">
-              Silwer Lining Photography
+              Luxury Studio Photoshoots
             </p>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight mb-6 animate-fade-in-up delay-100">
-              Capturing Life's Most{" "}
-              <span className="italic text-primary">Precious</span> Moments
+              More Than Photos —{" "}
+              <span className="italic text-primary">Capturing</span> the Glow, the Love & the Memory
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 animate-fade-in-up delay-200">
-              Every photograph tells a story. Let us help you preserve the memories
-              that matter most with timeless, artistic imagery.
+              Professional studio photography in Roodepoort, Johannesburg. Specializing in maternity, 
+              newborn, family & portrait sessions with beautiful, styled shoots and outfits provided.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-300">
               <Link to="/booking">
@@ -114,24 +174,30 @@ const HomePage = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <div
+              <Link
                 key={service.title}
-                className="bg-white rounded-xl p-8 shadow-soft card-hover text-center"
+                to={service.link}
+                className="group relative overflow-hidden rounded-xl aspect-[4/5] card-hover"
                 style={{ animationDelay: `${index * 100}ms` }}
-                data-testid={`service-${service.title.toLowerCase()}`}
+                data-testid={`service-${service.title.toLowerCase().replace(/\s/g, '-')}`}
               >
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-5">
-                  <service.icon className="w-7 h-7 text-primary" />
+                <img 
+                  src={service.image} 
+                  alt={service.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <h3 className="font-display text-2xl font-semibold mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-white/80 text-sm">
+                    {service.description}
+                  </p>
                 </div>
-                <h3 className="font-display text-xl font-semibold mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {service.description}
-                </p>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -201,8 +267,8 @@ const HomePage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div className="relative">
               <img
-                src="https://images.unsplash.com/photo-1766228185748-06b625e7ba6a"
-                alt="Photographer"
+                src="https://images-pw.pixieset.com/elementfield/170321823/PORTELLI1-2c5a22f1-1500.jpg"
+                alt="Nadia - Silwer Lining Photography"
                 className="rounded-xl w-full h-[500px] object-cover shadow-soft"
               />
               <div className="absolute -bottom-6 -right-6 bg-white rounded-xl p-6 shadow-soft hidden md:block">
@@ -213,21 +279,21 @@ const HomePage = () => {
 
             <div>
               <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
-                About Me
+                About The Photographer
               </p>
               <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-6">
-                Hello, I'm Your Photographer
+                Hi, I'm Nadia
               </h2>
               <p className="text-muted-foreground leading-relaxed mb-6">
-                With over a decade of experience in portrait photography, I've dedicated
-                my career to capturing the essence of life's most beautiful moments.
-                My approach combines artistic vision with genuine connection, creating
-                images that tell your unique story.
+                I'm a wife, mother, and passionate photographer with over 10 years of experience. 
+                I specialize in <strong>maternity, motherhood, family, and individual portraits</strong>, 
+                capturing timeless images filled with emotion, elegance, and authenticity.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                Every family, every moment, every milestone is precious. I believe in
-                creating a comfortable, relaxed atmosphere where authentic emotions
-                shine through.
+                With a creative background and deep personal connection to the journey of motherhood, 
+                I approach each session with care, understanding, and a commitment to telling your unique story.
+                Photography, for me, is about more than beautiful images — it's about preserving connection, 
+                love, and the fleeting moments that matter most.
               </p>
               <Link to="/about">
                 <Button
@@ -248,34 +314,69 @@ const HomePage = () => {
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="text-center mb-16">
             <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
-              Client Love
+              What Clients Say
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
-              What Clients Say
+              Testimonials
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.slice(0, 6).map((testimonial, index) => (
               <div
                 key={testimonial.id}
-                className="bg-warm-sand rounded-xl p-8 card-hover"
+                className="bg-warm-sand rounded-xl p-6 card-hover"
                 data-testid={`testimonial-${index}`}
               >
+                {testimonial.image_url && (
+                  <img 
+                    src={testimonial.image_url} 
+                    alt={testimonial.client_name}
+                    className="w-full h-48 object-cover rounded-lg mb-4"
+                  />
+                )}
                 <div className="flex gap-1 mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-primary text-primary" />
+                    <Star key={i} className="w-4 h-4 fill-primary text-primary" />
                   ))}
                 </div>
-                <p className="font-accent text-lg italic text-foreground/80 leading-relaxed mb-6">
+                <p className="font-accent text-base italic text-foreground/80 leading-relaxed mb-4">
                   "{testimonial.content}"
                 </p>
                 <div>
-                  <p className="font-semibold text-foreground">{testimonial.client_name}</p>
+                  <p className="font-semibold text-foreground">— {testimonial.client_name}</p>
                   <p className="text-sm text-muted-foreground capitalize">
-                    {testimonial.session_type} Session
+                    {testimonial.session_type?.replace('-', ' ')} Session
                   </p>
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Preview */}
+      <section className="py-20 md:py-32 bg-warm-sand" data-testid="faq-section">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-12">
+            <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
+              FAQ
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              { q: "Where are you located?", a: "My studio is home-based in Helderkruin, Roodepoort JHB." },
+              { q: "When should I book?", a: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome!" },
+              { q: "Do you provide outfits?", a: "Yes! Beautiful outfits are provided for maternity and newborn sessions. You can also bring your own special pieces." },
+              { q: "When will I get my photos?", a: "Editing is done within 2 weeks after confirmation of your final selections (excluding public holidays and weekends)." },
+            ].map((faq, index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-soft">
+                <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
+                <p className="text-muted-foreground text-sm">{faq.a}</p>
               </div>
             ))}
           </div>

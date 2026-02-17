@@ -22,8 +22,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const sessionTypes = [
   { id: "maternity", name: "Maternity" },
   { id: "newborn", name: "Newborn" },
-  { id: "family", name: "Family" },
-  { id: "individual", name: "Individual" },
+  { id: "studio", name: "Studio Portraits" },
 ];
 
 const BookingPage = () => {

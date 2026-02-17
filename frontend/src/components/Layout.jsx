@@ -58,10 +58,10 @@ export const Layout = () => {
               className="flex items-center gap-2 group"
               data-testid="logo-link"
             >
-              <Camera className="w-6 h-6 text-primary transition-transform group-hover:scale-110" />
               <span className="font-display text-xl md:text-2xl font-semibold text-foreground tracking-tight">
                 Silwer Lining
               </span>
+              <span className="text-primary font-display text-sm hidden sm:inline">Photography</span>
             </Link>
 
             {/* Desktop Navigation */}

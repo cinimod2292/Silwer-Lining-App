@@ -40,9 +40,12 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 
 ### Frontend Pages
 - **HomePage**: Hero section, services overview, featured work, testimonials, CTA
-- **PortfolioPage**: Masonry gallery with category filters
+- **PortfolioPage**: Collage gallery with lightbox navigation (prev/next)
 - **PricingPage**: Tabbed packages (12 total) with add-ons in ZAR
-- **BookingPage**: 3-step booking flow (session → date/time → details)
+- **BookingPage**: Enhanced 3-step booking flow:
+  - Step 1: Session type, package selection, **add-ons selection**
+  - Step 2: Date/time selection with **weekend surcharge popup**
+  - Step 3: Contact details with **full price breakdown**
 - **AboutPage**: Photographer story, stats, philosophy
 - **ContactPage**: Contact form, FAQ section
 - **Admin Dashboard**:
@@ -50,7 +53,7 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
   - Dashboard Home (stats overview)
   - Bookings Management (view, edit, filter by status)
   - **Packages Management** (CRUD operations) ✅
-  - **Booking Settings** (available days, time slots, buffer, lead time, blocked dates) ✅
+  - **Booking Settings** (available days, time slots, buffer, lead time, blocked dates, weekend surcharge) ✅
   - **Calendar Sync** (Apple Calendar settings UI - sync logic MOCKED) ✅
   - Portfolio Management
   - Testimonials Management

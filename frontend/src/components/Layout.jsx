@@ -146,18 +146,18 @@ export const Layout = () => {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <Camera className="w-6 h-6 text-primary" />
                 <span className="font-display text-2xl font-semibold">
                   Silwer Lining
                 </span>
+                <span className="text-primary font-display text-sm">Photography</span>
               </div>
               <p className="text-white/60 leading-relaxed max-w-md">
-                Capturing life's most precious moments with warmth, artistry, and care.
-                Every photograph tells a story worth preserving.
+                More than photos - capturing the glow, the love and the memory.
+                Professional studio photography in Roodepoort, Johannesburg.
               </p>
               <div className="flex gap-4 mt-6">
                 <a
-                  href="https://instagram.com"
+                  href="https://www.instagram.com/silwerliningphotography"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
@@ -166,13 +166,22 @@ export const Layout = () => {
                   <Instagram className="w-5 h-5" />
                 </a>
                 <a
-                  href="https://facebook.com"
+                  href="https://facebook.com/silwerliningphotography"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
                   data-testid="footer-facebook"
                 >
                   <Facebook className="w-5 h-5" />
+                </a>
+                <a
+                  href="https://api.whatsapp.com/message/DCYPF37JRDEED1?autoload=1&app_absent=0"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors"
+                  data-testid="footer-whatsapp"
+                >
+                  <MessageCircle className="w-5 h-5" />
                 </a>
               </div>
             </div>
@@ -200,23 +209,27 @@ export const Layout = () => {
               <ul className="space-y-3">
                 <li>
                   <a
-                    href="mailto:hello@silwerlining.com"
+                    href="mailto:info@silwerlining.co.za"
                     className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors text-sm"
                     data-testid="footer-email"
                   >
                     <Mail className="w-4 h-4" />
-                    hello@silwerlining.com
+                    info@silwerlining.co.za
                   </a>
                 </li>
                 <li>
                   <a
-                    href="tel:+15551234567"
+                    href="tel:+27636999703"
                     className="flex items-center gap-2 text-white/60 hover:text-primary transition-colors text-sm"
                     data-testid="footer-phone"
                   >
                     <Phone className="w-4 h-4" />
-                    (555) 123-4567
+                    063 699 9703
                   </a>
+                </li>
+                <li className="text-white/60 text-sm">
+                  Helderkruin, Roodepoort<br />
+                  Johannesburg, Gauteng
                 </li>
               </ul>
             </div>

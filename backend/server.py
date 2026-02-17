@@ -324,36 +324,6 @@ async def get_packages():
         ),
     ]
     return packages
-        ),
-        Package(
-            id="ind-portrait",
-            name="Portrait Session",
-            session_type="individual",
-            price=200,
-            duration="45 min",
-            includes=["45 minute session", "10 edited digital images", "Online gallery", "1 outfit change"],
-            popular=False
-        ),
-        Package(
-            id="ind-signature",
-            name="Signature",
-            session_type="individual",
-            price=350,
-            duration="1.5 hours",
-            includes=["1.5 hour session", "20 edited digital images", "Online gallery", "3 outfit changes", "Hair & makeup consultation"],
-            popular=True
-        ),
-        Package(
-            id="ind-editorial",
-            name="Editorial",
-            session_type="individual",
-            price=600,
-            duration="3 hours",
-            includes=["3 hour session", "40 edited digital images", "Online gallery", "Unlimited outfit changes", "Multiple locations", "Professional styling advice", "5x7 print set"],
-            popular=False
-        ),
-    ]
-    return packages
 
 # Bookings
 @api_router.post("/bookings", response_model=Booking)

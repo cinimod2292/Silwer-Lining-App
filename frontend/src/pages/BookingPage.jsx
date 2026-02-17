@@ -198,12 +198,26 @@ const BookingPage = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const selectedPkg = getSelectedPackage();
+      const selectedAddons = getSelectedAddons();
+      const addonsTotal = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+      
       const payload = {
-        ...formData,
+        client_name: formData.client_name,
+        client_email: formData.client_email,
+        client_phone: formData.client_phone,
+        session_type: formData.session_type,
+        package_id: selectedPkg?.id || "",
+        package_name: formData.package_name,
+        package_price: selectedPkg?.price || 0,
         booking_date: format(formData.booking_date, "yyyy-MM-dd"),
-        addons: formData.selected_addons,
-        total_price: calculateTotal(),
+        booking_time: formData.booking_time,
+        notes: formData.notes,
+        selected_addons: formData.selected_addons,
+        addons_total: addonsTotal,
+        is_weekend: formData.is_weekend,
         weekend_surcharge: formData.is_weekend ? getWeekendSurcharge() : 0,
+        total_price: calculateTotal(),
       };
       await axios.post(`${API}/bookings`, payload);
       setBookingComplete(true);

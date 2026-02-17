@@ -68,10 +68,30 @@ class SilwerLiningAPITester:
         return self.run_test("Health Check", "GET", "health", 200)
 
     def test_packages_endpoint(self):
-        """Test packages endpoint"""
+        """Test packages endpoint and verify ZAR pricing"""
         success, response = self.run_test("Get Packages", "GET", "packages", 200)
         if success and response:
             print(f"   Found {len(response)} packages")
+            
+            # Verify ZAR pricing for maternity packages
+            maternity_packages = [p for p in response if p.get('session_type') == 'maternity']
+            expected_zar_prices = [3500, 5500, 8500]
+            
+            if maternity_packages:
+                actual_prices = [p.get('price') for p in maternity_packages]
+                print(f"   Maternity package prices (ZAR): {actual_prices}")
+                
+                # Check if we have the expected ZAR prices
+                matching_prices = [p for p in actual_prices if p in expected_zar_prices]
+                if len(matching_prices) >= 2:  # At least 2 of the expected prices
+                    print("   ✅ ZAR pricing confirmed for maternity packages")
+                else:
+                    print(f"   ❌ Expected ZAR prices {expected_zar_prices}, got {actual_prices}")
+                    self.failed_tests.append({
+                        "test": "ZAR Pricing Verification",
+                        "error": f"Expected ZAR prices {expected_zar_prices}, got {actual_prices}"
+                    })
+            
             # Verify package structure
             if response and len(response) > 0:
                 pkg = response[0]

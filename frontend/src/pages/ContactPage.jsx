@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { Mail, Phone, MapPin, Clock, Send, Instagram, Facebook } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, Send, Instagram, Facebook, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -53,27 +60,43 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: "Email",
-      value: "hello@silwerlining.com",
-      link: "mailto:hello@silwerlining.com",
+      value: "info@silwerlining.co.za",
+      link: "mailto:info@silwerlining.co.za",
     },
     {
       icon: Phone,
-      title: "Phone",
-      value: "(555) 123-4567",
-      link: "tel:+15551234567",
+      title: "WhatsApp Call",
+      value: "063 699 9703",
+      link: "tel:+27636999703",
+    },
+    {
+      icon: MessageCircle,
+      title: "WhatsApp Chat",
+      value: "Click to chat",
+      link: "https://api.whatsapp.com/message/DCYPF37JRDEED1?autoload=1&app_absent=0",
     },
     {
       icon: MapPin,
       title: "Studio Location",
-      value: "123 Photography Lane, Suite 100",
+      value: "Helderkruin, Roodepoort, Gauteng",
       link: null,
     },
     {
       icon: Clock,
       title: "Hours",
-      value: "Mon-Fri: 9am-6pm, Sat: By Appointment",
+      value: "Mon-Fri: 9am-4pm (By Appointment)",
       link: null,
     },
+  ];
+
+  const shootTypes = [
+    "Maternity",
+    "Newborn",
+    "Family",
+    "Baby Milestone/Birthday",
+    "Adult Birthday/Photos",
+    "Brand/Product",
+    "Other",
   ];
 
   return (
@@ -85,7 +108,7 @@ const ContactPage = () => {
             Get in Touch
           </p>
           <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground mb-6">
-            Let's Start a Conversation
+            Contact Us
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Have questions about our services? Ready to book? Or just want to say hello?
@@ -115,6 +138,8 @@ const ContactPage = () => {
                       {item.link ? (
                         <a
                           href={item.link}
+                          target={item.link.startsWith("http") ? "_blank" : undefined}
+                          rel={item.link.startsWith("http") ? "noopener noreferrer" : undefined}
                           className="text-muted-foreground hover:text-primary transition-colors"
                         >
                           {item.value}
@@ -132,7 +157,7 @@ const ContactPage = () => {
                 <h3 className="font-semibold text-foreground mb-4">Follow Us</h3>
                 <div className="flex gap-4">
                   <a
-                    href="https://instagram.com"
+                    href="https://www.instagram.com/silwerliningphotography"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-full bg-warm-sand flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
@@ -141,7 +166,7 @@ const ContactPage = () => {
                     <Instagram className="w-5 h-5" />
                   </a>
                   <a
-                    href="https://facebook.com"
+                    href="https://facebook.com/silwerliningphotography"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 rounded-full bg-warm-sand flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
@@ -149,13 +174,22 @@ const ContactPage = () => {
                   >
                     <Facebook className="w-5 h-5" />
                   </a>
+                  <a
+                    href="https://api.whatsapp.com/message/DCYPF37JRDEED1?autoload=1&app_absent=0"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 rounded-full bg-warm-sand flex items-center justify-center hover:bg-primary hover:text-white transition-colors"
+                    data-testid="social-whatsapp"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                  </a>
                 </div>
               </div>
 
               {/* Image */}
               <div className="mt-10 hidden lg:block">
                 <img
-                  src="https://images.unsplash.com/photo-1761395105130-c77ea4a8e3ab"
+                  src="https://images-pw.pixieset.com/elementfield/Q0WZqp7/6-3b2695ce-1500.jpg"
                   alt="Studio"
                   className="rounded-2xl w-full h-64 object-cover shadow-soft"
                 />
@@ -185,49 +219,50 @@ const ContactPage = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="email" className="mb-2 block">
-                        Email Address <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={formData.email}
-                        onChange={(e) => handleChange("email", e.target.value)}
-                        className="h-12"
-                        data-testid="input-email"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
                       <Label htmlFor="phone" className="mb-2 block">
-                        Phone Number
+                        Contact Number <span className="text-destructive">*</span>
                       </Label>
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="(555) 123-4567"
+                        placeholder="063 699 9703"
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
                         className="h-12"
                         data-testid="input-phone"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="subject" className="mb-2 block">
-                        Subject <span className="text-destructive">*</span>
-                      </Label>
-                      <Input
-                        id="subject"
-                        placeholder="What's this about?"
-                        value={formData.subject}
-                        onChange={(e) => handleChange("subject", e.target.value)}
-                        className="h-12"
-                        data-testid="input-subject"
-                      />
-                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email" className="mb-2 block">
+                      Email Address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={(e) => handleChange("email", e.target.value)}
+                      className="h-12"
+                      data-testid="input-email"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="subject" className="mb-2 block">
+                      Type of Shoot? <span className="text-destructive">*</span>
+                    </Label>
+                    <Select value={formData.subject} onValueChange={(v) => handleChange("subject", v)}>
+                      <SelectTrigger className="h-12" data-testid="select-subject">
+                        <SelectValue placeholder="Select option" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shootTypes.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <div>
@@ -266,7 +301,7 @@ const ContactPage = () => {
         </div>
       </section>
 
-      {/* FAQ or Additional Info */}
+      {/* FAQ */}
       <section className="py-16 md:py-24 bg-warm-sand" data-testid="contact-faq">
         <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
           <h2 className="font-display text-2xl md:text-3xl font-semibold text-foreground mb-6">
@@ -275,20 +310,36 @@ const ContactPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mt-10">
             {[
               {
+                q: "Do you shoot/book weekends?",
+                a: "Shoots take place between Mon-Fri 9am-4pm. Weekend and public holiday sessions are available upon request at an additional cost of R500.",
+              },
+              {
+                q: "Where am I located?",
+                a: "My studio is home-based in Helderkruin, Roodepoort JHB.",
+              },
+              {
+                q: "Do you provide hair and makeup?",
+                a: "Makeup services are an add-on option. Hair is NOT provided - this should be arranged by you and done before you arrive for your session.",
+              },
+              {
                 q: "How far in advance should I book?",
-                a: "We recommend booking at least 2-4 weeks in advance, especially for maternity and newborn sessions.",
+                a: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome where possible.",
               },
               {
-                q: "Do you travel for sessions?",
-                a: "Yes! We offer on-location sessions within a 30-mile radius. Travel fees may apply for longer distances.",
+                q: "When will I get my photos?",
+                a: "Editing is done within 2 weeks after confirmation of your final selections (excluding public holidays and weekends).",
               },
               {
-                q: "What should we wear?",
-                a: "We provide a detailed style guide after booking. Generally, neutral tones and coordinated (not matching) outfits work best.",
+                q: "Do you have a cancellation fee?",
+                a: "Yes, it is 25% of your invoiced total.",
               },
               {
-                q: "How long until we receive our photos?",
-                a: "Your online gallery will be ready within 2-3 weeks. Rush delivery is available for an additional fee.",
+                q: "Do you have a reschedule fee?",
+                a: "Yes, it is R550 and is applicable when you request a reschedule of your shoot date.",
+              },
+              {
+                q: "Why do a studio session?",
+                a: "The studio is booked for only 1 family per slot which makes it private and allows for a relaxing atmosphere. Your session will also not be affected by mother nature.",
               },
             ].map((faq, index) => (
               <div key={index} className="bg-white rounded-xl p-6 shadow-soft" data-testid={`faq-${index}`}>

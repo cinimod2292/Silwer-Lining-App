@@ -173,7 +173,7 @@ const PortfolioPage = () => {
         </div>
       </section>
 
-      {/* Gallery */}
+      {/* Gallery - Collage Layout */}
       <section className="py-16 md:py-24" data-testid="portfolio-gallery">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           {filteredImages.length === 0 ? (
@@ -181,31 +181,23 @@ const PortfolioPage = () => {
               <p className="text-muted-foreground">No images found in this category.</p>
             </div>
           ) : (
-            <div className="masonry-grid">
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
               {filteredImages.map((image, index) => (
                 <div
                   key={image.id}
-                  className="masonry-item"
+                  className="break-inside-avoid"
                   data-testid={`portfolio-item-${index}`}
                 >
                   <div
-                    className="img-zoom rounded-xl overflow-hidden cursor-pointer shadow-soft card-hover relative"
-                    onClick={() => setSelectedImage(image)}
+                    className="rounded-xl overflow-hidden cursor-pointer shadow-soft hover:shadow-lg transition-shadow duration-300"
+                    onClick={() => setSelectedIndex(index)}
                   >
                     <img
                       src={image.image_url}
                       alt={image.title}
-                      className={`w-full object-cover ${
-                        index % 3 === 0 ? "h-80" : index % 3 === 1 ? "h-96" : "h-72"
-                      }`}
+                      className="w-full h-auto object-cover hover:scale-[1.02] transition-transform duration-300"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                      <div>
-                        <p className="text-white font-semibold">{image.title}</p>
-                        <p className="text-white/70 text-sm capitalize">{image.category?.replace('-', ' ')}</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -214,33 +206,66 @@ const PortfolioPage = () => {
         </div>
       </section>
 
-      {/* Lightbox */}
+      {/* Lightbox with Navigation */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={closeLightbox}
           data-testid="lightbox"
         >
-          <div className="relative max-w-5xl w-full">
+          {/* Close Button */}
+          <button
+            className="absolute top-6 right-6 text-white/70 hover:text-white z-10 p-2 rounded-full hover:bg-white/10 transition-colors"
+            onClick={closeLightbox}
+            data-testid="lightbox-close"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          {/* Previous Button */}
+          {selectedIndex > 0 && (
+            <button
+              className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPrev();
+              }}
+              data-testid="lightbox-prev"
+            >
+              <ChevronLeft className="w-10 h-10" />
+            </button>
+          )}
+
+          {/* Image */}
+          <div 
+            className="relative max-w-6xl w-full mx-4 md:mx-20"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
               src={selectedImage.image_url}
               alt={selectedImage.title}
-              className="w-full h-auto max-h-[85vh] object-contain rounded-lg"
+              className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
             />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-lg">
-              <p className="text-white font-display text-xl">{selectedImage.title}</p>
-              {selectedImage.description && (
-                <p className="text-white/70">{selectedImage.description}</p>
-              )}
+            
+            {/* Image Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-sm bg-black/50 px-4 py-2 rounded-full">
+              {selectedIndex + 1} / {filteredImages.length}
             </div>
-            <button
-              className="absolute top-4 right-4 text-white/80 hover:text-white text-3xl"
-              onClick={() => setSelectedImage(null)}
-              data-testid="lightbox-close"
-            >
-              ×
-            </button>
           </div>
+
+          {/* Next Button */}
+          {selectedIndex < filteredImages.length - 1 && (
+            <button
+              className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 text-white/70 hover:text-white p-3 rounded-full hover:bg-white/10 transition-colors z-10"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNext();
+              }}
+              data-testid="lightbox-next"
+            >
+              <ChevronRight className="w-10 h-10" />
+            </button>
+          )}
         </div>
       )}
     </div>

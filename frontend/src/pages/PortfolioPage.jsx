@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
@@ -9,24 +10,61 @@ const categories = [
   { id: "all", name: "All" },
   { id: "maternity", name: "Maternity" },
   { id: "newborn", name: "Newborn" },
-  { id: "family", name: "Family" },
-  { id: "individual", name: "Individual" },
+  { id: "family", name: "Family & Mommy Me" },
+  { id: "baby-birthday", name: "Baby Birthday" },
+  { id: "adult-birthday", name: "Adult Birthday" },
+  { id: "brand-product", name: "Brand/Product" },
 ];
 
-// Default portfolio images
+// Real portfolio images from silwerlining.co.za
 const defaultImages = [
-  { id: "1", image_url: "https://images.unsplash.com/photo-1765447551791-b3581cce8207", title: "Maternity Elegance", category: "maternity", description: "Celebrating the beauty of motherhood" },
-  { id: "2", image_url: "https://images.unsplash.com/photo-1644418657862-4ec86e44d6dc", title: "Peaceful Slumber", category: "newborn", description: "Capturing those precious first days" },
-  { id: "3", image_url: "https://images.unsplash.com/photo-1761891950106-3276efeef9d1", title: "Little One", category: "newborn", description: "Tiny fingers, tiny toes" },
-  { id: "4", image_url: "https://images.unsplash.com/photo-1760633549190-6f184e88d640", title: "Joy in Motion", category: "family", description: "Happiness captured in a moment" },
-  { id: "5", image_url: "https://images.unsplash.com/photo-1761400306487-09e8dad8179f", title: "Golden Hour", category: "family", description: "Family love in golden light" },
-  { id: "6", image_url: "https://images.unsplash.com/photo-1664837024902-5ace3976f806", title: "Artistic Portrait", category: "individual", description: "Timeless individual portrait" },
-  { id: "7", image_url: "https://images.unsplash.com/photo-1601561956009-2537dfe81266", title: "Classic Portrait", category: "individual", description: "Simple elegance" },
-  { id: "8", image_url: "https://images.unsplash.com/photo-1760633549204-f652cef723af", title: "Family Walk", category: "family", description: "Adventures together" },
+  // Maternity
+  { id: "mat1", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC6768-62b28956-1000.jpg", title: "Couple Maternity", category: "maternity" },
+  { id: "mat2", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC6949-31c04db5-1000.jpg", title: "Elegant Maternity", category: "maternity" },
+  { id: "mat3", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC5179-f7cbe338-1000.jpg", title: "White Fabric Maternity", category: "maternity" },
+  { id: "mat4", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC5091-057c61cb-1000.jpg", title: "Gold Gown Maternity", category: "maternity" },
+  { id: "mat5", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC0963-ce201870-1000.jpg", title: "Intimate Couple", category: "maternity" },
+  { id: "mat6", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC9230-Recovered-104d85c5-1000.jpg", title: "Studio Couple", category: "maternity" },
+  { id: "mat7", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC7829-22f01b4f-1000.jpg", title: "Silhouette Couple", category: "maternity" },
+  { id: "mat8", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/JasmineSneakpeek3-bc3b54d6-1000.jpg", title: "White Fabric", category: "maternity" },
+  { id: "mat9", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/KERILENG3-33444db6-1000.jpg", title: "Pearl Accessory", category: "maternity" },
+  { id: "mat10", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/KERILENG51-c1f3cf45-1000.jpg", title: "Artistic Portrait", category: "maternity" },
+  { id: "mat11", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC3620_3-4d8bbd04-1000.jpg", title: "Pink Dream", category: "maternity" },
+  { id: "mat12", image_url: "https://images-pw.pixieset.com/elementfield/qyn5qab/_DSC10772-8a404e3f-1000.jpg", title: "Golden Hour", category: "maternity" },
+  
+  // Newborn
+  { id: "new1", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/_DSC2224_1-5d48c4c9-1000.jpg", title: "Peaceful Sleep", category: "newborn" },
+  { id: "new2", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/_DSC2182-afff463a-1000.jpg", title: "Basket Portrait", category: "newborn" },
+  { id: "new3", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/AKWE24-02830378-1000.jpg", title: "Lace Dress", category: "newborn" },
+  { id: "new4", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/AKWE12-a3464568-1000.jpg", title: "Purple Tulle", category: "newborn" },
+  { id: "new5", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/AKWE25-51f1c79b-1000.jpg", title: "Cream Lace Wrap", category: "newborn" },
+  { id: "new6", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/AKWE27-e1cdc848-1000.jpg", title: "Wicker Chair", category: "newborn" },
+  { id: "new7", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/AKWE36-137a4abb-1000.jpg", title: "Family Portrait", category: "newborn" },
+  { id: "new8", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/_DSC8203-Recovered-f0126ceb-1000.jpg", title: "Butterfly Dreams", category: "newborn" },
+  { id: "new9", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/_DSC8278-Recovered-a360a808-1000.jpg", title: "Cozy Basket", category: "newborn" },
+  { id: "new10", image_url: "https://images-pw.pixieset.com/elementfield/yWK5leJ/_DSC7167-101ab1b6-1000.jpg", title: "Sweet Dreams", category: "newborn" },
+  
+  // Family
+  { id: "fam1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/Ayr5KK/MONGALEFAMILYPHOTOS6-e9c3fdd0-1500.jpg", title: "Family Portrait", category: "family" },
+  { id: "fam2", image_url: "https://images-pw.pixieset.com/elementfield/170321823/PORTELLI1-2c5a22f1-1500.jpg", title: "Garden Family", category: "family" },
+  { id: "fam3", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/7p3e9q/J-981123c4-1500.jpg", title: "Mommy & Me", category: "family" },
+  { id: "fam4", image_url: "https://images-pw.pixieset.com/elementfield/777916812/PORTELLI123-7e8b1649-1500.jpg", title: "Sunset Portrait", category: "family" },
+  
+  // Baby Birthday
+  { id: "bb1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/WDdooa/SILWERLININGPHOTOGRAPHY-LUMI50-591942a0-1500.jpg", title: "Balloon Fun", category: "baby-birthday" },
+  { id: "bb2", image_url: "https://images-pw.pixieset.com/elementfield/204211912/3-ddd5aa05.JPG", title: "Safari Theme", category: "baby-birthday" },
+  
+  // Adult Birthday
+  { id: "ab1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/WomqQY/_DSC7012-34e9895c-1500.jpg", title: "Celebration", category: "adult-birthday" },
+  
+  // Brand/Product
+  { id: "bp1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/70GxyA/_DSC6154-17ae8b12-1500.jpg", title: "Product Shot", category: "brand-product" },
 ];
 
 const PortfolioPage = () => {
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchParams] = useSearchParams();
+  const initialCategory = searchParams.get("category") || "all";
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [images, setImages] = useState([]);
   const [filteredImages, setFilteredImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -34,6 +72,13 @@ const PortfolioPage = () => {
   useEffect(() => {
     fetchPortfolio();
   }, []);
+
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category) {
+      setActiveCategory(category);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (activeCategory === "all") {
@@ -114,7 +159,7 @@ const PortfolioPage = () => {
                   data-testid={`portfolio-item-${index}`}
                 >
                   <div
-                    className="img-zoom rounded-xl overflow-hidden cursor-pointer shadow-soft card-hover"
+                    className="img-zoom rounded-xl overflow-hidden cursor-pointer shadow-soft card-hover relative"
                     onClick={() => setSelectedImage(image)}
                   >
                     <img
@@ -128,7 +173,7 @@ const PortfolioPage = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                       <div>
                         <p className="text-white font-semibold">{image.title}</p>
-                        <p className="text-white/70 text-sm capitalize">{image.category}</p>
+                        <p className="text-white/70 text-sm capitalize">{image.category?.replace('-', ' ')}</p>
                       </div>
                     </div>
                   </div>

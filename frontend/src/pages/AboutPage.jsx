@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const stats = [
-  { icon: Camera, value: "2,500+", label: "Sessions Completed" },
+  { icon: Camera, value: "1000+", label: "Sessions Completed" },
   { icon: Award, value: "10+", label: "Years Experience" },
   { icon: Heart, value: "100%", label: "Client Satisfaction" },
-  { icon: Clock, value: "48hr", label: "Gallery Delivery" },
+  { icon: Clock, value: "2 weeks", label: "Photo Delivery" },
 ];
 
 const AboutPage = () => {
@@ -18,22 +18,19 @@ const AboutPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div className="order-2 lg:order-1">
               <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
-                About Me
+                About The Photographer
               </p>
               <h1 className="font-display text-4xl md:text-5xl font-semibold text-foreground mb-6 leading-tight">
-                The Heart Behind the Lens
+                Hi, I'm Nadia
               </h1>
               <p className="text-muted-foreground leading-relaxed mb-6 text-lg">
-                Hello! I'm the photographer behind Silwer Lining Photography. With over a
-                decade of experience capturing life's most precious moments, I've dedicated
-                my career to creating timeless images that families treasure for generations.
+                I'm a wife, mother, and passionate photographer with over <strong>10 years of experience</strong>. 
+                I specialize in <strong>maternity, motherhood, family, and individual portraits</strong>, 
+                capturing timeless images filled with emotion, elegance, and authenticity.
               </p>
               <p className="text-muted-foreground leading-relaxed mb-8">
-                My journey began when I realized the power of a single photograph to
-                capture emotions, tell stories, and preserve memories that might
-                otherwise fade with time. What started as a passion has grown into
-                a mission: to help families celebrate and remember their most
-                beautiful moments.
+                With a creative background and deep personal connection to the journey of motherhood, 
+                I approach each session with care, understanding, and a commitment to telling your unique story.
               </p>
               <Link to="/booking">
                 <Button
@@ -47,13 +44,13 @@ const AboutPage = () => {
             
             <div className="order-1 lg:order-2 relative">
               <img
-                src="https://images.unsplash.com/photo-1766228185748-06b625e7ba6a"
-                alt="Photographer"
+                src="https://images-pw.pixieset.com/elementfield/777916812/PORTELLI123-7e8b1649-1500.jpg"
+                alt="Nadia - Silwer Lining Photography"
                 className="rounded-2xl w-full h-[500px] object-cover shadow-soft"
               />
               <div className="absolute -bottom-6 -left-6 bg-white rounded-xl p-6 shadow-soft hidden md:block">
                 <p className="font-accent text-lg italic text-foreground/80">
-                  "Every photo tells a story worth preserving."
+                  "More than photos — capturing the glow, the love and the memory."
                 </p>
               </div>
             </div>
@@ -92,56 +89,54 @@ const AboutPage = () => {
 
           <div className="prose prose-lg max-w-none">
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Photography found me at a pivotal moment in my life. As a new mother, I
-              was overwhelmed by how quickly my children were growing and how fleeting
-              each stage of their lives seemed to be. I picked up a camera determined
-              to capture every precious moment, and in doing so, discovered my calling.
+              Photography, for me, is about more than beautiful images — it's about preserving 
+              connection, love, and the fleeting moments that matter most. I invite you to 
+              explore my work and see how we can create lasting memories together.
             </p>
 
             <p className="text-muted-foreground leading-relaxed mb-6">
-              What began as documenting my own family's journey soon evolved into a
-              deep passion for helping other families do the same. I pursued formal
-              training, studied under renowned photographers, and spent years
-              perfecting my craft. Every workshop, every challenging shoot, every
-              late night editing taught me something new about the art of capturing
-              authentic emotion.
+              My journey began when I realized the power of a single photograph to capture 
+              emotions, tell stories, and preserve memories that might otherwise fade with time. 
+              What started as a passion has grown into a mission: to help families celebrate 
+              and remember their most beautiful moments.
             </p>
 
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Today, I specialize in maternity, newborn, family, and individual
-              portrait photography. My approach is simple: create a warm, relaxed
-              environment where genuine moments unfold naturally. I believe the
-              best photographs happen when people feel comfortable being themselves.
+              Today, I specialize in maternity, newborn, family, baby birthday, and individual 
+              portrait photography from my home-based studio in Helderkruin, Roodepoort. 
+              My approach is simple: create a warm, relaxed environment where genuine moments 
+              unfold naturally. I believe the best photographs happen when people feel 
+              comfortable being themselves.
             </p>
 
             <p className="text-muted-foreground leading-relaxed">
-              When I'm not behind the camera, you'll find me spending time with my
-              own family, exploring local hiking trails, or discovering new coffee
-              shops around town. I believe in living fully and capturing those moments
-              of joy, love, and connection—both for my clients and in my own life.
+              The studio is booked for only 1 family per slot which makes it private and 
+              allows for a relaxing atmosphere. Your session will also not be affected by 
+              mother nature. Beautiful outfits and props are provided, so you can focus 
+              entirely on enjoying the experience.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Philosophy */}
-      <section className="py-20 md:py-32 bg-warm-beige" data-testid="about-philosophy">
+      {/* Studio */}
+      <section className="py-20 md:py-32 bg-warm-beige" data-testid="about-studio">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div>
               <img
-                src="https://images.unsplash.com/photo-1761395105130-c77ea4a8e3ab"
-                alt="Photography studio"
+                src="https://images-pw.pixieset.com/site/Nzv0dL/8LG9jl/BacklitWindow8-e510f7f0-1500.jpg"
+                alt="Silwer Lining Photography Studio"
                 className="rounded-2xl w-full h-[450px] object-cover shadow-soft"
               />
             </div>
             
             <div>
               <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
-                My Philosophy
+                The Studio
               </p>
               <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-6">
-                Creating Art from Real Moments
+                Why Choose a Studio Session?
               </h2>
               <div className="space-y-6">
                 <div className="flex gap-4">
@@ -149,10 +144,10 @@ const AboutPage = () => {
                     <Heart className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Connection First</h3>
+                    <h3 className="font-semibold mb-1">Private & Intimate</h3>
                     <p className="text-muted-foreground text-sm">
-                      I take time to know each family, understanding what makes them unique
-                      before we ever start shooting.
+                      The studio is booked for only 1 family per slot, ensuring a completely 
+                      private and relaxing atmosphere for your session.
                     </p>
                   </div>
                 </div>
@@ -162,10 +157,10 @@ const AboutPage = () => {
                     <Camera className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Artistry & Authenticity</h3>
+                    <h3 className="font-semibold mb-1">Weather Independent</h3>
                     <p className="text-muted-foreground text-sm">
-                      My images blend artistic composition with genuine emotion—beautiful
-                      photographs that feel true to who you are.
+                      Your session won't be affected by mother nature. No need to worry 
+                      about rain, wind, or harsh sunlight!
                     </p>
                   </div>
                 </div>
@@ -175,16 +170,41 @@ const AboutPage = () => {
                     <Award className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">Excellence in Every Detail</h3>
+                    <h3 className="font-semibold mb-1">Outfits & Props Provided</h3>
                     <p className="text-muted-foreground text-sm">
-                      From the initial consultation to the final delivery, every aspect
-                      of your experience is crafted with care.
+                      Beautiful outfits and props are provided for maternity and newborn sessions. 
+                      You can also bring your own special pieces.
                     </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Location */}
+      <section className="py-20 md:py-32" data-testid="about-location">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+          <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
+            Location
+          </p>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground mb-6">
+            Find Us
+          </h2>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            My home-based studio is located in:
+          </p>
+          <p className="text-xl font-semibold text-foreground mb-2">
+            Helderkruin, Roodepoort
+          </p>
+          <p className="text-muted-foreground mb-8">
+            Johannesburg, Gauteng, South Africa
+          </p>
+          <p className="text-muted-foreground text-sm">
+            Sessions are by appointment only, Mon-Fri 9am-4pm.<br />
+            Weekend and public holiday sessions available upon request at an additional cost.
+          </p>
         </div>
       </section>
 

@@ -236,88 +236,94 @@ async def health_check():
 # Packages
 @api_router.get("/packages", response_model=List[Package])
 async def get_packages():
-    """Get all photography packages"""
+    """Get all photography packages - South African Rand (ZAR)"""
     packages = [
+        # Maternity Packages
         Package(
             id="mat-essential",
             name="Essential",
             session_type="maternity",
-            price=350,
-            duration="1 hour",
-            includes=["1 hour studio session", "10 edited digital images", "Online gallery", "1 outfit change"],
+            price=3500,
+            duration="1-2 hours",
+            includes=["Studio session", "10 edited digital images", "Online gallery", "2 outfit changes", "Outfits provided"],
             popular=False
         ),
         Package(
-            id="mat-deluxe",
-            name="Deluxe",
+            id="mat-signature",
+            name="Signature",
             session_type="maternity",
-            price=550,
-            duration="2 hours",
-            includes=["2 hour session (studio or outdoor)", "25 edited digital images", "Online gallery", "3 outfit changes", "Partner included", "5x7 print"],
+            price=5500,
+            duration="2-3 hours",
+            includes=["Full studio session", "25 edited digital images", "Online gallery", "4 outfit changes", "Outfits provided", "Partner included", "Hair/makeup styling guidance"],
             popular=True
         ),
         Package(
             id="mat-luxury",
-            name="Luxury",
+            name="Luxury Collection",
             session_type="maternity",
-            price=850,
-            duration="3 hours",
-            includes=["3 hour session (multiple locations)", "50 edited digital images", "Online gallery", "Unlimited outfit changes", "Partner & siblings included", "8x10 framed print", "Digital album"],
+            price=8500,
+            duration="3+ hours",
+            includes=["Premium studio session", "50+ edited digital images", "Online gallery", "Unlimited outfit changes", "Premium outfits provided", "Partner & siblings included", "Professional makeup included", "Fine art prints"],
             popular=False
         ),
+        # Newborn Packages
         Package(
             id="new-precious",
             name="Precious Moments",
             session_type="newborn",
-            price=400,
-            duration="2 hours",
-            includes=["2 hour studio session", "15 edited digital images", "Online gallery", "3 setups", "Props provided"],
+            price=4500,
+            duration="2-3 hours",
+            includes=["Baby-led studio session", "15 edited digital images", "Online gallery", "3-4 setups", "Props & wraps provided"],
             popular=False
         ),
         Package(
             id="new-complete",
             name="Complete Collection",
             session_type="newborn",
-            price=650,
-            duration="3 hours",
-            includes=["3 hour studio session", "30 edited digital images", "Online gallery", "6 setups", "Props & wraps provided", "Family portraits included", "5x7 print"],
+            price=7000,
+            duration="3-4 hours",
+            includes=["Extended baby-led session", "30 edited digital images", "Online gallery", "6+ setups", "Premium props & wraps", "Family portraits included", "Sibling shots included"],
             popular=True
         ),
         Package(
             id="new-heirloom",
             name="Heirloom",
             session_type="newborn",
-            price=950,
-            duration="4 hours",
-            includes=["4 hour studio session", "50 edited digital images", "Online gallery", "Unlimited setups", "Premium props & wraps", "Family & sibling portraits", "10x10 album", "2 framed prints"],
+            price=10000,
+            duration="4+ hours",
+            includes=["Full newborn experience", "50+ edited digital images", "Online gallery", "Unlimited setups", "Premium props & outfits", "Family & sibling portraits", "Fine art album", "Framed prints"],
             popular=False
         ),
+        # Studio Portrait Packages
         Package(
-            id="fam-mini",
+            id="studio-mini",
             name="Mini Session",
-            session_type="family",
-            price=250,
-            duration="30 min",
-            includes=["30 minute outdoor session", "10 edited digital images", "Online gallery", "1 location"],
+            session_type="studio",
+            price=2500,
+            duration="30-45 min",
+            includes=["Quick studio session", "8 edited digital images", "Online gallery", "1-2 setups", "Perfect for milestones"],
             popular=False
         ),
         Package(
-            id="fam-classic",
+            id="studio-classic",
             name="Classic",
-            session_type="family",
-            price=450,
-            duration="1 hour",
-            includes=["1 hour session (outdoor or studio)", "20 edited digital images", "Online gallery", "Up to 6 family members", "1 outfit change"],
+            session_type="studio",
+            price=4000,
+            duration="1-1.5 hours",
+            includes=["Full studio session", "20 edited digital images", "Online gallery", "3-4 setups", "Props included", "Outfit changes"],
             popular=True
         ),
         Package(
-            id="fam-extended",
-            name="Extended Family",
-            session_type="family",
-            price=750,
-            duration="2 hours",
-            includes=["2 hour session (multiple locations)", "40 edited digital images", "Online gallery", "Unlimited family members", "Multiple outfit changes", "8x10 print"],
+            id="studio-premium",
+            name="Premium",
+            session_type="studio",
+            price=6500,
+            duration="2+ hours",
+            includes=["Extended studio session", "40 edited digital images", "Online gallery", "6+ setups", "Premium props", "Outfit guidance", "Fine art print"],
             popular=False
+        ),
+    ]
+    return packages
         ),
         Package(
             id="ind-portrait",

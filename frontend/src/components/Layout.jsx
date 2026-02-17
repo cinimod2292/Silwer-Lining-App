@@ -1,7 +1,16 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Menu, X, Camera, Instagram, Facebook, Mail, Phone } from "lucide-react";
+import { Menu, X, Instagram, Facebook, Mail, Phone, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+// Silwer Lining Logo
+const Logo = ({ className = "h-10" }) => (
+  <img 
+    src="https://images-pw.pixieset.com/elementfield/1znyRr9/White-Fabric-Podium-1-84dab3dc-1500.jpg" 
+    alt="Silwer Lining Photography"
+    className={className}
+  />
+);
 
 export const Layout = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -24,7 +33,7 @@ export const Layout = () => {
   const navLinks = [
     { name: "Home", path: "/" },
     { name: "Portfolio", path: "/portfolio" },
-    { name: "Pricing", path: "/pricing" },
+    { name: "Packages", path: "/pricing" },
     { name: "About", path: "/about" },
     { name: "Contact", path: "/contact" },
   ];

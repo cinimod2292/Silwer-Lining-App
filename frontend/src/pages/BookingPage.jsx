@@ -1,21 +1,22 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle, Plus, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import axios from "axios";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { format, isBefore, startOfDay, isWeekend } from "date-fns";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -25,6 +26,15 @@ const sessionTypes = [
   { id: "studio", name: "Studio Portraits" },
 ];
 
+// Available add-ons with prices in ZAR
+const availableAddOns = [
+  { id: "makeup", name: "Makeup Artist", price: 800, description: "Professional makeup for your session" },
+  { id: "extra_images", name: "10 Additional Edited Images", price: 1500, description: "Expand your gallery with more edited photos" },
+  { id: "rush_edit", name: "Rush Editing (48hrs)", price: 1000, description: "Get your images within 48 hours" },
+  { id: "prints_pack", name: "Print Package (5 prints)", price: 1200, description: "5 high-quality 8x10 prints" },
+  { id: "album", name: "Photo Album (20 pages)", price: 3500, description: "Beautiful hardcover photo album" },
+];
+
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
@@ -32,6 +42,11 @@ const BookingPage = () => {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [bookingSettings, setBookingSettings] = useState(null);
+  
+  // Weekend popup state
+  const [showWeekendPopup, setShowWeekendPopup] = useState(false);
+  const [pendingWeekendDate, setPendingWeekendDate] = useState(null);
 
   const [formData, setFormData] = useState({
     client_name: "",
@@ -42,10 +57,13 @@ const BookingPage = () => {
     booking_date: null,
     booking_time: "",
     notes: "",
+    selected_addons: [],
+    is_weekend: false,
   });
 
   useEffect(() => {
     fetchPackages();
+    fetchBookingSettings();
   }, []);
 
   useEffect(() => {
@@ -60,6 +78,16 @@ const BookingPage = () => {
       setPackages(res.data);
     } catch (e) {
       console.error("Failed to fetch packages");
+    }
+  };
+
+  const fetchBookingSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/booking-settings`);
+      setBookingSettings(res.data);
+    } catch (e) {
+      console.error("Failed to fetch booking settings");
+      setBookingSettings({ weekend_surcharge: 500 });
     }
   };
 
@@ -80,9 +108,74 @@ const BookingPage = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleDateSelect = (date) => {
+    if (!date) return;
+    
+    const weekend = isWeekend(date);
+    
+    if (weekend) {
+      setPendingWeekendDate(date);
+      setShowWeekendPopup(true);
+    } else {
+      setFormData((prev) => ({ 
+        ...prev, 
+        booking_date: date,
+        booking_time: "",
+        is_weekend: false 
+      }));
+    }
+  };
+
+  const confirmWeekendDate = () => {
+    setFormData((prev) => ({ 
+      ...prev, 
+      booking_date: pendingWeekendDate,
+      booking_time: "",
+      is_weekend: true 
+    }));
+    setShowWeekendPopup(false);
+    setPendingWeekendDate(null);
+  };
+
+  const cancelWeekendDate = () => {
+    setShowWeekendPopup(false);
+    setPendingWeekendDate(null);
+  };
+
+  const toggleAddon = (addonId) => {
+    setFormData((prev) => {
+      const current = prev.selected_addons;
+      if (current.includes(addonId)) {
+        return { ...prev, selected_addons: current.filter(id => id !== addonId) };
+      } else {
+        return { ...prev, selected_addons: [...current, addonId] };
+      }
+    });
+  };
+
   const getFilteredPackages = () => {
     if (!formData.session_type) return [];
     return packages.filter((pkg) => pkg.session_type === formData.session_type);
+  };
+
+  const getSelectedPackage = () => {
+    return packages.find((pkg) => pkg.name === formData.package_name);
+  };
+
+  const getSelectedAddons = () => {
+    return availableAddOns.filter((addon) => formData.selected_addons.includes(addon.id));
+  };
+
+  const getWeekendSurcharge = () => {
+    return bookingSettings?.weekend_surcharge || 500;
+  };
+
+  const calculateTotal = () => {
+    const pkg = getSelectedPackage();
+    const basePrice = pkg?.price || 0;
+    const addonsTotal = getSelectedAddons().reduce((sum, addon) => sum + addon.price, 0);
+    const weekendCharge = formData.is_weekend ? getWeekendSurcharge() : 0;
+    return basePrice + addonsTotal + weekendCharge;
   };
 
   const isDateDisabled = (date) => {
@@ -108,6 +201,9 @@ const BookingPage = () => {
       const payload = {
         ...formData,
         booking_date: format(formData.booking_date, "yyyy-MM-dd"),
+        addons: formData.selected_addons,
+        total_price: calculateTotal(),
+        weekend_surcharge: formData.is_weekend ? getWeekendSurcharge() : 0,
       };
       await axios.post(`${API}/bookings`, payload);
       setBookingComplete(true);
@@ -120,6 +216,9 @@ const BookingPage = () => {
   };
 
   if (bookingComplete) {
+    const selectedPackage = getSelectedPackage();
+    const selectedAddons = getSelectedAddons();
+    
     return (
       <div className="min-h-screen flex items-center justify-center px-6" data-testid="booking-success">
         <div className="max-w-md text-center">
@@ -138,6 +237,12 @@ const BookingPage = () => {
               <p><strong>Package:</strong> {formData.package_name}</p>
               <p><strong>Date:</strong> {format(formData.booking_date, "MMMM d, yyyy")}</p>
               <p><strong>Time:</strong> {formData.booking_time}</p>
+              {selectedAddons.length > 0 && (
+                <p><strong>Add-ons:</strong> {selectedAddons.map(a => a.name).join(", ")}</p>
+              )}
+              <div className="border-t border-border pt-3 mt-3">
+                <p className="font-semibold text-lg">Total: R{calculateTotal().toLocaleString()}</p>
+              </div>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -150,6 +255,50 @@ const BookingPage = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Weekend Surcharge Popup */}
+      <Dialog open={showWeekendPopup} onOpenChange={setShowWeekendPopup}>
+        <DialogContent className="sm:max-w-md" data-testid="weekend-popup">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Weekend Session Fee
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground mb-4">
+              You've selected a <strong>weekend date</strong>. Weekend and public holiday sessions 
+              include an additional fee.
+            </p>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+              <p className="text-sm text-amber-700 mb-1">Weekend Surcharge</p>
+              <p className="text-2xl font-display font-semibold text-amber-800">
+                R{getWeekendSurcharge().toLocaleString()}
+              </p>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              This fee will be added to your total booking price.
+            </p>
+          </div>
+          <DialogFooter className="flex gap-3 sm:gap-3">
+            <Button 
+              variant="outline" 
+              onClick={cancelWeekendDate}
+              className="flex-1"
+              data-testid="weekend-cancel"
+            >
+              Select Different Date
+            </Button>
+            <Button 
+              onClick={confirmWeekendDate}
+              className="flex-1 bg-primary hover:bg-primary/90 text-white"
+              data-testid="weekend-confirm"
+            >
+              Continue with Weekend
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <section className="bg-warm-sand py-20 md:py-28" data-testid="booking-header">
         <div className="max-w-7xl mx-auto px-6 md:px-12 text-center">
@@ -170,9 +319,9 @@ const BookingPage = () => {
       <div className="max-w-4xl mx-auto px-6 md:px-12 py-8">
         <div className="flex items-center justify-center gap-4 md:gap-8">
           {[
-            { num: 1, label: "Session" },
+            { num: 1, label: "Session & Add-ons" },
             { num: 2, label: "Date & Time" },
-            { num: 3, label: "Details" },
+            { num: 3, label: "Details & Payment" },
           ].map((s, i) => (
             <div key={s.num} className="flex items-center">
               <div
@@ -201,14 +350,14 @@ const BookingPage = () => {
       <section className="pb-20 md:pb-28" data-testid="booking-form">
         <div className="max-w-3xl mx-auto px-6 md:px-12">
           <div className="bg-white rounded-2xl shadow-soft p-8 md:p-12">
-            {/* Step 1: Session Type & Package */}
+            {/* Step 1: Session Type, Package & Add-ons */}
             {step === 1 && (
               <div className="space-y-8" data-testid="step-1">
                 <div>
                   <Label className="text-base font-semibold mb-4 block">
                     What type of session are you looking for?
                   </Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {sessionTypes.map((type) => (
                       <button
                         key={type.id}
@@ -249,13 +398,57 @@ const BookingPage = () => {
                           <div>
                             <span className="font-semibold block">{pkg.name}</span>
                             <span className="text-sm text-muted-foreground">
-                              {pkg.duration} • {pkg.includes.slice(0, 2).join(", ")}...
+                              {pkg.duration} • {pkg.includes?.slice(0, 2).join(", ")}...
                             </span>
                           </div>
                           <span className="font-display text-xl font-semibold text-primary">
-                            ${pkg.price}
+                            R{pkg.price?.toLocaleString()}
                           </span>
                         </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add-ons Section */}
+                {formData.package_name && (
+                  <div>
+                    <Label className="text-base font-semibold mb-2 block">
+                      <Plus className="w-5 h-5 inline mr-2" />
+                      Enhance your session with add-ons
+                    </Label>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Optional extras to make your session even more special
+                    </p>
+                    <div className="grid gap-3">
+                      {availableAddOns.map((addon) => (
+                        <div
+                          key={addon.id}
+                          className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                            formData.selected_addons.includes(addon.id)
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/30"
+                          }`}
+                          onClick={() => toggleAddon(addon.id)}
+                          data-testid={`addon-${addon.id}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                checked={formData.selected_addons.includes(addon.id)}
+                                onCheckedChange={() => toggleAddon(addon.id)}
+                                className="pointer-events-none"
+                              />
+                              <div>
+                                <span className="font-medium block">{addon.name}</span>
+                                <span className="text-sm text-muted-foreground">{addon.description}</span>
+                              </div>
+                            </div>
+                            <span className="font-semibold text-primary whitespace-nowrap ml-4">
+                              +R{addon.price.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -271,17 +464,28 @@ const BookingPage = () => {
                     <Calendar className="w-5 h-5 inline mr-2" />
                     Select a date
                   </Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Note: Weekend sessions include an additional R{getWeekendSurcharge().toLocaleString()} fee
+                  </p>
                   <div className="flex justify-center">
                     <CalendarComponent
                       mode="single"
                       selected={formData.booking_date}
-                      onSelect={(date) => handleInputChange("booking_date", date)}
+                      onSelect={handleDateSelect}
                       disabled={isDateDisabled}
                       fromDate={new Date()}
                       className="rounded-xl border shadow-soft"
                       data-testid="booking-calendar"
                     />
                   </div>
+                  {formData.is_weekend && formData.booking_date && (
+                    <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      <span className="text-sm text-amber-700">
+                        Weekend surcharge of R{getWeekendSurcharge().toLocaleString()} will be added
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {formData.booking_date && (
@@ -316,7 +520,7 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Step 3: Contact Details */}
+            {/* Step 3: Contact Details & Summary */}
             {step === 3 && (
               <div className="space-y-6" data-testid="step-3">
                 <div>
@@ -355,7 +559,7 @@ const BookingPage = () => {
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="(555) 123-4567"
+                    placeholder="+27 12 345 6789"
                     value={formData.client_phone}
                     onChange={(e) => handleInputChange("client_phone", e.target.value)}
                     className="h-12"
@@ -377,27 +581,70 @@ const BookingPage = () => {
                   />
                 </div>
 
-                {/* Summary */}
-                <div className="bg-warm-sand rounded-xl p-6 mt-8">
-                  <h3 className="font-semibold mb-4">Booking Summary</h3>
-                  <div className="space-y-2 text-sm">
+                {/* Price Breakdown Summary */}
+                <div className="bg-warm-sand rounded-xl p-6 mt-8" data-testid="booking-summary">
+                  <h3 className="font-semibold mb-4 text-lg">Booking Summary</h3>
+                  
+                  {/* Session Details */}
+                  <div className="space-y-2 text-sm border-b border-border/50 pb-4 mb-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Session Type:</span>
-                      <span className="capitalize">{formData.session_type}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Package:</span>
-                      <span>{formData.package_name}</span>
+                      <span className="capitalize">{formData.session_type?.replace("-", " ")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Date:</span>
-                      <span>{formData.booking_date && format(formData.booking_date, "MMMM d, yyyy")}</span>
+                      <span>
+                        {formData.booking_date && format(formData.booking_date, "MMMM d, yyyy")}
+                        {formData.is_weekend && <span className="text-amber-600 ml-1">(Weekend)</span>}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Time:</span>
                       <span>{formData.booking_time}</span>
                     </div>
                   </div>
+
+                  {/* Price Breakdown */}
+                  <div className="space-y-3">
+                    {/* Base Package */}
+                    <div className="flex justify-between">
+                      <span>{formData.package_name} Package</span>
+                      <span className="font-medium">R{getSelectedPackage()?.price?.toLocaleString() || 0}</span>
+                    </div>
+
+                    {/* Add-ons */}
+                    {getSelectedAddons().length > 0 && (
+                      <div className="space-y-2 border-t border-border/30 pt-3">
+                        <p className="text-sm text-muted-foreground font-medium">Add-ons:</p>
+                        {getSelectedAddons().map((addon) => (
+                          <div key={addon.id} className="flex justify-between text-sm pl-2">
+                            <span className="text-muted-foreground">{addon.name}</span>
+                            <span>+R{addon.price.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Weekend Surcharge */}
+                    {formData.is_weekend && (
+                      <div className="flex justify-between text-sm border-t border-border/30 pt-3">
+                        <span className="text-amber-700">Weekend Surcharge</span>
+                        <span className="text-amber-700">+R{getWeekendSurcharge().toLocaleString()}</span>
+                      </div>
+                    )}
+
+                    {/* Total */}
+                    <div className="flex justify-between border-t-2 border-foreground/20 pt-4 mt-4">
+                      <span className="font-semibold text-lg">Total</span>
+                      <span className="font-display text-2xl font-semibold text-primary">
+                        R{calculateTotal().toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mt-4">
+                    * A 50% deposit (R{(calculateTotal() / 2).toLocaleString()}) is required to secure your booking
+                  </p>
                 </div>
               </div>
             )}

@@ -102,6 +102,12 @@ class BookingCreate(BaseModel):
     booking_date: str
     booking_time: str
     notes: Optional[str] = ""
+    # Add-ons and pricing
+    selected_addons: List[str] = []
+    addons_total: int = 0
+    is_weekend: bool = False
+    weekend_surcharge: int = 0
+    total_price: int = 0
 
 class BookingUpdate(BaseModel):
     client_name: Optional[str] = None

@@ -9,6 +9,7 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - Skip shop section for now
 - Full admin dashboard for bookings, portfolio, testimonials management
 - Warm neutrals color palette (creams, beiges, soft golds)
+- Admin experience similar to usesession.com
 
 ## Architecture
 - **Frontend**: React 19 + Tailwind CSS + Shadcn UI
@@ -35,21 +36,34 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Mobile-friendly responsive design
 - [x] SEO optimized
 
-## What's Been Implemented (Jan 2026)
+## What's Been Implemented (Feb 2026)
 
 ### Frontend Pages
 - **HomePage**: Hero section, services overview, featured work, testimonials, CTA
 - **PortfolioPage**: Masonry gallery with category filters
-- **PricingPage**: Tabbed packages (12 total) with add-ons
+- **PricingPage**: Tabbed packages (12 total) with add-ons in ZAR
 - **BookingPage**: 3-step booking flow (session → date/time → details)
 - **AboutPage**: Photographer story, stats, philosophy
 - **ContactPage**: Contact form, FAQ section
-- **Admin**: Login, Dashboard, Bookings, Portfolio, Testimonials, Messages management
+- **Admin Dashboard**:
+  - Login/Authentication
+  - Dashboard Home (stats overview)
+  - Bookings Management (view, edit, filter by status)
+  - **Packages Management** (CRUD operations) ✅
+  - **Booking Settings** (available days, time slots, buffer, lead time, blocked dates) ✅
+  - **Calendar Sync** (Apple Calendar settings UI - sync logic MOCKED) ✅
+  - Portfolio Management
+  - Testimonials Management
+  - Messages Management
 
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages
+- `/api/admin/packages` - CRUD for packages
 - `/api/bookings` - Create bookings + email confirmation
 - `/api/bookings/available-times` - Get available time slots
+- `/api/admin/booking-settings` - GET/PUT booking configuration
+- `/api/admin/calendar-settings` - GET/PUT calendar sync settings
+- `/api/admin/calendar/sync` - Trigger calendar sync (MOCKED)
 - `/api/portfolio` - Get portfolio images
 - `/api/testimonials` - Get approved testimonials
 - `/api/contact` - Submit contact messages
@@ -68,23 +82,36 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Portfolio galleries
 - [x] Admin dashboard
 - [x] Email confirmations
+- [x] Packages management in admin
+- [x] Booking settings configuration
+- [x] Calendar sync UI
 
-### P1 (Future)
+### P1 (Next Priority - Blocked)
+- [ ] Apple Calendar 2-way sync logic (BLOCKED - awaiting user's Apple ID credentials)
+- [ ] Google Reviews integration (needs clarification - manual entry or automated widget?)
+
+### P2 (Future)
 - [ ] Image upload to cloud storage (currently URL-based)
 - [ ] SEO meta tags per page
 - [ ] Google Analytics integration
-- [ ] Calendar sync (Google Calendar)
+- [ ] Shop section for sublimation/personalized gifts
+- [ ] WhatsApp "Book Now" button
+- [ ] PayFlex integration
 
-### P2 (Nice to Have)
+### P3 (Nice to Have)
 - [ ] Client portal for viewing/downloading photos
 - [ ] Gift cards/vouchers
-- [ ] Shop section for sublimation gifts
 - [ ] Blog for SEO content
 - [ ] Multi-language support
 
-## Next Action Items
-1. Add real portfolio images via admin dashboard
-2. Create admin account and add testimonials
-3. Configure SendGrid sender verification
-4. Test booking flow with real email
-5. Consider adding payment integration (Stripe) for deposits
+## Admin Credentials (for testing)
+- Email: admin@silwerlining.com
+- Password: Admin123!
+
+## Notes
+- Apple Calendar sync logic is MOCKED - returns success but doesn't actually sync
+- Content (logo, images, packages, testimonials) was scraped from silwerlining.co.za
+- All prices are in ZAR (South African Rand)
+
+## Test Reports
+- /app/test_reports/iteration_3.json - 100% pass rate (Feb 2026)

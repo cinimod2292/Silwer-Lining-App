@@ -132,6 +132,12 @@ class Booking(BaseModel):
     admin_notes: str = ""
     status: str = "pending"  # pending, confirmed, completed, cancelled, rescheduled
     calendar_event_id: Optional[str] = None
+    # Add-ons and pricing
+    selected_addons: List[str] = []
+    addons_total: int = 0
+    is_weekend: bool = False
+    weekend_surcharge: int = 0
+    total_price: int = 0
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

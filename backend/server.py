@@ -71,24 +71,26 @@ class Package(BaseModel):
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class BookingSettingsUpdate(BaseModel):
-    available_days: List[int] = [1, 2, 3, 4, 5]  # 0=Sun, 1=Mon, ..., 6=Sat
-    time_slots: List[str] = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"]
+    available_days: List[int] = [1, 2, 3, 4, 5, 6]  # 0=Sun, 1=Mon, ..., 6=Sat
+    time_slots: List[str] = []  # Legacy flat list (kept for backwards compatibility)
+    time_slot_schedule: dict = {}  # New: { sessionType: { dayId: ["09:00", "13:00"], ... }, ... }
     buffer_minutes: int = 30  # Buffer between sessions
     min_lead_days: int = 3  # Minimum days before booking
     max_advance_days: int = 90  # Maximum days in advance
     blocked_dates: List[str] = []  # Specific dates blocked
-    weekend_surcharge: int = 500  # R500 for weekends
+    weekend_surcharge: int = 750  # ZAR for weekends
     session_duration_default: int = 120  # Default 2 hours
 
 class BookingSettings(BaseModel):
     id: str = "default"
-    available_days: List[int] = [1, 2, 3, 4, 5]
-    time_slots: List[str] = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"]
+    available_days: List[int] = [1, 2, 3, 4, 5, 6]
+    time_slots: List[str] = []  # Legacy
+    time_slot_schedule: dict = {}  # New flexible schedule
     buffer_minutes: int = 30
     min_lead_days: int = 3
     max_advance_days: int = 90
     blocked_dates: List[str] = []
-    weekend_surcharge: int = 500
+    weekend_surcharge: int = 750
     session_duration_default: int = 120
 
 class BookingCreate(BaseModel):

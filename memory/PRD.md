@@ -39,11 +39,11 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 ## What's Been Implemented (Feb 2026)
 
 ### Frontend Pages
-- **HomePage**: Hero section, services overview, featured work, testimonials, CTA
+- **HomePage**: Hero section, services overview, featured work, testimonials, CTA, **Instagram Recent Shoots** ✅
 - **PortfolioPage**: Collage gallery with lightbox navigation (prev/next)
 - **PricingPage**: Tabbed packages (12 total) with add-ons in ZAR
 - **BookingPage**: Enhanced 3-step booking flow:
-  - Step 1: Session type, package selection, **add-ons selection**
+  - Step 1: Session type, package selection, **dynamic add-ons from API**
   - Step 2: Date/time selection with **weekend surcharge popup**
   - Step 3: Contact details with **full price breakdown**
 - **AboutPage**: Photographer story, stats, philosophy
@@ -52,12 +52,15 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
   - Login/Authentication
   - Dashboard Home (stats overview)
   - Bookings Management (view, edit, filter by status)
-  - **Packages Management** (CRUD operations) ✅
-  - **Booking Settings** (available days, time slots, buffer, lead time, blocked dates, weekend surcharge) ✅
-  - **Calendar Sync** (Apple Calendar settings UI - sync logic MOCKED) ✅
-  - Portfolio Management
+  - Packages Management (CRUD operations)
+  - **Add-ons Management** (CRUD with category filtering) ✅ NEW
+  - Booking Settings (available days, time slots, buffer, lead time, blocked dates, weekend surcharge)
+  - Calendar Sync (Apple Calendar settings UI - sync logic MOCKED)
+  - Portfolio Management (**bulk upload with R2 support**) ✅ ENHANCED
   - Testimonials Management
   - Messages Management
+  - **Email Templates** (visual + raw HTML editor, multiple template types) ✅ NEW
+  - **Settings Page** (Cloudflare R2 storage, Instagram config) ✅ NEW
 
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages

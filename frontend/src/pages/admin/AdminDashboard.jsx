@@ -68,11 +68,14 @@ const AdminDashboard = () => {
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
     { icon: Calendar, label: "Bookings", path: "/admin/bookings" },
     { icon: Package, label: "Packages", path: "/admin/packages" },
+    { icon: Tag, label: "Add-ons", path: "/admin/addons" },
     { icon: Settings, label: "Booking Settings", path: "/admin/booking-settings" },
     { icon: CalendarDays, label: "Calendar Sync", path: "/admin/calendar" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },
     { icon: MessageSquare, label: "Testimonials", path: "/admin/testimonials" },
     { icon: Mail, label: "Messages", path: "/admin/messages" },
+    { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },
+    { icon: Settings, label: "Settings", path: "/admin/settings" },
   ];
 
   const isActive = (path) => location.pathname === path;

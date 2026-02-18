@@ -27,18 +27,11 @@ const sessionTypes = [
 ];
 
 // Available add-ons with prices in ZAR
-const availableAddOns = [
-  { id: "makeup", name: "Makeup Artist", price: 800, description: "Professional makeup for your session" },
-  { id: "extra_images", name: "10 Additional Edited Images", price: 1500, description: "Expand your gallery with more edited photos" },
-  { id: "rush_edit", name: "Rush Editing (48hrs)", price: 1000, description: "Get your images within 48 hours" },
-  { id: "prints_pack", name: "Print Package (5 prints)", price: 1200, description: "5 high-quality 8x10 prints" },
-  { id: "album", name: "Photo Album (20 pages)", price: 3500, description: "Beautiful hardcover photo album" },
-];
-
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [packages, setPackages] = useState([]);
+  const [availableAddOns, setAvailableAddOns] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);

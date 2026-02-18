@@ -60,11 +60,14 @@ const BookingPage = () => {
     fetchAddOns();
   }, []);
 
+  // Fetch available times when date OR session type changes
   useEffect(() => {
-    if (formData.booking_date) {
+    if (formData.booking_date && formData.session_type) {
+      fetchAvailableTimes(format(formData.booking_date, "yyyy-MM-dd"), formData.session_type);
+    } else if (formData.booking_date) {
       fetchAvailableTimes(format(formData.booking_date, "yyyy-MM-dd"));
     }
-  }, [formData.booking_date]);
+  }, [formData.booking_date, formData.session_type]);
 
   // Re-fetch add-ons when session type changes
   useEffect(() => {

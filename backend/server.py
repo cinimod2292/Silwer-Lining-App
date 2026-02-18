@@ -845,6 +845,365 @@ async def admin_get_stats(admin=Depends(verify_token)):
         "packages_count": packages_count
     }
 
+# ==================== ADMIN - ADD-ONS ====================
+
+@api_router.get("/admin/addons")
+async def admin_get_addons(admin=Depends(verify_token)):
+    """Get all add-ons"""
+    items = await db.addons.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    return items
+
+@api_router.get("/addons")
+async def get_public_addons(session_type: Optional[str] = None):
+    """Get active add-ons, optionally filtered by session type"""
+    query = {"active": True}
+    items = await db.addons.find(query, {"_id": 0}).sort("order", 1).to_list(100)
+    if session_type:
+        items = [item for item in items if not item.get("categories") or session_type in item.get("categories", [])]
+    return items
+
+@api_router.post("/admin/addons")
+async def admin_create_addon(data: AddOnCreate, admin=Depends(verify_token)):
+    """Create a new add-on"""
+    addon = AddOn(**data.model_dump())
+    doc = addon.model_dump()
+    await db.addons.insert_one(doc)
+    return addon
+
+@api_router.put("/admin/addons/{addon_id}")
+async def admin_update_addon(addon_id: str, data: AddOnCreate, admin=Depends(verify_token)):
+    """Update an add-on"""
+    update_data = data.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    result = await db.addons.update_one(
+        {"id": addon_id},
+        {"$set": update_data}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Add-on not found")
+    return {"message": "Add-on updated"}
+
+@api_router.delete("/admin/addons/{addon_id}")
+async def admin_delete_addon(addon_id: str, admin=Depends(verify_token)):
+    """Delete an add-on"""
+    result = await db.addons.delete_one({"id": addon_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Add-on not found")
+    return {"message": "Add-on deleted"}
+
+# ==================== ADMIN - EMAIL TEMPLATES ====================
+
+@api_router.get("/admin/email-templates")
+async def admin_get_email_templates(admin=Depends(verify_token)):
+    """Get all email templates"""
+    templates = await db.email_templates.find({}, {"_id": 0}).to_list(50)
+    return templates
+
+@api_router.get("/admin/email-templates/{template_name}")
+async def admin_get_email_template(template_name: str, admin=Depends(verify_token)):
+    """Get a specific email template by name"""
+    template = await db.email_templates.find_one({"name": template_name}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return template
+
+@api_router.post("/admin/email-templates")
+async def admin_create_email_template(data: EmailTemplateCreate, admin=Depends(verify_token)):
+    """Create a new email template"""
+    # Check if template with same name exists
+    existing = await db.email_templates.find_one({"name": data.name})
+    if existing:
+        raise HTTPException(status_code=400, detail="Template with this name already exists")
+    
+    template = EmailTemplate(**data.model_dump())
+    template.display_name = data.name.replace("_", " ").title()
+    doc = template.model_dump()
+    await db.email_templates.insert_one(doc)
+    return template
+
+@api_router.put("/admin/email-templates/{template_id}")
+async def admin_update_email_template(template_id: str, data: EmailTemplateCreate, admin=Depends(verify_token)):
+    """Update an email template"""
+    update_data = data.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["display_name"] = data.name.replace("_", " ").title()
+    result = await db.email_templates.update_one(
+        {"id": template_id},
+        {"$set": update_data}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"message": "Template updated"}
+
+@api_router.delete("/admin/email-templates/{template_id}")
+async def admin_delete_email_template(template_id: str, admin=Depends(verify_token)):
+    """Delete an email template"""
+    result = await db.email_templates.delete_one({"id": template_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Template not found")
+    return {"message": "Template deleted"}
+
+# ==================== ADMIN - STORAGE SETTINGS ====================
+
+@api_router.get("/admin/storage-settings")
+async def admin_get_storage_settings(admin=Depends(verify_token)):
+    """Get storage settings"""
+    settings = await db.storage_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        return {
+            "id": "default",
+            "provider": "cloudflare_r2",
+            "account_id": "",
+            "access_key_id": "",
+            "secret_access_key": "",
+            "bucket_name": "",
+            "public_url": ""
+        }
+    # Mask the secret key for security
+    if settings.get("secret_access_key"):
+        settings["secret_access_key"] = "••••••••" + settings["secret_access_key"][-4:] if len(settings["secret_access_key"]) > 4 else "••••••••"
+    return settings
+
+@api_router.put("/admin/storage-settings")
+async def admin_update_storage_settings(data: StorageSettingsUpdate, admin=Depends(verify_token)):
+    """Update storage settings"""
+    update_data = data.model_dump()
+    
+    # If secret key is masked, don't update it
+    if update_data.get("secret_access_key", "").startswith("••••"):
+        existing = await db.storage_settings.find_one({"id": "default"})
+        if existing:
+            update_data["secret_access_key"] = existing.get("secret_access_key", "")
+    
+    await db.storage_settings.update_one(
+        {"id": "default"},
+        {"$set": update_data},
+        upsert=True
+    )
+    return {"message": "Storage settings updated"}
+
+# ==================== ADMIN - INSTAGRAM SETTINGS ====================
+
+@api_router.get("/admin/instagram-settings")
+async def admin_get_instagram_settings(admin=Depends(verify_token)):
+    """Get Instagram settings"""
+    settings = await db.instagram_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        return {
+            "id": "default",
+            "access_token": "",
+            "enabled": True,
+            "post_count": 6
+        }
+    # Mask the token for security
+    if settings.get("access_token"):
+        token = settings["access_token"]
+        settings["access_token"] = token[:10] + "••••••••" + token[-4:] if len(token) > 14 else "••••••••"
+    return settings
+
+@api_router.put("/admin/instagram-settings")
+async def admin_update_instagram_settings(data: InstagramSettingsUpdate, admin=Depends(verify_token)):
+    """Update Instagram settings"""
+    update_data = data.model_dump()
+    
+    # If token is masked, don't update it
+    if "••••" in update_data.get("access_token", ""):
+        existing = await db.instagram_settings.find_one({"id": "default"})
+        if existing:
+            update_data["access_token"] = existing.get("access_token", "")
+    
+    await db.instagram_settings.update_one(
+        {"id": "default"},
+        {"$set": update_data},
+        upsert=True
+    )
+    return {"message": "Instagram settings updated"}
+
+@api_router.get("/instagram/feed")
+async def get_instagram_feed():
+    """Get Instagram feed for public display"""
+    settings = await db.instagram_settings.find_one({"id": "default"})
+    if not settings or not settings.get("enabled") or not settings.get("access_token"):
+        return {"posts": [], "error": "Instagram not configured"}
+    
+    try:
+        access_token = settings["access_token"]
+        post_count = settings.get("post_count", 6)
+        
+        async with httpx.AsyncClient() as client:
+            # Get user media
+            response = await client.get(
+                f"https://graph.instagram.com/me/media",
+                params={
+                    "fields": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp",
+                    "access_token": access_token,
+                    "limit": post_count
+                },
+                timeout=10.0
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"Instagram API error: {response.text}")
+                return {"posts": [], "error": "Failed to fetch Instagram feed"}
+            
+            data = response.json()
+            posts = data.get("data", [])
+            
+            # Filter to only images and carousels (not videos for now)
+            filtered_posts = [
+                {
+                    "id": post["id"],
+                    "image_url": post.get("media_url") or post.get("thumbnail_url"),
+                    "caption": post.get("caption", "")[:100] if post.get("caption") else "",
+                    "permalink": post.get("permalink"),
+                    "timestamp": post.get("timestamp")
+                }
+                for post in posts
+                if post.get("media_type") in ["IMAGE", "CAROUSEL_ALBUM"]
+            ]
+            
+            return {"posts": filtered_posts}
+    except Exception as e:
+        logger.error(f"Instagram feed error: {str(e)}")
+        return {"posts": [], "error": str(e)}
+
+# ==================== FILE UPLOAD (Cloudflare R2) ====================
+
+@api_router.post("/admin/upload")
+async def admin_upload_file(admin=Depends(verify_token)):
+    """Get presigned URL for file upload to R2"""
+    from fastapi import UploadFile, File
+    # This endpoint would be used with multipart form data
+    # For now, we'll implement a simple presigned URL approach
+    
+    settings = await db.storage_settings.find_one({"id": "default"})
+    if not settings or not settings.get("access_key_id"):
+        raise HTTPException(status_code=400, detail="Storage not configured. Please configure R2 settings first.")
+    
+    return {"message": "Use /admin/upload-image endpoint with multipart form data"}
+
+from fastapi import UploadFile, File
+import base64
+
+@api_router.post("/admin/upload-image")
+async def admin_upload_image(
+    file: UploadFile = File(...),
+    admin=Depends(verify_token)
+):
+    """Upload image to Cloudflare R2"""
+    import boto3
+    from botocore.config import Config
+    
+    settings = await db.storage_settings.find_one({"id": "default"})
+    if not settings or not settings.get("access_key_id"):
+        raise HTTPException(status_code=400, detail="Storage not configured. Please configure R2 settings in admin.")
+    
+    try:
+        # Configure S3-compatible client for R2
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=f"https://{settings['account_id']}.r2.cloudflarestorage.com",
+            aws_access_key_id=settings['access_key_id'],
+            aws_secret_access_key=settings['secret_access_key'],
+            config=Config(signature_version='s3v4'),
+            region_name='auto'
+        )
+        
+        # Generate unique filename
+        file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+        unique_filename = f"portfolio/{uuid.uuid4()}.{file_ext}"
+        
+        # Read file content
+        content = await file.read()
+        
+        # Upload to R2
+        s3_client.put_object(
+            Bucket=settings['bucket_name'],
+            Key=unique_filename,
+            Body=content,
+            ContentType=file.content_type or 'image/jpeg'
+        )
+        
+        # Construct public URL
+        public_url = settings.get('public_url', '').rstrip('/')
+        if public_url:
+            image_url = f"{public_url}/{unique_filename}"
+        else:
+            image_url = f"https://{settings['bucket_name']}.{settings['account_id']}.r2.cloudflarestorage.com/{unique_filename}"
+        
+        return {"success": True, "url": image_url, "filename": unique_filename}
+        
+    except Exception as e:
+        logger.error(f"Upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@api_router.post("/admin/upload-images")
+async def admin_upload_multiple_images(
+    files: List[UploadFile] = File(...),
+    category: str = Query(...),
+    admin=Depends(verify_token)
+):
+    """Upload multiple images to R2 and create portfolio entries"""
+    import boto3
+    from botocore.config import Config
+    
+    settings = await db.storage_settings.find_one({"id": "default"})
+    if not settings or not settings.get("access_key_id"):
+        raise HTTPException(status_code=400, detail="Storage not configured. Please configure R2 settings in admin.")
+    
+    try:
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=f"https://{settings['account_id']}.r2.cloudflarestorage.com",
+            aws_access_key_id=settings['access_key_id'],
+            aws_secret_access_key=settings['secret_access_key'],
+            config=Config(signature_version='s3v4'),
+            region_name='auto'
+        )
+        
+        uploaded = []
+        public_url = settings.get('public_url', '').rstrip('/')
+        
+        for file in files:
+            file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+            unique_filename = f"portfolio/{uuid.uuid4()}.{file_ext}"
+            
+            content = await file.read()
+            
+            s3_client.put_object(
+                Bucket=settings['bucket_name'],
+                Key=unique_filename,
+                Body=content,
+                ContentType=file.content_type or 'image/jpeg'
+            )
+            
+            if public_url:
+                image_url = f"{public_url}/{unique_filename}"
+            else:
+                image_url = f"https://{settings['bucket_name']}.{settings['account_id']}.r2.cloudflarestorage.com/{unique_filename}"
+            
+            # Create portfolio entry
+            portfolio_item = Portfolio(
+                title=file.filename.rsplit('.', 1)[0] if '.' in file.filename else file.filename,
+                category=category,
+                image_url=image_url
+            )
+            doc = portfolio_item.model_dump()
+            await db.portfolio.insert_one(doc)
+            
+            uploaded.append({
+                "id": portfolio_item.id,
+                "url": image_url,
+                "filename": file.filename,
+                "category": category
+            })
+        
+        return {"success": True, "uploaded": uploaded, "count": len(uploaded)}
+        
+    except Exception as e:
+        logger.error(f"Multi-upload error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
 # Include the router
 app.include_router(api_router)
 

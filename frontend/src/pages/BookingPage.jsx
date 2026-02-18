@@ -57,6 +57,7 @@ const BookingPage = () => {
   useEffect(() => {
     fetchPackages();
     fetchBookingSettings();
+    fetchAddOns();
   }, []);
 
   useEffect(() => {
@@ -65,12 +66,37 @@ const BookingPage = () => {
     }
   }, [formData.booking_date]);
 
+  // Re-fetch add-ons when session type changes
+  useEffect(() => {
+    if (formData.session_type) {
+      fetchAddOns(formData.session_type);
+    }
+  }, [formData.session_type]);
+
   const fetchPackages = async () => {
     try {
       const res = await axios.get(`${API}/packages`);
       setPackages(res.data);
     } catch (e) {
       console.error("Failed to fetch packages");
+    }
+  };
+
+  const fetchAddOns = async (sessionType = null) => {
+    try {
+      let url = `${API}/addons`;
+      if (sessionType) {
+        url += `?session_type=${sessionType}`;
+      }
+      const res = await axios.get(url);
+      setAvailableAddOns(res.data);
+    } catch (e) {
+      console.error("Failed to fetch add-ons");
+      // Fallback add-ons if API fails
+      setAvailableAddOns([
+        { id: "makeup", name: "Makeup Artist", price: 800, description: "Professional makeup for your session" },
+        { id: "extra_images", name: "10 Additional Edited Images", price: 1500, description: "Expand your gallery with more edited photos" },
+      ]);
     }
   };
 

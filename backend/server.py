@@ -153,6 +153,62 @@ class CalendarSettings(BaseModel):
     apple_calendar_password: str = ""
     sync_enabled: bool = False
 
+# ==================== ADD-ONS MODELS ====================
+
+class AddOnCreate(BaseModel):
+    name: str
+    description: str = ""
+    price: int
+    categories: List[str] = []  # Which session types this add-on applies to
+    active: bool = True
+
+class AddOn(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str = ""
+    price: int
+    categories: List[str] = []
+    active: bool = True
+    order: int = 0
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# ==================== EMAIL TEMPLATE MODELS ====================
+
+class EmailTemplateCreate(BaseModel):
+    name: str  # e.g., "booking_confirmation", "booking_reminder", "booking_cancellation"
+    subject: str
+    html_content: str
+    use_raw_html: bool = False
+    active: bool = True
+
+class EmailTemplate(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    display_name: str = ""
+    subject: str
+    html_content: str
+    use_raw_html: bool = False
+    active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+# ==================== STORAGE SETTINGS MODELS ====================
+
+class StorageSettingsUpdate(BaseModel):
+    provider: str = "cloudflare_r2"  # cloudflare_r2, aws_s3, local
+    account_id: str = ""
+    access_key_id: str = ""
+    secret_access_key: str = ""
+    bucket_name: str = ""
+    public_url: str = ""  # Public URL for accessing files
+
+# ==================== INSTAGRAM SETTINGS MODELS ====================
+
+class InstagramSettingsUpdate(BaseModel):
+    access_token: str = ""
+    enabled: bool = True
+    post_count: int = 6
+
 class PortfolioCreate(BaseModel):
     title: str
     category: str

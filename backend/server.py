@@ -429,8 +429,8 @@ async def get_booking_settings_public():
     return settings
 
 @api_router.get("/bookings/available-times")
-async def get_available_times(date: str):
-    """Get available time slots for a date"""
+async def get_available_times(date: str, session_type: Optional[str] = None):
+    """Get available time slots for a date and optionally filtered by session type"""
     # Get booking settings
     settings = await db.booking_settings.find_one({"id": "default"}, {"_id": 0})
     if not settings:
@@ -440,20 +440,37 @@ async def get_available_times(date: str):
     if date in settings.get("blocked_dates", []):
         return {"date": date, "available_times": [], "message": "This date is not available"}
     
-    # Check day of week
+    # Parse date and get day of week
     try:
         date_obj = datetime.strptime(date, "%Y-%m-%d")
         day_of_week = date_obj.weekday()  # 0=Monday, 6=Sunday
         # Convert to our format (0=Sunday, 1=Monday, etc.)
-        day_of_week = (day_of_week + 1) % 7
+        day_id = (day_of_week + 1) % 7
+        is_weekend = day_id in [0, 6]
         
-        if day_of_week not in settings.get("available_days", [1, 2, 3, 4, 5]):
-            is_weekend = day_of_week in [0, 6]
-            if is_weekend:
-                return {"date": date, "available_times": settings.get("time_slots", []), "is_weekend": True, "weekend_surcharge": settings.get("weekend_surcharge", 500)}
-            return {"date": date, "available_times": [], "message": "Not available on this day"}
+        if day_id not in settings.get("available_days", [1, 2, 3, 4, 5, 6]):
+            return {"date": date, "available_times": [], "message": "Not available on this day", "is_weekend": is_weekend}
     except ValueError:
-        pass
+        return {"date": date, "available_times": [], "message": "Invalid date format"}
+    
+    # Get time slots based on new flexible schedule or legacy flat list
+    time_slot_schedule = settings.get("time_slot_schedule", {})
+    all_times = []
+    
+    if session_type and time_slot_schedule.get(session_type):
+        # Use session-type specific schedule
+        session_schedule = time_slot_schedule[session_type]
+        all_times = session_schedule.get(str(day_id), [])
+    elif time_slot_schedule:
+        # If no session type specified but schedule exists, collect all unique slots for this day
+        for st, schedule in time_slot_schedule.items():
+            day_slots = schedule.get(str(day_id), [])
+            all_times.extend([s for s in day_slots if s not in all_times])
+        all_times = sorted(list(set(all_times)))
+    
+    # Fallback to legacy time_slots if no schedule configured
+    if not all_times:
+        all_times = settings.get("time_slots", ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"])
     
     # Get booked times for the date
     booked = await db.bookings.find(
@@ -462,10 +479,15 @@ async def get_available_times(date: str):
     ).to_list(100)
     booked_times = [b["booking_time"] for b in booked]
     
-    all_times = settings.get("time_slots", ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"])
     available = [t for t in all_times if t not in booked_times]
     
-    return {"date": date, "available_times": available}
+    return {
+        "date": date,
+        "available_times": available,
+        "is_weekend": is_weekend,
+        "weekend_surcharge": settings.get("weekend_surcharge", 750) if is_weekend else 0,
+        "session_type": session_type
+    }
 
 # ==================== BOOKINGS (Public Create) ====================
 

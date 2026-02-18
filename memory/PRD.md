@@ -65,11 +65,19 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages
 - `/api/admin/packages` - CRUD for packages
+- `/api/addons` - Get active add-ons (filter by session_type) ✅ NEW
+- `/api/admin/addons` - CRUD for add-ons ✅ NEW
 - `/api/bookings` - Create bookings + email confirmation
 - `/api/bookings/available-times` - Get available time slots
 - `/api/admin/booking-settings` - GET/PUT booking configuration
 - `/api/admin/calendar-settings` - GET/PUT calendar sync settings
 - `/api/admin/calendar/sync` - Trigger calendar sync (MOCKED)
+- `/api/admin/email-templates` - CRUD for email templates ✅ NEW
+- `/api/admin/storage-settings` - GET/PUT R2 storage config ✅ NEW
+- `/api/admin/instagram-settings` - GET/PUT Instagram config ✅ NEW
+- `/api/instagram/feed` - Get Instagram posts for homepage ✅ NEW
+- `/api/admin/upload-image` - Single image upload to R2 ✅ NEW
+- `/api/admin/upload-images` - Multi-image upload to R2 ✅ NEW
 - `/api/portfolio` - Get portfolio images
 - `/api/testimonials` - Get approved testimonials
 - `/api/contact` - Submit contact messages

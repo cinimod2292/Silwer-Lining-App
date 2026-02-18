@@ -179,11 +179,14 @@ const AdminDashboard = () => {
             <Route path="dashboard" element={<DashboardHome />} />
             <Route path="bookings" element={<BookingsManage />} />
             <Route path="packages" element={<PackagesManage />} />
+            <Route path="addons" element={<AddOnsManage />} />
             <Route path="booking-settings" element={<BookingSettingsPage />} />
             <Route path="calendar" element={<CalendarSettingsPage />} />
             <Route path="portfolio" element={<PortfolioManage />} />
             <Route path="testimonials" element={<TestimonialsManage />} />
             <Route path="messages" element={<MessagesManage />} />
+            <Route path="email-templates" element={<EmailTemplatesManage />} />
+            <Route path="settings" element={<SettingsPage />} />
             <Route path="*" element={<DashboardHome />} />
           </Routes>
         </main>

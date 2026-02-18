@@ -274,6 +274,58 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Instagram Recent Shoots */}
+      {instagramPosts.length > 0 && (
+        <section className="py-20 md:py-32 bg-warm-beige" data-testid="instagram-section">
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
+              <div>
+                <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
+                  <Instagram className="w-4 h-4 inline mr-2" />
+                  Follow Along
+                </p>
+                <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
+                  Recent Shoots
+                </h2>
+              </div>
+              <a 
+                href="https://www.instagram.com/silwerliningphotography" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mt-4 md:mt-0"
+              >
+                <Button
+                  variant="ghost"
+                  className="text-primary gap-2 hover:bg-primary/10"
+                >
+                  @silwerliningphotography
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </a>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {instagramPosts.map((post, index) => (
+                <a
+                  key={post.id}
+                  href={post.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="aspect-square rounded-xl overflow-hidden group"
+                  data-testid={`instagram-post-${index}`}
+                >
+                  <img
+                    src={post.image_url}
+                    alt={post.caption || "Instagram post"}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* About Preview */}
       <section className="py-20 md:py-32 bg-warm-beige" data-testid="about-preview-section">
         <div className="max-w-7xl mx-auto px-6 md:px-12">

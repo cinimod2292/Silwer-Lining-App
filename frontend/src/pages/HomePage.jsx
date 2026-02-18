@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowRight, Star, Heart, Users, Baby, Sparkles, Gift, Camera } from "lucide-react";
+import { ArrowRight, Star, Heart, Users, Baby, Sparkles, Gift, Camera, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -9,10 +9,12 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const HomePage = () => {
   const [featuredImages, setFeaturedImages] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [instagramPosts, setInstagramPosts] = useState([]);
 
   useEffect(() => {
     fetchPortfolio();
     fetchTestimonials();
+    fetchInstagramFeed();
   }, []);
 
   const fetchPortfolio = async () => {
@@ -38,6 +40,17 @@ const HomePage = () => {
       }
     } catch (e) {
       setTestimonials(defaultTestimonials);
+    }
+  };
+
+  const fetchInstagramFeed = async () => {
+    try {
+      const res = await axios.get(`${API}/instagram/feed`);
+      if (res.data.posts && res.data.posts.length > 0) {
+        setInstagramPosts(res.data.posts);
+      }
+    } catch (e) {
+      console.error("Instagram feed not available");
     }
   };
 

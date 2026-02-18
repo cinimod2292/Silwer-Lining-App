@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Camera, LayoutDashboard, Calendar, Image, MessageSquare,
-  Mail, LogOut, Menu, X, ChevronRight, Package, Settings, CalendarDays
+  Mail, LogOut, Menu, X, ChevronRight, Package, Settings, CalendarDays,
+  Tag, Users, Clock, RefreshCcw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -17,6 +18,9 @@ import CalendarSettingsPage from "./CalendarSettingsPage";
 import PortfolioManage from "./PortfolioManage";
 import TestimonialsManage from "./TestimonialsManage";
 import MessagesManage from "./MessagesManage";
+import AddOnsManage from "./AddOnsManage";
+import EmailTemplatesManage from "./EmailTemplatesManage";
+import SettingsPage from "./SettingsPage";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

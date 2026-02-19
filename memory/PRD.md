@@ -45,25 +45,27 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - **BookingPage**: Enhanced booking flow with **dynamic questionnaire step**:
   - Step 1: Session type, package selection, **dynamic add-ons from API**
   - Step 2: Date/time selection with **weekend surcharge popup**
-  - Step 3: **Questionnaire** (only if questionnaire exists for session type) ✅ NEW
+  - Step 3: **Questionnaire** (only if questionnaire exists for session type) ✅
   - Step 3/4: Contact details with **full price breakdown**
+- **CompleteBookingPage**: Client-facing page for manual booking completion ✅ NEW
 - **AboutPage**: Photographer story, stats, philosophy
 - **ContactPage**: Contact form, **Dynamic FAQs** ✅
 - **Admin Dashboard**:
   - Login/Authentication
   - Dashboard Home (stats overview)
+  - **Calendar View** (FullCalendar with bookings, personal events, blocked slots) ✅ NEW
   - Bookings Management (view, edit, filter by status)
   - Packages Management (CRUD operations)
   - **Add-ons Management** (CRUD with category filtering) ✅
   - Booking Settings (available days, time slots, buffer, lead time, blocked dates, weekend surcharge)
-  - Calendar Sync (Apple Calendar settings UI - sync logic MOCKED)
+  - Calendar Sync (Apple Calendar CalDAV with **2-way sync**) ✅ ENHANCED
   - Portfolio Management (**bulk upload with R2 support**) ✅
   - Testimonials Management
   - Messages Management
   - **Email Templates** (visual + raw HTML editor, multiple template types) ✅
   - **Settings Page** (Cloudflare R2 storage, Instagram config) ✅
   - **Questionnaires Management** (Google Forms-style builder) ✅
-  - **FAQ Management** (CRUD with categories and ordering) ✅ NEW
+  - **FAQ Management** (CRUD with categories and ordering) ✅
 
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages

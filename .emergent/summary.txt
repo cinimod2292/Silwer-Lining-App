@@ -3,164 +3,173 @@ The user wants to create a premium photography website for Silwer Lining Photogr
 
 **PRODUCT REQUIREMENTS:**
 - **Admin Dashboard:**
-    - Manage bookings (view, edit date/package, confirm, cancel).
-    - Manage portfolio images, including bulk uploads from a device.
+    - Manage bookings, including a full-size calendar view with click-to-action features (manual booking, block slot, add custom slot).
+    - Manage portfolio images, including bulk uploads from a device via Cloudflare R2.
     - Manage testimonials (and add Google Reviews manually).
     - Manage pricing packages (CRUD operations).
     - Manage add-ons (CRUD, pricing, category assignment).
-    - Manage FAQs.
-    - Configure booking settings with flexible time slots per session type and day.
+    - Manage FAQs (CRUD operations).
+    - Configure booking settings with flexible time slots per session type and day, including features to copy schedules between days and session types.
     - Configure email templates with a visual editor and raw HTML mode.
-    - Create Google Forms-style questionnaires per session type.
-    - Configure 2-way Apple Calendar synchronization.
+    - Create Google Forms-style questionnaires per session type, integrated into the booking flow.
+    - Configure and manage 2-way Apple Calendar synchronization (CalDAV) with multi-calendar support.
     - Manage credentials for third-party services (Cloudflare R2, Instagram).
 - **Frontend:**
     - Display scraped content: logo, images, package details (in ZAR), About Me, and Contact Info.
     - Filterable portfolio gallery with a masonry layout and lightbox navigation.
     - Testimonials section to display client reviews.
     - Recent Shoots section on the homepage powered by an Instagram feed.
-    - Integrated booking form with add-on selection, weekend surcharge popups, and a final price breakdown.
+    - Integrated booking form with add-on selection, weekend surcharge popups, a final price breakdown, and a dynamic questionnaire step.
+    - A client-facing page to complete manually created bookings.
 - **Integrations:**
     - SendGrid for email confirmations.
-    - 2-way Apple Calendar sync for booking availability.
+    - 2-way Apple Calendar sync for booking availability (CalDAV).
     - Instagram API for the homepage feed.
     - Cloudflare R2 for image storage.
-- **Design:**
-    - Elegant typography, soft neutral tones, large high-quality imagery, and intuitive navigation. The admin/booking functionality should be inspired by .
 
 **User's preferred language**: English
 
 **what currently exists?**
-A comprehensive full-stack application (React, FastAPI, MongoDB) is in place. All original content has been scraped and integrated. The admin panel is fully functional and has been significantly expanded with numerous advanced features requested by the user.
+A feature-rich, full-stack photography business platform with a React frontend, FastAPI backend, and MongoDB database. All original content from the user's old site has been scraped and integrated.
 
-Key implemented features include: full CRUD for packages and add-ons; a Recent Shoots section on the homepage powered by the Instagram API; an advanced email template editor with both visual and raw HTML modes; a portfolio page with a masonry collage layout and lightbox navigation; an enhanced booking flow with add-on selection and weekend surcharge logic; a settings page for Cloudflare R2 and Instagram credentials; and a sophisticated, Google Forms-style questionnaire builder.
-
-Most recently, the booking settings were overhauled to allow highly flexible time-slot scheduling (unique times per session type and per day of the week), and the foundation for a manageable FAQ section was laid out.
+The application includes a comprehensive admin dashboard with advanced features:
+- **Full FAQ Management System:** Admins can perform full CRUD operations on FAQs, which are dynamically displayed on the homepage and contact page.
+- **Advanced Booking & Scheduling:** A sophisticated 2-way Apple Calendar (CalDAV) sync blocks off time from multiple personal/work calendars and adds new bookings to a designated work calendar. The admin dashboard features a full-sized calendar view showing bookings, personal events, and available slots. Admins can click any time slot to manually book a client (generating a unique payment link), block the slot, or add a custom one-off availability.
+- **Flexible Booking Configuration:** Admins can set time slots per session type and day, with efficient tools to copy schedules to multiple days or other session types.
+- **Questionnaire Integration:** A Google Forms-style questionnaire builder is fully integrated into the booking flow.
+- **Other core features:** Portfolio and add-on management, an Instagram-powered Recent Shoots feed, and a dual-mode (visual/HTML) email editor are all implemented and functional.
 
 **Last working item**:
-    - Last item agent was working: Implementing a manageable FAQ section. The agent successfully created the backend models, API endpoints, and the admin management page (). The navigation link was also added to the main admin dashboard. The work was paused just before updating the frontend pages ( and ) to fetch and display the FAQs dynamically.
+    - Last item agent was working: Simplifying the Booking Settings page. The user requested to remove the Available Days checkboxes and the Default Session Duration input field. The logic was updated so that a day is considered available for booking if any time slots are configured for it.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? both
+    - Which testing method agent to use? frontend testing agent
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs. All pending work relates to feature completion and future development.
+  - Issue 1:  (P0) Verify the simplification of the Booking Settings page.
+  
+  Issues Detail:
+  - Issue 1: 
+     - Attempted fixes: The agent has modified  to remove the UI elements and  to adjust the availability logic in the  and  endpoints.
+     - Next debug checklist: 
+        1. Take a screenshot of the  page to confirm the Available Days and Default Session Duration sections are gone.
+        2. Test adding time slots to a day and saving.
+        3. Verify the public booking page () correctly reflects the new availability.
+     - Why fix this issue and what will be achieved with the fix? This resolves the user's latest request, making the booking configuration more intuitive and streamlined.
+     - Status:  IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: No
 
 **In progress Task List**:
-  - Task 1:  (P0) Complete FAQ Management Implementation
-  
-  Task Detail:
-  - Task 1: 
-     - Where to resume: Modify  and  to remove the hardcoded FAQ content and replace it with a dynamic fetch from the  endpoint.
-     - What will be achieved with this? The user will be able to manage all FAQ content directly from the admin panel, with changes reflected sitewide.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? Both
-     - Blocked on something: No.
+The last working item is the only in-progress task.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: **Connect Questionnaires to Booking Flow**: Update  to fetch and display the relevant questionnaire (based on the selected session type) as a new step in the booking process and save the user's responses.
-    - P2: **Implement Apple Calendar 2-way Sync Logic**: Implement the actual synchronization logic in the  function in . This is blocked on the user providing their Apple ID credentials via the admin settings page.
-    - P3: **Test Cloudflare R2 Portfolio Upload**: The UI for bulk upload is complete, but the end-to-end flow needs to be tested once the user enters their R2 credentials in the admin settings.
-    - P4: **Google Reviews Integration Clarification**: The user previously expressed interest in this. The agent needs to clarify if a manual entry system (already covered by Testimonials) is sufficient, or if a more automated widget-based solution is desired.
+    - P1: **Test Cloudflare R2 Portfolio Upload**: The user has provided credentials, and the UI for bulk upload is complete. The end-to-end flow needs to be tested by the user.
+    - P2: **Google Reviews Integration Clarification**: The user previously expressed interest in this. The agent needs to clarify if a manual entry system (already covered by Testimonials) is sufficient, or if a more automated widget-based solution is desired.
 
     Future Tasks:
     - **Shop Section**: Implement an e-commerce section for selling sublimation and personalized gifts.
     - **Alternate Booking/Payment Options**: Propose adding a Book Now via WhatsApp button or integrating a payment gateway like PayFlex.
+    - **Automated Reminders**: Implement automated booking reminders (e.g., 24-hour SMS/email reminder before a session).
 
 **Completed work in this session**
-- **Admin Navigation and Pages**: Verified all initial admin pages were functional and added new pages for Add-ons, Email Templates, general Settings, Questionnaires, and FAQs.
-- **Portfolio Enhancements**: Reworked the portfolio into a masonry-style collage with an improved lightbox (next/prev navigation) and added a multi-file bulk upload feature for Cloudflare R2.
-- **Booking Flow Overhaul**: Implemented dynamic add-on selection, a weekend surcharge confirmation popup, and a final price breakdown summary.
-- **Instagram Feed Integration**: Created a Recent Shoots section on the homepage that automatically displays the latest posts from the user's Instagram account.
-- **Advanced Admin Tools**:
-  - **Flexible Booking Schedules**: Rebuilt the booking settings page to allow unique time slots per session type and per day.
-  - **Email Template Editor**: Created a dual-mode editor with a user-friendly visual builder and a raw HTML option.
-  - **Questionnaire Builder**: Implemented a Google Forms-style interface to create custom intake questionnaires for each session type.
-- **Recurring Admin Login Fix**: Scripted a solution to reset the admin account, resolving a recurring access issue.
+- **FAQ Management System**: Completed the feature by implementing dynamic rendering on frontend pages (, ) and verifying the admin CRUD functionality.
+- **Questionnaire-Booking Integration**: Successfully integrated the questionnaire builder into the public , adding it as a dynamic step in the booking flow.
+- **Apple Calendar 2-Way Sync (CalDAV)**: Implemented a robust 2-way sync. It now reads events from all of the user's calendars (e.g., Home, Work) to block availability and writes new bookings to a user-designated calendar.
+- **Admin Calendar View & Manual Booking**:
+    - Created a full-page calendar () showing bookings, personal events from all synced calendars, blocked time, and open/available slots.
+    - Implemented click-to-action on calendar slots:
+        - **Create Manual Booking**: Generates a unique link for a client to complete their booking ().
+        - **Block Slot**: Manually blocks a time slot.
+        - **Add Custom Slot**: Adds a one-off available time slot on any day.
+- **Booking Settings Enhancements**:
+    - Added modals to copy time slot schedules to multiple days or other session types.
+    - Simplified the UI by removing the Available Days and Default Session Duration settings per the user's request.
 
 **Earlier issues found/mentioned but not fixed**
    - None.
 
 **Known issue recurrence from previous fork**
-  - **Issue recurrence in previous fork**: Admin login failing or showing admin already exists. The current agent resolved this by scripting a deletion and recreation of the admin user ( / ).
+  - **Issue recurrence in previous fork**: Admin login failing.
   - **Recurrence count**: 2+
-  - **Status**: RESOLVED (via workaround)
+  - **Status**: RESOLVED (via a scripted workaround that deletes and recreates the admin account). This might be needed again in a new environment.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, MongoDB (), Pydantic,  (for Cloudflare R2).
-- **Frontend**: React, Tailwind CSS.
-- **Integrations**: SendGrid, Instagram Graph API, Cloudflare R2 (framework in place).
+- **Backend**: FastAPI, MongoDB (), Pydantic, , .
+- **Frontend**: React, Tailwind CSS, .
+- **Integrations**: SendGrid, Instagram Graph API, Cloudflare R2, Apple Calendar (CalDAV).
 - **Process Management**: .
 
 **key DB schema**
-- **addons**: 
-- **email_templates**: 
-- **settings**:  (Stores , ).
-- **questionnaires**: 
-- **faqs**: 
-- **bookings**: (Updated to include) 
+- **custom_slots**: 
+- **manual_bookings**: 
+- **settings**: Now stores , , .
 
 **changes in tech stack**
-  -  was added to the backend dependencies for S3-compatible object storage.
+- **Backend**: Added  library for Apple Calendar integration.
+- **Frontend**: Added  packages (, , , , ) for the admin calendar view.
 
 **All files of reference**
-- : The single, monolithic backend file. It has been heavily modified to add all new features.
-- : The main admin layout, updated to include navigation for all new sections.
-- : (New) Admin page for managing FAQs.
--  & : These files contain hardcoded FAQs and need to be updated to fetch data dynamically.
-- : (New) The Google Forms-style questionnaire builder.
-- : (Rewritten) The new interface for flexible time-slot scheduling.
-- : (Rewritten) The new dual-mode email template editor.
+- : Heavily modified to add logic for FAQs, Questionnaire integration, and a comprehensive CalDAV 2-way sync and calendar view data generation.
+- : New page implementing the  component for a complete schedule overview.
+- : New page for clients to complete bookings created manually by the admin.
+- : Updated to manage CalDAV credentials and allow the user to select a target calendar for new bookings.
+- : Rewritten to include copy to days and copy to session modals, and then simplified by removing the Available Days and Default Session Duration fields.
+- : Updated to include the dynamic questionnaire step.
+-  & : Updated to fetch and display FAQs dynamically.
+-  & : Updated with routes and navigation links for the new calendar pages.
 
 **Areas that need refactoring**:
-- **Critical**: The  file is now extremely large and complex. It urgently needs to be refactored into smaller, modular components using FastAPI's  (e.g., , , ). This will improve maintainability and reduce the risk of conflicts.
+- **Critical**: The  file is now exceedingly large and handles all application logic. It should be broken down into a modular structure using FastAPI's  (e.g., , , ).
 
 **key api endpoints**
-- : CRUD endpoints for managing FAQs.
-- : Public endpoint to fetch all FAQs.
-- : CRUD endpoints for the questionnaire builder.
-- : GET/POST for managing R2 and Instagram credentials.
-- : GET endpoint to fetch recent Instagram posts.
-- : (Updated) Now requires  to return correct time slots.
+- : GETs all data (bookings, personal events, open slots) for the admin calendar.
+- : POST to create a manual booking and get a client completion link.
+- : GET/POST for the client-facing booking completion page.
+- : POST to test the CalDAV connection.
+- : POST to trigger a manual sync.
+- : GET to list available calendars from the user's Apple account.
+- : POST/DELETE to manage one-off available time slots.
+- : POST to create a blocked time entry.
 
 **Critical Info for New Agent**
-- Your first task is to complete the FAQ feature by updating the  and  to fetch and render FAQs from the API.
-- The  file is a major piece of technical debt. Proposing a refactor to the user would be a valuable next step for the project's health.
-- Several new features (Portfolio Upload, Instagram Feed, Calendar Sync) depend on the user providing credentials in the  page. The application is designed to handle their absence gracefully, but they won't work until configured.
-- The Questionnaire builder is complete, but it is not yet integrated into the booking flow. This is a high-priority upcoming task.
+- Your first priority is to complete the simplification of the Booking Settings page. This involves verifying that the UI is correct and that booking availability works as expected without the old Available Days configuration.
+- The calendar system is now a core, complex part of the application. Be mindful of the interactions between , , and the various backend functions in  that calculate availability.
+- The recurring admin login issue was fixed with a script. If login fails ( / ), you may need to run the reset script again (visible in the message history).
 
 **documents and test reports created in this job**
-  - /app/memory/PRD.md
-  - /app/test_reports/iteration_3.json
-  - /app/test_reports/iteration_4.json
+  - /app/test_reports/iteration_5.json
+  - /app/test_reports/iteration_6.json
+  - /app/memory/PRD.md (updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- -  1. **User:**  (Status: In Progress)
- -  2. **User:**  (Status: Completed)
- -  3. **User:**  (Status: Completed)
- -  4. **User:**  (Status: Completed)
- -  5. **User:**  (Status: Completed)
- -  6. **User:**  (Status: Completed)
- -  7. **User:**  (Status: Completed)
- -  8. **User:**  (for Instagram) (Status: Completed)
+ -  10. **User:**  (Status: In Progress)
  -  9. **User:**  (Status: Completed)
- -  10. **User:**  (Status: Completed)
+ -  8. **User:** 
+wtmp begins Thu Feb 19 10:22:57 2026 (Status: Completed)
+ -  7. **User:** Corrected the agent on missing features: the only thing is the open slots that I said must show are not there... (Status: Completed)
+ -  6. **User:**  (Status: Completed)
+ -  5. **User:**  (Status: Completed)
+ -  4. **User:**  (Status: Completed)
+ -  3. **User:**  (Status: Completed)
+ -  2. **User:**  (Status: Completed, agent clarified status)
+ -  1. **User:** Confirmed the plan:  (Status: Completed)
 
 **Project Health Check:**
-- **Broken**: The FAQ display on the frontend is not yet dynamic, making the new admin feature incomplete.
-- **Mocked**:
-    - Apple Calendar sync logic remains a placeholder.
-    - Cloudflare R2 portfolio uploads are mocked until credentials are provided by the user.
+- **Broken**: The simplification of the  is incomplete pending testing and verification.
+- **Mocked**: No features are currently mocked. R2 upload and Calendar Sync are implemented but await final user testing to be considered fully verified.
 
 **3rd Party Integrations**
 - **SendGrid**: For transactional emails.
-- **Instagram Graph API**: For the Recent Shoots homepage feed. Requires a user-provided token.
-- **Cloudflare R2**: For image hosting. Requires user-provided credentials.
+- **Instagram Graph API**: For the Recent Shoots homepage feed.
+- **Cloudflare R2**: For image hosting.
+- **Apple CalDAV**: For 2-way calendar synchronization.
 
 **Testing status**
   - Testing agent used after significant changes: YES
@@ -175,5 +184,5 @@ To test the admin flow, log in via :
 (Note: This account may need to be reset in a new environment if login fails.)
 
 **What agent forgot to execute**
-- The agent did not complete the final step of the FAQ feature, which was to connect the new backend to the frontend pages (, ).
-- The agent built the questionnaire system but did not integrate it into the user-facing booking flow. It currently only exists in the admin panel.</analysis>
+- The agent initially forgot to add the open time slots to the admin calendar view but implemented it correctly after the user pointed it out.
+- The agent has not yet performed a final verification/test of the last user request to simplify the booking settings page.</analysis>

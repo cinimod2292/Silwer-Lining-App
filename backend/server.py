@@ -1263,6 +1263,88 @@ async def admin_upload_multiple_images(
         logger.error(f"Multi-upload error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
+# ==================== ADMIN - QUESTIONNAIRES ====================
+
+@api_router.get("/admin/questionnaires")
+async def admin_get_questionnaires(admin=Depends(verify_token)):
+    """Get all questionnaires"""
+    items = await db.questionnaires.find({}, {"_id": 0}).to_list(100)
+    return items
+
+@api_router.get("/admin/questionnaires/{session_type}")
+async def admin_get_questionnaire_by_type(session_type: str, admin=Depends(verify_token)):
+    """Get questionnaire for a specific session type"""
+    item = await db.questionnaires.find_one({"session_type": session_type}, {"_id": 0})
+    if not item:
+        # Return empty questionnaire structure
+        return {
+            "session_type": session_type,
+            "title": "",
+            "description": "",
+            "questions": [],
+            "active": False
+        }
+    return item
+
+@api_router.get("/questionnaire/{session_type}")
+async def get_public_questionnaire(session_type: str):
+    """Get active questionnaire for a session type (public endpoint for booking)"""
+    item = await db.questionnaires.find_one(
+        {"session_type": session_type, "active": True}, 
+        {"_id": 0}
+    )
+    if not item:
+        return {"questions": []}
+    return item
+
+@api_router.post("/admin/questionnaires")
+async def admin_create_questionnaire(data: QuestionnaireCreate, admin=Depends(verify_token)):
+    """Create or update a questionnaire for a session type"""
+    # Check if questionnaire already exists for this session type
+    existing = await db.questionnaires.find_one({"session_type": data.session_type})
+    
+    if existing:
+        # Update existing
+        update_data = data.model_dump()
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.questionnaires.update_one(
+            {"session_type": data.session_type},
+            {"$set": update_data}
+        )
+        return {"message": "Questionnaire updated", "session_type": data.session_type}
+    else:
+        # Create new
+        questionnaire = Questionnaire(**data.model_dump())
+        doc = questionnaire.model_dump()
+        await db.questionnaires.insert_one(doc)
+        return {"message": "Questionnaire created", "id": questionnaire.id}
+
+@api_router.put("/admin/questionnaires/{questionnaire_id}")
+async def admin_update_questionnaire(questionnaire_id: str, data: QuestionnaireCreate, admin=Depends(verify_token)):
+    """Update a questionnaire"""
+    update_data = data.model_dump()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.questionnaires.update_one(
+        {"id": questionnaire_id},
+        {"$set": update_data}
+    )
+    if result.modified_count == 0:
+        # Try updating by session_type
+        result = await db.questionnaires.update_one(
+            {"session_type": data.session_type},
+            {"$set": update_data}
+        )
+    return {"message": "Questionnaire updated"}
+
+@api_router.delete("/admin/questionnaires/{questionnaire_id}")
+async def admin_delete_questionnaire(questionnaire_id: str, admin=Depends(verify_token)):
+    """Delete a questionnaire"""
+    result = await db.questionnaires.delete_one({"id": questionnaire_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Questionnaire not found")
+    return {"message": "Questionnaire deleted"}
+
 # Include the router
 app.include_router(api_router)
 

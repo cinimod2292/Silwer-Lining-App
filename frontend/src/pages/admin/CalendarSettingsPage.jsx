@@ -63,14 +63,32 @@ const CalendarSettingsPage = () => {
     const token = localStorage.getItem("admin_token");
     setSyncing(true);
     try {
-      await axios.post(`${API}/admin/calendar/sync`, {}, {
+      const res = await axios.post(`${API}/admin/calendar/sync`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Calendar sync triggered");
+      toast.success(`Sync complete! ${res.data.synced} bookings synced to ${res.data.calendar_name}`);
     } catch (e) {
       toast.error(e.response?.data?.detail || "Failed to sync calendar");
     } finally {
       setSyncing(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    const token = localStorage.getItem("admin_token");
+    setTesting(true);
+    setConnectionStatus(null);
+    try {
+      const res = await axios.post(`${API}/admin/calendar/test`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setConnectionStatus({ success: true, message: res.data.message, calendar: res.data.calendar_name });
+      toast.success(res.data.message);
+    } catch (e) {
+      setConnectionStatus({ success: false, message: e.response?.data?.detail || "Connection failed" });
+      toast.error(e.response?.data?.detail || "Failed to connect to Apple Calendar");
+    } finally {
+      setTesting(false);
     }
   };
 

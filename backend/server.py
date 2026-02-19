@@ -1038,8 +1038,8 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
             for time_slot in time_slots:
                 slot_key = f"{date_str}_{time_slot}"
                 
-                # Skip if already booked or blocked
-                if slot_key in booked_slots or slot_key in blocked_set:
+                # Skip if already booked, blocked, or already added as custom slot
+                if slot_key in booked_slots or slot_key in blocked_set or slot_key in custom_slots_dict:
                     continue
                 
                 # Check if blocked by calendar event

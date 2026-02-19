@@ -804,7 +804,363 @@ async def admin_delete_booking(booking_id: str, admin=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="Booking not found")
     return {"message": "Booking deleted"}
 
-# ==================== ADMIN - CALENDAR ====================
+# ==================== ADMIN - CALENDAR VIEW ====================
+
+@api_router.get("/admin/calendar-view")
+async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(verify_token)):
+    """
+    Get calendar data for admin view including:
+    - Bookings
+    - Personal calendar events (from Apple Calendar)
+    - Available time slots
+    - Blocked slots
+    """
+    events = []
+    
+    # 1. Get all bookings in date range
+    bookings = await db.bookings.find({
+        "booking_date": {"$gte": start_date, "$lte": end_date},
+        "status": {"$nin": ["cancelled"]}
+    }, {"_id": 0}).to_list(500)
+    
+    for booking in bookings:
+        # Parse time for proper event display
+        hour, minute = parse_time_slot(booking["booking_time"])
+        if hour is not None:
+            start_dt = f"{booking['booking_date']}T{hour:02d}:{minute:02d}:00"
+            end_hour = hour + 2  # Assume 2-hour sessions
+            end_dt = f"{booking['booking_date']}T{end_hour:02d}:{minute:02d}:00"
+        else:
+            start_dt = f"{booking['booking_date']}T09:00:00"
+            end_dt = f"{booking['booking_date']}T11:00:00"
+        
+        status_colors = {
+            "pending": "#F59E0B",      # Amber
+            "confirmed": "#10B981",    # Green
+            "completed": "#6B7280",    # Gray
+            "awaiting_client": "#8B5CF6"  # Purple
+        }
+        
+        events.append({
+            "id": f"booking-{booking['id']}",
+            "title": f"📸 {booking['client_name']} - {booking['session_type'].title()}",
+            "start": start_dt,
+            "end": end_dt,
+            "backgroundColor": status_colors.get(booking["status"], "#C6A87C"),
+            "borderColor": status_colors.get(booking["status"], "#C6A87C"),
+            "extendedProps": {
+                "type": "booking",
+                "bookingId": booking["id"],
+                "status": booking["status"],
+                "clientName": booking["client_name"],
+                "clientEmail": booking["client_email"],
+                "clientPhone": booking["client_phone"],
+                "sessionType": booking["session_type"],
+                "packageName": booking["package_name"],
+                "totalPrice": booking.get("total_price", 0)
+            }
+        })
+    
+    # 2. Get blocked slots
+    blocked_slots = await db.blocked_slots.find({
+        "date": {"$gte": start_date, "$lte": end_date}
+    }, {"_id": 0}).to_list(500)
+    
+    for slot in blocked_slots:
+        hour, minute = parse_time_slot(slot["time"])
+        if hour is not None:
+            start_dt = f"{slot['date']}T{hour:02d}:{minute:02d}:00"
+            end_hour = hour + 2
+            end_dt = f"{slot['date']}T{end_hour:02d}:{minute:02d}:00"
+        else:
+            start_dt = f"{slot['date']}T09:00:00"
+            end_dt = f"{slot['date']}T11:00:00"
+        
+        events.append({
+            "id": f"blocked-{slot['id']}",
+            "title": f"🚫 {slot.get('reason', 'Blocked')}",
+            "start": start_dt,
+            "end": end_dt,
+            "backgroundColor": "#EF4444",
+            "borderColor": "#EF4444",
+            "extendedProps": {
+                "type": "blocked",
+                "slotId": slot["id"],
+                "reason": slot.get("reason", "Blocked")
+            }
+        })
+    
+    # 3. Get Apple Calendar events (personal appointments)
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if settings and settings.get("sync_enabled"):
+        _, calendar = await get_caldav_client()
+        if calendar:
+            try:
+                start_dt_obj = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                end_dt_obj = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, tzinfo=timezone.utc)
+                
+                cal_events = calendar.search(start=start_dt_obj, end=end_dt_obj, expand=True)
+                
+                for event in cal_events:
+                    ical = event.icalendar_component
+                    for component in ical.walk():
+                        if component.name == "VEVENT":
+                            summary = str(component.get('summary', 'Personal Event'))
+                            
+                            # Skip our own booking events
+                            if '📸' in summary or 'silwerlining' in summary.lower():
+                                continue
+                            
+                            dtstart = component.get('dtstart')
+                            dtend = component.get('dtend')
+                            
+                            if dtstart:
+                                if hasattr(dtstart.dt, 'isoformat'):
+                                    start_str = dtstart.dt.isoformat()
+                                else:
+                                    # All-day event
+                                    start_str = f"{dtstart.dt}T00:00:00"
+                                
+                                if dtend:
+                                    if hasattr(dtend.dt, 'isoformat'):
+                                        end_str = dtend.dt.isoformat()
+                                    else:
+                                        end_str = f"{dtend.dt}T23:59:59"
+                                else:
+                                    end_str = start_str
+                                
+                                events.append({
+                                    "id": f"personal-{uuid.uuid4()}",
+                                    "title": f"🔒 {summary}",
+                                    "start": start_str,
+                                    "end": end_str,
+                                    "backgroundColor": "#64748B",
+                                    "borderColor": "#64748B",
+                                    "extendedProps": {
+                                        "type": "personal",
+                                        "summary": summary
+                                    }
+                                })
+            except Exception as e:
+                logger.error(f"Failed to fetch calendar events: {e}")
+    
+    return {"events": events}
+
+@api_router.post("/admin/blocked-slots")
+async def admin_create_blocked_slot(data: dict, admin=Depends(verify_token)):
+    """Block a time slot"""
+    slot = BlockedSlot(
+        date=data["date"],
+        time=data["time"],
+        reason=data.get("reason", "Blocked by admin")
+    )
+    await db.blocked_slots.insert_one(slot.model_dump())
+    return {"message": "Slot blocked", "id": slot.id}
+
+@api_router.delete("/admin/blocked-slots/{slot_id}")
+async def admin_delete_blocked_slot(slot_id: str, admin=Depends(verify_token)):
+    """Unblock a time slot"""
+    result = await db.blocked_slots.delete_one({"id": slot_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Blocked slot not found")
+    return {"message": "Slot unblocked"}
+
+# ==================== MANUAL BOOKING FLOW ====================
+
+@api_router.post("/admin/manual-booking")
+async def admin_create_manual_booking(data: ManualBookingCreate, background_tasks: BackgroundTasks, admin=Depends(verify_token)):
+    """
+    Create a manual booking placeholder and send link to client.
+    The booking starts as 'awaiting_client' status.
+    """
+    # Create the booking with placeholder data
+    booking = Booking(
+        client_name=data.client_name,
+        client_email=data.client_email,
+        client_phone=data.client_phone,
+        session_type=data.session_type,
+        package_id="pending",
+        package_name="To be selected",
+        package_price=0,
+        booking_date=data.booking_date,
+        booking_time=data.booking_time,
+        notes=data.notes,
+        status="awaiting_client"
+    )
+    
+    await db.bookings.insert_one(booking.model_dump())
+    
+    # Create a unique token for the client to complete the booking
+    token = ManualBookingToken(
+        booking_id=booking.id,
+        expires_at=(datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+    )
+    await db.booking_tokens.insert_one(token.model_dump())
+    
+    # Send email with booking link
+    background_tasks.add_task(send_manual_booking_email, booking.model_dump(), token.token)
+    
+    return {
+        "message": "Manual booking created",
+        "booking_id": booking.id,
+        "token": token.token,
+        "booking_link": f"/complete-booking/{token.token}"
+    }
+
+async def send_manual_booking_email(booking: dict, token: str):
+    """Send email to client with link to complete their booking"""
+    if not SENDGRID_API_KEY:
+        logger.warning("SendGrid not configured, skipping manual booking email")
+        return
+    
+    booking_link = f"https://silwerlining.co.za/complete-booking/{token}"  # Update with actual domain
+    
+    html_content = f"""
+    <div style="font-family: 'Manrope', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #C6A87C; font-family: 'Playfair Display', serif;">Silwer Lining Photography</h1>
+        </div>
+        
+        <p>Hi {booking['client_name']},</p>
+        
+        <p>We're excited to have you! A session has been reserved for you:</p>
+        
+        <div style="background-color: #FDFCF8; padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <p><strong>Session Type:</strong> {booking['session_type'].title()}</p>
+            <p><strong>Date:</strong> {booking['booking_date']}</p>
+            <p><strong>Time:</strong> {booking['booking_time']}</p>
+        </div>
+        
+        <p>Please click the button below to complete your booking by selecting your package and providing additional details:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{booking_link}" style="background-color: #C6A87C; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                Complete Your Booking
+            </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">This link will expire in 7 days. If you have any questions, please don't hesitate to contact us.</p>
+        
+        <p>With love,<br>Silwer Lining Photography</p>
+    </div>
+    """
+    
+    try:
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        message = Mail(
+            from_email=SENDGRID_FROM_EMAIL,
+            to_emails=booking['client_email'],
+            subject="Complete Your Photography Session Booking - Silwer Lining",
+            html_content=html_content
+        )
+        sg.send(message)
+        logger.info(f"Manual booking email sent to {booking['client_email']}")
+    except Exception as e:
+        logger.error(f"Failed to send manual booking email: {e}")
+
+@api_router.get("/booking-token/{token}")
+async def get_booking_by_token(token: str):
+    """Get booking details by token (public endpoint for client to complete booking)"""
+    token_doc = await db.booking_tokens.find_one({"token": token}, {"_id": 0})
+    
+    if not token_doc:
+        raise HTTPException(status_code=404, detail="Invalid or expired booking link")
+    
+    if token_doc.get("used"):
+        raise HTTPException(status_code=400, detail="This booking link has already been used")
+    
+    # Check expiration
+    expires_at = datetime.fromisoformat(token_doc["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="This booking link has expired")
+    
+    # Get the booking
+    booking = await db.bookings.find_one({"id": token_doc["booking_id"]}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get available packages for this session type
+    packages = await db.packages.find(
+        {"session_type": booking["session_type"], "active": True},
+        {"_id": 0}
+    ).sort("order", 1).to_list(20)
+    
+    # Get available add-ons
+    addons = await db.addons.find(
+        {"active": True, "$or": [
+            {"categories": {"$in": [booking["session_type"]]}},
+            {"categories": {"$size": 0}}
+        ]},
+        {"_id": 0}
+    ).to_list(50)
+    
+    # Get questionnaire if exists
+    questionnaire = await db.questionnaires.find_one(
+        {"session_type": booking["session_type"], "active": True},
+        {"_id": 0}
+    )
+    
+    return {
+        "booking": booking,
+        "packages": packages,
+        "addons": addons,
+        "questionnaire": questionnaire
+    }
+
+@api_router.post("/booking-token/{token}/complete")
+async def complete_booking_by_token(token: str, data: dict, background_tasks: BackgroundTasks):
+    """Complete a booking using the token (client selects package, answers questionnaire)"""
+    token_doc = await db.booking_tokens.find_one({"token": token})
+    
+    if not token_doc:
+        raise HTTPException(status_code=404, detail="Invalid booking link")
+    
+    if token_doc.get("used"):
+        raise HTTPException(status_code=400, detail="This booking link has already been used")
+    
+    # Check expiration
+    expires_at = datetime.fromisoformat(token_doc["expires_at"].replace("Z", "+00:00"))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="This booking link has expired")
+    
+    # Update the booking with client's selections
+    update_data = {
+        "package_id": data.get("package_id", ""),
+        "package_name": data.get("package_name", ""),
+        "package_price": data.get("package_price", 0),
+        "selected_addons": data.get("selected_addons", []),
+        "addons_total": data.get("addons_total", 0),
+        "total_price": data.get("total_price", 0),
+        "questionnaire_responses": data.get("questionnaire_responses", {}),
+        "client_phone": data.get("client_phone", ""),
+        "notes": data.get("notes", ""),
+        "status": "confirmed",
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.bookings.update_one(
+        {"id": token_doc["booking_id"]},
+        {"$set": update_data}
+    )
+    
+    # Mark token as used
+    await db.booking_tokens.update_one(
+        {"token": token},
+        {"$set": {"used": True}}
+    )
+    
+    # Get updated booking and send confirmation
+    booking = await db.bookings.find_one({"id": token_doc["booking_id"]}, {"_id": 0})
+    
+    # Send confirmation email
+    background_tasks.add_task(send_booking_confirmation_email, booking)
+    
+    # Create calendar event
+    background_tasks.add_task(create_calendar_event_background, booking)
+    
+    return {"message": "Booking completed successfully", "booking": booking}
+
+# ==================== ADMIN - CALENDAR SYNC ====================
 
 async def get_caldav_client():
     """Get CalDAV client with stored credentials"""

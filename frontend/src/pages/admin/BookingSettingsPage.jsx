@@ -139,15 +139,6 @@ const BookingSettingsPage = () => {
     }
   };
 
-  const toggleDay = (dayId) => {
-    setSettings((prev) => ({
-      ...prev,
-      available_days: prev.available_days.includes(dayId)
-        ? prev.available_days.filter((d) => d !== dayId)
-        : [...prev.available_days, dayId].sort(),
-    }));
-  };
-
   const getTimeSlotsForDay = (sessionType, dayId) => {
     return timeSlotSchedule[sessionType]?.[dayId] || [];
   };

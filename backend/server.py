@@ -962,15 +962,50 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
                 try:
                     evt_start = datetime.fromisoformat(evt["start"].replace("Z", "+00:00"))
                     evt_end = datetime.fromisoformat(evt["end"].replace("Z", "+00:00"))
-                    evt_date = evt_start.strftime("%Y-%m-%d")
-                    if evt_date not in calendar_blocked:
-                        calendar_blocked[evt_date] = []
-                    calendar_blocked[evt_date].append({
-                        "start_hour": evt_start.hour,
-                        "start_min": evt_start.minute,
-                        "end_hour": evt_end.hour,
-                        "end_min": evt_end.minute
-                    })
+                    
+                    # Handle multi-day events - block all dates the event spans
+                    current_date = evt_start.date()
+                    end_date_obj = evt_end.date()
+                    
+                    while current_date <= end_date_obj:
+                        date_str = current_date.strftime("%Y-%m-%d")
+                        if date_str not in calendar_blocked:
+                            calendar_blocked[date_str] = []
+                        
+                        # For multi-day events, determine the blocking hours for this specific day
+                        if current_date == evt_start.date() and current_date == evt_end.date():
+                            # Single day event - use actual start/end times
+                            block_start_hour = evt_start.hour
+                            block_start_min = evt_start.minute
+                            block_end_hour = evt_end.hour
+                            block_end_min = evt_end.minute
+                        elif current_date == evt_start.date():
+                            # First day of multi-day event - block from start time to end of day
+                            block_start_hour = evt_start.hour
+                            block_start_min = evt_start.minute
+                            block_end_hour = 23
+                            block_end_min = 59
+                        elif current_date == evt_end.date():
+                            # Last day of multi-day event - block from start of day to end time
+                            block_start_hour = 0
+                            block_start_min = 0
+                            block_end_hour = evt_end.hour
+                            block_end_min = evt_end.minute
+                        else:
+                            # Middle day of multi-day event - block entire day
+                            block_start_hour = 0
+                            block_start_min = 0
+                            block_end_hour = 23
+                            block_end_min = 59
+                        
+                        calendar_blocked[date_str].append({
+                            "start_hour": block_start_hour,
+                            "start_min": block_start_min,
+                            "end_hour": block_end_hour,
+                            "end_min": block_end_min
+                        })
+                        
+                        current_date += timedelta(days=1)
                 except:
                     pass
         except:

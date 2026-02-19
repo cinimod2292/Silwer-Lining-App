@@ -926,6 +926,105 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
         except Exception as e:
             logger.error(f"Failed to fetch calendar events: {e}")
     
+    # 4. Generate OPEN time slots for each day in range
+    # Get blocked slots as a set for quick lookup
+    blocked_slots_db = await db.blocked_slots.find({
+        "date": {"$gte": start_date, "$lte": end_date}
+    }, {"_id": 0}).to_list(500)
+    blocked_set = {f"{s['date']}_{s['time']}" for s in blocked_slots_db}
+    
+    # Get calendar blocked times
+    calendar_blocked = {}
+    if settings and settings.get("sync_enabled"):
+        try:
+            start_dt_obj = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            end_dt_obj = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, tzinfo=timezone.utc)
+            cal_events_raw = await get_events_from_all_calendars(start_dt_obj, end_dt_obj)
+            
+            for evt in cal_events_raw:
+                try:
+                    evt_start = datetime.fromisoformat(evt["start"].replace("Z", "+00:00"))
+                    evt_end = datetime.fromisoformat(evt["end"].replace("Z", "+00:00"))
+                    evt_date = evt_start.strftime("%Y-%m-%d")
+                    if evt_date not in calendar_blocked:
+                        calendar_blocked[evt_date] = []
+                    calendar_blocked[evt_date].append({
+                        "start_hour": evt_start.hour,
+                        "start_min": evt_start.minute,
+                        "end_hour": evt_end.hour,
+                        "end_min": evt_end.minute
+                    })
+                except:
+                    pass
+        except:
+            pass
+    
+    # Get time slots from settings
+    time_slots = booking_settings.get("time_slots", ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"])
+    available_days = booking_settings.get("available_days", [1,2,3,4,5])  # Mon-Fri by default
+    
+    # Generate dates in range
+    current = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+    
+    while current <= end:
+        date_str = current.strftime("%Y-%m-%d")
+        day_of_week = current.weekday()  # 0=Mon, 6=Sun
+        # Convert to our format (0=Sun, 1=Mon, etc.)
+        day_id = (day_of_week + 1) % 7
+        
+        if day_id in available_days:
+            for time_slot in time_slots:
+                slot_key = f"{date_str}_{time_slot}"
+                
+                # Skip if already booked or blocked
+                if slot_key in booked_slots or slot_key in blocked_set:
+                    continue
+                
+                # Check if blocked by calendar event
+                hour, minute = parse_time_slot(time_slot)
+                if hour is None:
+                    continue
+                
+                is_calendar_blocked = False
+                if date_str in calendar_blocked:
+                    slot_start = hour * 60 + minute
+                    slot_end = (hour + 2) * 60 + minute  # 2-hour session
+                    
+                    for cal_evt in calendar_blocked[date_str]:
+                        evt_start = cal_evt["start_hour"] * 60 + cal_evt["start_min"]
+                        evt_end = cal_evt["end_hour"] * 60 + cal_evt["end_min"]
+                        
+                        # Check overlap
+                        if not (slot_end <= evt_start or slot_start >= evt_end):
+                            is_calendar_blocked = True
+                            break
+                
+                if is_calendar_blocked:
+                    continue
+                
+                # Add as open slot
+                start_dt = f"{date_str}T{hour:02d}:{minute:02d}:00"
+                end_hour = hour + 2
+                end_dt = f"{date_str}T{end_hour:02d}:{minute:02d}:00"
+                
+                events.append({
+                    "id": f"open-{date_str}-{time_slot}",
+                    "title": "✅ Available",
+                    "start": start_dt,
+                    "end": end_dt,
+                    "backgroundColor": "#22C55E",  # Green
+                    "borderColor": "#22C55E",
+                    "display": "block",
+                    "extendedProps": {
+                        "type": "open",
+                        "date": date_str,
+                        "time": time_slot
+                    }
+                })
+        
+        current += timedelta(days=1)
+    
     return {"events": events}
 
 @api_router.post("/admin/blocked-slots")

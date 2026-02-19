@@ -76,6 +76,7 @@ const AdminDashboard = () => {
     { icon: CalendarDays, label: "Calendar Sync", path: "/admin/calendar" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },
     { icon: Users, label: "Testimonials", path: "/admin/testimonials" },
+    { icon: HelpCircle, label: "FAQs", path: "/admin/faqs" },
     { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
     { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },
     { icon: Settings, label: "Settings", path: "/admin/settings" },

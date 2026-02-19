@@ -185,8 +185,8 @@ const BookingSettingsPage = () => {
       return;
     }
     setCopyFromDay(dayId);
-    // Pre-select all available days except the source day
-    setSelectedCopyDays(settings.available_days.filter(d => d !== dayId));
+    // Pre-select all days except the source day
+    setSelectedCopyDays(daysOfWeek.map(d => d.id).filter(d => d !== dayId));
     setShowCopyToDaysModal(true);
   };
 

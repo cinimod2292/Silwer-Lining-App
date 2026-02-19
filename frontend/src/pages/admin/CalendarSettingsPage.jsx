@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -15,12 +22,15 @@ const CalendarSettingsPage = () => {
   const [syncing, setSyncing] = useState(false);
   const [testing, setTesting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState(null);
+  const [availableCalendars, setAvailableCalendars] = useState([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
   
   const [settings, setSettings] = useState({
     apple_calendar_url: "",
     apple_calendar_user: "",
     apple_calendar_password: "",
     sync_enabled: false,
+    booking_calendar: "",
   });
 
   useEffect(() => {
@@ -37,10 +47,29 @@ const CalendarSettingsPage = () => {
         ...res.data,
         apple_calendar_password: "", // Password is not returned for security
       });
+      // If connected, fetch available calendars
+      if (res.data.sync_enabled) {
+        fetchAvailableCalendars();
+      }
     } catch (e) {
       console.error("Failed to fetch calendar settings");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableCalendars = async () => {
+    const token = localStorage.getItem("admin_token");
+    setLoadingCalendars(true);
+    try {
+      const res = await axios.get(`${API}/admin/calendars`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAvailableCalendars(res.data.calendars || []);
+    } catch (e) {
+      console.error("Failed to fetch calendars");
+    } finally {
+      setLoadingCalendars(false);
     }
   };
 

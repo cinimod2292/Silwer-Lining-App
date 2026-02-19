@@ -566,7 +566,23 @@ async def create_booking(booking_data: BookingCreate, background_tasks: Backgrou
     # Send confirmation email in background
     background_tasks.add_task(send_booking_confirmation_email, doc)
     
+    # Create calendar event in background (if sync enabled)
+    background_tasks.add_task(create_calendar_event_background, doc)
+    
     return booking
+
+async def create_calendar_event_background(booking_dict: dict):
+    """Background task to create calendar event"""
+    try:
+        event_uid = await create_calendar_event(booking_dict)
+        if event_uid:
+            await db.bookings.update_one(
+                {"id": booking_dict["id"]},
+                {"$set": {"calendar_event_id": event_uid}}
+            )
+            logger.info(f"Calendar event created for booking {booking_dict['id']}")
+    except Exception as e:
+        logger.error(f"Failed to create calendar event: {e}")
 
 # ==================== PORTFOLIO (Public) ====================
 

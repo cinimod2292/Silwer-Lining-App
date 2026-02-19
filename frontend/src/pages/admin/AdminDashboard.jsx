@@ -182,6 +182,7 @@ const AdminDashboard = () => {
             <Route path="bookings" element={<BookingsManage />} />
             <Route path="packages" element={<PackagesManage />} />
             <Route path="addons" element={<AddOnsManage />} />
+            <Route path="questionnaires" element={<QuestionnairesManage />} />
             <Route path="booking-settings" element={<BookingSettingsPage />} />
             <Route path="calendar" element={<CalendarSettingsPage />} />
             <Route path="portfolio" element={<PortfolioManage />} />

@@ -757,6 +757,156 @@ async def admin_delete_booking(booking_id: str, admin=Depends(verify_token)):
 
 # ==================== ADMIN - CALENDAR ====================
 
+async def get_caldav_client():
+    """Get CalDAV client with stored credentials"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("apple_calendar_password"):
+        return None, None
+    
+    url = settings.get("apple_calendar_url") or "https://caldav.icloud.com"
+    username = settings.get("apple_calendar_user")
+    password = settings.get("apple_calendar_password")
+    
+    if not username or not password:
+        return None, None
+    
+    try:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+        principal = client.principal()
+        calendars = principal.calendars()
+        
+        # Find or use the first calendar (usually "Calendar" or "Silwer Lining")
+        target_calendar = None
+        for cal in calendars:
+            cal_name = cal.name.lower() if cal.name else ""
+            if "silwer" in cal_name or "photography" in cal_name or "booking" in cal_name:
+                target_calendar = cal
+                break
+        
+        if not target_calendar and calendars:
+            target_calendar = calendars[0]
+        
+        return client, target_calendar
+    except Exception as e:
+        logger.error(f"CalDAV connection error: {e}")
+        return None, None
+
+async def create_calendar_event(booking: dict) -> Optional[str]:
+    """Create a calendar event for a booking"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return None
+    
+    _, calendar = await get_caldav_client()
+    if not calendar:
+        logger.warning("No calendar available for sync")
+        return None
+    
+    try:
+        # Parse booking date and time
+        booking_date = datetime.strptime(booking["booking_date"], "%Y-%m-%d")
+        time_parts = booking["booking_time"].replace("AM", "").replace("PM", "").strip().split(":")
+        hour = int(time_parts[0])
+        minute = int(time_parts[1]) if len(time_parts) > 1 else 0
+        
+        # Handle AM/PM
+        if "PM" in booking["booking_time"] and hour != 12:
+            hour += 12
+        elif "AM" in booking["booking_time"] and hour == 12:
+            hour = 0
+        
+        start_dt = booking_date.replace(hour=hour, minute=minute, tzinfo=timezone.utc)
+        end_dt = start_dt + timedelta(hours=2)  # Assume 2-hour session
+        
+        # Create iCalendar event
+        cal = ICalendar()
+        cal.add('prodid', '-//Silwer Lining Photography//Booking System//EN')
+        cal.add('version', '2.0')
+        
+        event = ICalEvent()
+        event_uid = f"booking-{booking['id']}@silwerlining.co.za"
+        event.add('uid', event_uid)
+        event.add('dtstart', start_dt)
+        event.add('dtend', end_dt)
+        event.add('summary', f"📸 {booking['session_type'].title()} Session - {booking['client_name']}")
+        event.add('description', f"""
+Client: {booking['client_name']}
+Email: {booking['client_email']}
+Phone: {booking['client_phone']}
+Package: {booking['package_name']}
+Total: R{booking.get('total_price', 0):,.0f}
+Notes: {booking.get('notes', 'None')}
+        """.strip())
+        event.add('location', 'Silwer Lining Photography Studio, Helderkruin, Roodepoort')
+        
+        cal.add_component(event)
+        
+        # Save to CalDAV
+        calendar.save_event(cal.to_ical().decode('utf-8'))
+        logger.info(f"Calendar event created for booking {booking['id']}")
+        return event_uid
+        
+    except Exception as e:
+        logger.error(f"Failed to create calendar event: {e}")
+        return None
+
+async def delete_calendar_event(event_uid: str):
+    """Delete a calendar event"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return False
+    
+    _, calendar = await get_caldav_client()
+    if not calendar:
+        return False
+    
+    try:
+        # Search for the event by UID
+        events = calendar.search(uid=event_uid)
+        for event in events:
+            event.delete()
+            logger.info(f"Calendar event deleted: {event_uid}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to delete calendar event: {e}")
+        return False
+
+async def get_blocked_times_from_calendar(date_str: str) -> List[dict]:
+    """Get blocked times from calendar for a specific date"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return []
+    
+    _, calendar = await get_caldav_client()
+    if not calendar:
+        return []
+    
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        start = date.replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
+        end = date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        
+        events = calendar.search(start=start, end=end, expand=True)
+        blocked = []
+        
+        for event in events:
+            ical = event.icalendar_component
+            for component in ical.walk():
+                if component.name == "VEVENT":
+                    dtstart = component.get('dtstart')
+                    dtend = component.get('dtend')
+                    if dtstart and dtend:
+                        blocked.append({
+                            "start": dtstart.dt.isoformat() if hasattr(dtstart.dt, 'isoformat') else str(dtstart.dt),
+                            "end": dtend.dt.isoformat() if hasattr(dtend.dt, 'isoformat') else str(dtend.dt),
+                            "summary": str(component.get('summary', 'Busy'))
+                        })
+        
+        return blocked
+    except Exception as e:
+        logger.error(f"Failed to get calendar events: {e}")
+        return []
+
 @api_router.get("/admin/calendar-settings")
 async def admin_get_calendar_settings(admin=Depends(verify_token)):
     """Get calendar sync settings"""
@@ -795,13 +945,66 @@ async def admin_update_calendar_settings(data: CalendarSettings, admin=Depends(v
 
 @api_router.post("/admin/calendar/sync")
 async def admin_sync_calendar(admin=Depends(verify_token)):
-    """Manually trigger calendar sync"""
-    settings = await db.calendar_settings.find_one({"id": "default"}, {"_id": 0})
+    """Manually trigger calendar sync - syncs all confirmed bookings"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
     if not settings or not settings.get("sync_enabled"):
         raise HTTPException(status_code=400, detail="Calendar sync not enabled")
     
-    # TODO: Implement CalDAV sync when credentials are provided
-    return {"message": "Calendar sync triggered", "status": "pending_implementation"}
+    if not settings.get("apple_calendar_password"):
+        raise HTTPException(status_code=400, detail="Apple Calendar credentials not configured")
+    
+    # Test connection
+    client, calendar = await get_caldav_client()
+    if not calendar:
+        raise HTTPException(status_code=400, detail="Failed to connect to Apple Calendar. Check your credentials.")
+    
+    # Sync all confirmed bookings that don't have calendar events
+    bookings = await db.bookings.find({
+        "status": "confirmed",
+        "calendar_event_id": {"$exists": False}
+    }).to_list(100)
+    
+    synced = 0
+    errors = 0
+    
+    for booking in bookings:
+        booking_dict = {**booking, "id": booking.get("id")}
+        event_uid = await create_calendar_event(booking_dict)
+        if event_uid:
+            await db.bookings.update_one(
+                {"id": booking["id"]},
+                {"$set": {"calendar_event_id": event_uid}}
+            )
+            synced += 1
+        else:
+            errors += 1
+    
+    return {
+        "message": f"Calendar sync completed",
+        "synced": synced,
+        "errors": errors,
+        "calendar_name": calendar.name if calendar else "Unknown"
+    }
+
+@api_router.post("/admin/calendar/test")
+async def admin_test_calendar_connection(admin=Depends(verify_token)):
+    """Test Apple Calendar connection"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings:
+        raise HTTPException(status_code=400, detail="Calendar settings not configured")
+    
+    if not settings.get("apple_calendar_password"):
+        raise HTTPException(status_code=400, detail="Apple Calendar password not set")
+    
+    client, calendar = await get_caldav_client()
+    if not calendar:
+        raise HTTPException(status_code=400, detail="Failed to connect to Apple Calendar. Check your credentials.")
+    
+    return {
+        "status": "connected",
+        "calendar_name": calendar.name,
+        "message": f"Successfully connected to calendar: {calendar.name}"
+    }
 
 # ==================== ADMIN - PORTFOLIO ====================
 

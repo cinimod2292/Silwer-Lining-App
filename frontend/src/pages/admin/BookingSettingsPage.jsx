@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock, Settings, Plus, X, Save, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Clock, Settings, Plus, X, Save, ChevronDown, ChevronUp, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,13 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import axios from "axios";
 

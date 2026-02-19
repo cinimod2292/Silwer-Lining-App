@@ -83,6 +83,7 @@ const BookingPage = () => {
   useEffect(() => {
     if (formData.session_type) {
       fetchAddOns(formData.session_type);
+      fetchQuestionnaire(formData.session_type);
     }
   }, [formData.session_type]);
 

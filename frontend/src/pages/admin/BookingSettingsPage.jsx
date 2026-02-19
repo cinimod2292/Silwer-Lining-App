@@ -628,7 +628,7 @@ const BookingSettingsPage = () => {
             <div className="space-y-2">
               <Label>Select days to copy to:</Label>
               <div className="grid grid-cols-2 gap-2">
-                {daysOfWeek.filter(d => d.id !== copyFromDay && settings.available_days.includes(d.id)).map((day) => (
+                {daysOfWeek.filter(d => d.id !== copyFromDay).map((day) => (
                   <div key={day.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={`copy-day-${day.id}`}
@@ -647,7 +647,7 @@ const BookingSettingsPage = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedCopyDays(settings.available_days.filter(d => d !== copyFromDay))}
+                onClick={() => setSelectedCopyDays(daysOfWeek.map(d => d.id).filter(d => d !== copyFromDay))}
               >
                 Select All
               </Button>

@@ -44,6 +44,8 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   const [bookingSettings, setBookingSettings] = useState(null);
+  const [questionnaire, setQuestionnaire] = useState(null);
+  const [questionnaireResponses, setQuestionnaireResponses] = useState({});
   
   // Weekend popup state
   const [showWeekendPopup, setShowWeekendPopup] = useState(false);

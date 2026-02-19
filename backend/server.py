@@ -890,59 +890,31 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
             }
         })
     
-    # 3. Get Apple Calendar events (personal appointments)
+    # 3. Get Apple Calendar events from ALL calendars (personal + work)
     settings = await db.calendar_settings.find_one({"id": "default"})
     if settings and settings.get("sync_enabled"):
-        _, calendar = await get_caldav_client()
-        if calendar:
-            try:
-                start_dt_obj = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                end_dt_obj = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, tzinfo=timezone.utc)
-                
-                cal_events = calendar.search(start=start_dt_obj, end=end_dt_obj, expand=True)
-                
-                for event in cal_events:
-                    ical = event.icalendar_component
-                    for component in ical.walk():
-                        if component.name == "VEVENT":
-                            summary = str(component.get('summary', 'Personal Event'))
-                            
-                            # Skip our own booking events
-                            if '📸' in summary or 'silwerlining' in summary.lower():
-                                continue
-                            
-                            dtstart = component.get('dtstart')
-                            dtend = component.get('dtend')
-                            
-                            if dtstart:
-                                if hasattr(dtstart.dt, 'isoformat'):
-                                    start_str = dtstart.dt.isoformat()
-                                else:
-                                    # All-day event
-                                    start_str = f"{dtstart.dt}T00:00:00"
-                                
-                                if dtend:
-                                    if hasattr(dtend.dt, 'isoformat'):
-                                        end_str = dtend.dt.isoformat()
-                                    else:
-                                        end_str = f"{dtend.dt}T23:59:59"
-                                else:
-                                    end_str = start_str
-                                
-                                events.append({
-                                    "id": f"personal-{uuid.uuid4()}",
-                                    "title": f"🔒 {summary}",
-                                    "start": start_str,
-                                    "end": end_str,
-                                    "backgroundColor": "#64748B",
-                                    "borderColor": "#64748B",
-                                    "extendedProps": {
-                                        "type": "personal",
-                                        "summary": summary
-                                    }
-                                })
-            except Exception as e:
-                logger.error(f"Failed to fetch calendar events: {e}")
+        try:
+            start_dt_obj = datetime.strptime(start_date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            end_dt_obj = datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, tzinfo=timezone.utc)
+            
+            cal_events = await get_events_from_all_calendars(start_dt_obj, end_dt_obj)
+            
+            for cal_event in cal_events:
+                events.append({
+                    "id": f"personal-{uuid.uuid4()}",
+                    "title": f"🔒 {cal_event['summary']} ({cal_event['calendar_name']})",
+                    "start": cal_event["start"],
+                    "end": cal_event["end"],
+                    "backgroundColor": "#64748B",
+                    "borderColor": "#64748B",
+                    "extendedProps": {
+                        "type": "personal",
+                        "summary": cal_event["summary"],
+                        "calendarName": cal_event["calendar_name"]
+                    }
+                })
+        except Exception as e:
+            logger.error(f"Failed to fetch calendar events: {e}")
     
     return {"events": events}
 

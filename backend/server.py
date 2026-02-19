@@ -976,9 +976,8 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
         except:
             pass
     
-    # Get time slots from settings
-    time_slots = booking_settings.get("time_slots", ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"])
-    available_days = booking_settings.get("available_days", [1,2,3,4,5])  # Mon-Fri by default
+    # Get time slot schedule from settings
+    time_slot_schedule = booking_settings.get("time_slot_schedule", {})
     
     # First, add custom slots (these override normal schedule)
     for slot_key, slot_data in custom_slots_dict.items():

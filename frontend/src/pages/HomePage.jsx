@@ -56,6 +56,19 @@ const HomePage = () => {
     }
   };
 
+  const fetchFAQs = async () => {
+    try {
+      const res = await axios.get(`${API}/faqs`);
+      if (res.data.length > 0) {
+        setFaqs(res.data);
+      } else {
+        setFaqs(defaultFAQs);
+      }
+    } catch (e) {
+      setFaqs(defaultFAQs);
+    }
+  };
+
   // Real images from silwerlining.co.za
   const defaultFeaturedImages = [
     { id: "1", image_url: "https://images-pw.pixieset.com/site/Nzv0dL/6wok7k/_DSC5179-a4f71fe2-1500.jpg", title: "Maternity Elegance", category: "maternity" },

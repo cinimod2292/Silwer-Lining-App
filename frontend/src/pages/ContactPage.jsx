@@ -26,6 +26,20 @@ const ContactPage = () => {
     message: "",
   });
   const [loading, setLoading] = useState(false);
+  const [faqs, setFaqs] = useState([]);
+
+  useEffect(() => {
+    fetchFAQs();
+  }, []);
+
+  const fetchFAQs = async () => {
+    try {
+      const res = await axios.get(`${API}/faqs`);
+      setFaqs(res.data);
+    } catch (e) {
+      console.error("Failed to fetch FAQs");
+    }
+  };
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

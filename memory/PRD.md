@@ -150,6 +150,7 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - All prices are in ZAR (South African Rand)
 - Questionnaire data: Maternity session has active questionnaire with 4 questions
 - Manual booking tokens expire after 7 days
+- **Booking availability now derived from time_slot_schedule** - a day is available if ANY session type has time slots configured for that day
 
 ## Test Reports
 - /app/test_reports/iteration_3.json - 100% pass rate (Feb 2026)

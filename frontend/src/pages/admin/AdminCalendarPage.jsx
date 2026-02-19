@@ -146,6 +146,23 @@ const AdminCalendarPage = () => {
     }
   };
 
+  const handleAddSlot = async () => {
+    const token = localStorage.getItem("admin_token");
+    try {
+      await axios.post(`${API}/admin/custom-slots`, {
+        date: selectedSlot.date,
+        time: selectedSlot.time
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success("Time slot added");
+      setShowSlotModal(false);
+      fetchCalendarEvents(new Date());
+    } catch (e) {
+      toast.error(e.response?.data?.detail || "Failed to add slot");
+    }
+  };
+
   const handleUnblockSlot = async (slotId) => {
     const token = localStorage.getItem("admin_token");
     try {

@@ -352,7 +352,8 @@ const BookingSettingsPage = () => {
               <div className="space-y-3">
                 {daysOfWeek.map((day) => {
                   const slots = getTimeSlotsForDay(type.id, day.id);
-                  const isAvailable = settings.available_days.includes(day.id);
+                  // Availability is now determined by whether time slots are configured
+                  const hasSlots = slots.length > 0;
                   const inputKey = `${type.id}-${day.id}`;
                   
                   return (
@@ -361,23 +362,21 @@ const BookingSettingsPage = () => {
                       open={expandedDays[day.id]}
                       onOpenChange={() => toggleDayExpanded(day.id)}
                     >
-                      <div className={`border rounded-lg ${!isAvailable ? 'opacity-50' : ''}`}>
+                      <div className="border rounded-lg">
                         <CollapsibleTrigger className="w-full">
                           <div className="flex items-center justify-between p-4 hover:bg-warm-sand/30 transition-colors">
                             <div className="flex items-center gap-3">
                               <span className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-medium ${
-                                isAvailable ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
+                                hasSlots ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-400'
                               }`}>
                                 {day.short}
                               </span>
                               <div className="text-left">
                                 <p className="font-medium">{day.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {!isAvailable 
-                                    ? "Not available" 
-                                    : slots.length > 0 
-                                      ? `${slots.length} time slot${slots.length > 1 ? 's' : ''}: ${slots.join(', ')}`
-                                      : "No time slots configured"
+                                  {hasSlots 
+                                    ? `${slots.length} time slot${slots.length > 1 ? 's' : ''}: ${slots.join(', ')}`
+                                    : "No time slots configured"
                                   }
                                 </p>
                               </div>

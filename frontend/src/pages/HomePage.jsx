@@ -10,11 +10,13 @@ const HomePage = () => {
   const [featuredImages, setFeaturedImages] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
   const [instagramPosts, setInstagramPosts] = useState([]);
+  const [faqs, setFaqs] = useState([]);
 
   useEffect(() => {
     fetchPortfolio();
     fetchTestimonials();
     fetchInstagramFeed();
+    fetchFAQs();
   }, []);
 
   const fetchPortfolio = async () => {

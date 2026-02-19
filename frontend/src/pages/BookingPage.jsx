@@ -281,15 +281,41 @@ const BookingPage = () => {
   };
 
   const validateStep = (currentStep) => {
-    switch (currentStep) {
-      case 1:
-        return formData.session_type && formData.package_name;
-      case 2:
-        return formData.booking_date && formData.booking_time;
-      case 3:
-        return formData.client_name && formData.client_email && formData.client_phone;
-      default:
-        return false;
+    const totalSteps = getTotalSteps();
+    
+    if (totalSteps === 4) {
+      switch (currentStep) {
+        case 1:
+          return formData.session_type && formData.package_name;
+        case 2:
+          return formData.booking_date && formData.booking_time;
+        case 3:
+          // Validate required questionnaire fields
+          if (!questionnaire?.questions) return true;
+          const requiredQuestions = questionnaire.questions.filter(q => q.required);
+          return requiredQuestions.every(q => {
+            const response = questionnaireResponses[q.id];
+            if (q.type === "checkbox") {
+              return response && response.length > 0;
+            }
+            return response && response.toString().trim() !== "";
+          });
+        case 4:
+          return formData.client_name && formData.client_email && formData.client_phone;
+        default:
+          return false;
+      }
+    } else {
+      switch (currentStep) {
+        case 1:
+          return formData.session_type && formData.package_name;
+        case 2:
+          return formData.booking_date && formData.booking_time;
+        case 3:
+          return formData.client_name && formData.client_email && formData.client_phone;
+        default:
+          return false;
+      }
     }
   };
 

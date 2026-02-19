@@ -188,6 +188,13 @@ class BlockedSlot(BaseModel):
     reason: str = "Blocked"
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+class CustomSlot(BaseModel):
+    """Custom available slot added for a specific date"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    date: str
+    time: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ==================== ADD-ONS MODELS ====================
 
 class AddOnCreate(BaseModel):

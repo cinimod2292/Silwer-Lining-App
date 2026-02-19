@@ -497,33 +497,6 @@ const BookingSettingsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Available Days */}
-        <div className="bg-white rounded-xl shadow-soft p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-lg">Available Days</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Select days when you accept bookings
-          </p>
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-            {daysOfWeek.map((day) => (
-              <button
-                key={day.id}
-                onClick={() => toggleDay(day.id)}
-                className={`p-3 rounded-lg text-center transition-colors ${
-                  settings.available_days.includes(day.id)
-                    ? "bg-primary text-white"
-                    : "bg-warm-sand text-foreground hover:bg-warm-sand/80"
-                }`}
-                data-testid={`day-${day.id}`}
-              >
-                <span className="text-xs font-medium">{day.short}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Booking Rules */}
         <div className="bg-white rounded-xl shadow-soft p-6">
           <div className="flex items-center gap-3 mb-4">
@@ -541,6 +514,9 @@ const BookingSettingsPage = () => {
                 className="w-32"
                 data-testid="input-min-lead"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                How many days in advance clients must book
+              </p>
             </div>
             
             <div>
@@ -552,6 +528,9 @@ const BookingSettingsPage = () => {
                 className="w-32"
                 data-testid="input-max-advance"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                How far in the future clients can book
+              </p>
             </div>
             
             <div>
@@ -563,6 +542,9 @@ const BookingSettingsPage = () => {
                 className="w-32"
                 data-testid="input-buffer"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Time between consecutive bookings
+              </p>
             </div>
           </div>
         </div>
@@ -588,16 +570,8 @@ const BookingSettingsPage = () => {
                 Additional fee for Saturday/Sunday bookings
               </p>
             </div>
-            
-            <div>
-              <Label className="mb-2 block">Default Session Duration (minutes)</Label>
-              <Input
-                type="number"
-                value={settings.session_duration_default}
-                onChange={(e) => setSettings((prev) => ({ ...prev, session_duration_default: parseInt(e.target.value) || 120 }))}
-                className="w-32"
-                data-testid="input-duration"
-              />
+          </div>
+        </div>
             </div>
           </div>
         </div>

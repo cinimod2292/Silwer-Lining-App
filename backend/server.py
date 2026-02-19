@@ -1285,6 +1285,61 @@ async def admin_upload_multiple_images(
         logger.error(f"Multi-upload error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
+# ==================== FAQ ENDPOINTS ====================
+
+@api_router.get("/faqs")
+async def get_faqs(category: Optional[str] = None):
+    """Get all active FAQs, optionally filtered by category"""
+    query = {"active": True}
+    if category:
+        query["category"] = category
+    items = await db.faqs.find(query, {"_id": 0}).sort("order", 1).to_list(100)
+    return items
+
+@api_router.get("/admin/faqs")
+async def admin_get_faqs(admin=Depends(verify_token)):
+    """Get all FAQs for admin"""
+    items = await db.faqs.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    return items
+
+@api_router.post("/admin/faqs")
+async def admin_create_faq(data: FAQCreate, admin=Depends(verify_token)):
+    """Create a new FAQ"""
+    faq = FAQ(**data.model_dump())
+    doc = faq.model_dump()
+    await db.faqs.insert_one(doc)
+    return faq
+
+@api_router.put("/admin/faqs/{faq_id}")
+async def admin_update_faq(faq_id: str, data: FAQCreate, admin=Depends(verify_token)):
+    """Update an FAQ"""
+    update_data = data.model_dump()
+    result = await db.faqs.update_one(
+        {"id": faq_id},
+        {"$set": update_data}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="FAQ not found")
+    return {"message": "FAQ updated"}
+
+@api_router.delete("/admin/faqs/{faq_id}")
+async def admin_delete_faq(faq_id: str, admin=Depends(verify_token)):
+    """Delete an FAQ"""
+    result = await db.faqs.delete_one({"id": faq_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="FAQ not found")
+    return {"message": "FAQ deleted"}
+
+@api_router.put("/admin/faqs/reorder")
+async def admin_reorder_faqs(faq_orders: List[dict], admin=Depends(verify_token)):
+    """Reorder FAQs - expects [{id: "xxx", order: 0}, ...]"""
+    for item in faq_orders:
+        await db.faqs.update_one(
+            {"id": item["id"]},
+            {"$set": {"order": item["order"]}}
+        )
+    return {"message": "FAQs reordered"}
+
 # ==================== ADMIN - QUESTIONNAIRES ====================
 
 @api_router.get("/admin/questionnaires")

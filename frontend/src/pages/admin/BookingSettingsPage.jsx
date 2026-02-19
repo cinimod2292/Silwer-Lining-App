@@ -406,75 +406,73 @@ const BookingSettingsPage = () => {
                         </CollapsibleTrigger>
                         
                         <CollapsibleContent>
-                          {isAvailable && (
-                            <div className="px-4 pb-4 pt-2 border-t bg-warm-sand/20">
-                              <div className="flex flex-wrap gap-2 mb-4">
-                                {slots.map((slot) => (
-                                  <span
-                                    key={slot}
-                                    className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 ${type.color}`}
-                                  >
-                                    {slot}
-                                    <button
-                                      onClick={() => removeTimeSlot(type.id, day.id, slot)}
-                                      className="hover:text-red-600"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </span>
-                                ))}
-                                {slots.length === 0 && (
-                                  <span className="text-sm text-muted-foreground italic">
-                                    No time slots for {day.name}
-                                  </span>
-                                )}
-                              </div>
-                              
-                              <div className="flex flex-wrap items-center gap-2">
-                                <Input
-                                  type="time"
-                                  value={newSlotInputs[inputKey] || ""}
-                                  onChange={(e) => setNewSlotInputs((prev) => ({ 
-                                    ...prev, 
-                                    [inputKey]: e.target.value 
-                                  }))}
-                                  className="w-32"
-                                  data-testid={`input-time-${type.id}-${day.id}`}
-                                />
-                                <Button 
-                                  onClick={() => addTimeSlot(type.id, day.id)} 
-                                  variant="outline" 
-                                  size="sm"
-                                  data-testid={`add-slot-${type.id}-${day.id}`}
+                          <div className="px-4 pb-4 pt-2 border-t bg-warm-sand/20">
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {slots.map((slot) => (
+                                <span
+                                  key={slot}
+                                  className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 ${type.color}`}
                                 >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add Slot
-                                </Button>
-                                {slots.length > 0 && (
-                                  <>
-                                    <Button
-                                      onClick={() => openCopyToDaysModal(day.id)}
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-muted-foreground gap-1"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                      Copy to days...
-                                    </Button>
-                                    <Button
-                                      onClick={() => openCopyToSessionModal(day.id)}
-                                      variant="ghost"
-                                      size="sm"
-                                      className="text-muted-foreground gap-1"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                      Copy to session...
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
+                                  {slot}
+                                  <button
+                                    onClick={() => removeTimeSlot(type.id, day.id, slot)}
+                                    className="hover:text-red-600"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </span>
+                              ))}
+                              {slots.length === 0 && (
+                                <span className="text-sm text-muted-foreground italic">
+                                  No time slots for {day.name}
+                                </span>
+                              )}
                             </div>
-                          )}
+                            
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Input
+                                type="time"
+                                value={newSlotInputs[inputKey] || ""}
+                                onChange={(e) => setNewSlotInputs((prev) => ({ 
+                                  ...prev, 
+                                  [inputKey]: e.target.value 
+                                }))}
+                                className="w-32"
+                                data-testid={`input-time-${type.id}-${day.id}`}
+                              />
+                              <Button 
+                                onClick={() => addTimeSlot(type.id, day.id)} 
+                                variant="outline" 
+                                size="sm"
+                                data-testid={`add-slot-${type.id}-${day.id}`}
+                              >
+                                <Plus className="w-4 h-4 mr-1" />
+                                Add Slot
+                              </Button>
+                              {slots.length > 0 && (
+                                <>
+                                  <Button
+                                    onClick={() => openCopyToDaysModal(day.id)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-muted-foreground gap-1"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                    Copy to days...
+                                  </Button>
+                                  <Button
+                                    onClick={() => openCopyToSessionModal(day.id)}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-muted-foreground gap-1"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                    Copy to session...
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </CollapsibleContent>
                       </div>
                     </Collapsible>

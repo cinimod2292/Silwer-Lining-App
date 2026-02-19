@@ -1656,81 +1656,83 @@ async def get_blocked_times_from_calendar(date_str: str) -> List[dict]:
         return []
 
 async def get_calendar_blocked_times(date_str: str, time_slots: List[str]) -> List[str]:
-    """Check which time slots are blocked by calendar events"""
+    """Check which time slots are blocked by calendar events from ALL calendars"""
     settings = await db.calendar_settings.find_one({"id": "default"})
     if not settings or not settings.get("sync_enabled"):
-        return []
-    
-    _, calendar = await get_caldav_client()
-    if not calendar:
         return []
     
     blocked_slots = []
     
     try:
         date = datetime.strptime(date_str, "%Y-%m-%d")
-        # Set timezone to South Africa (UTC+2)
+        requested_date = date.date()
+        
+        # Get events from ALL calendars using the same function as calendar view
         start_of_day = date.replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
         end_of_day = date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
         
-        events = calendar.search(start=start_of_day, end=end_of_day, expand=True)
+        cal_events_raw = await get_events_from_all_calendars(start_of_day, end_of_day)
         
         calendar_events = []
-        for event in events:
-            ical = event.icalendar_component
-            for component in ical.walk():
-                if component.name == "VEVENT":
-                    dtstart = component.get('dtstart')
-                    dtend = component.get('dtend')
-                    summary = str(component.get('summary', ''))
+        for evt in cal_events_raw:
+            summary = evt.get("summary", "")
+            
+            # Skip events that are bookings we created (they have 📸 in title)
+            if '📸' in summary or 'silwerlining' in summary.lower():
+                continue
+            
+            try:
+                evt_start = datetime.fromisoformat(evt["start"].replace("Z", "+00:00"))
+                evt_end = datetime.fromisoformat(evt["end"].replace("Z", "+00:00"))
+                
+                # Handle all-day events (no time component)
+                if not hasattr(evt_start, 'hour') or evt_start.hour == 0 and evt_start.minute == 0 and evt_end.hour == 0 and evt_end.minute == 0:
+                    # Could be all-day event
+                    event_start_date = evt_start.date() if hasattr(evt_start, 'date') else evt_start
+                    event_end_date = evt_end.date() if hasattr(evt_end, 'date') else evt_end
                     
-                    # Skip events that are bookings we created (they have 📸 in title)
-                    if '📸' in summary or 'silwerlining' in summary.lower():
-                        continue
-                    
-                    if dtstart and dtend:
-                        start_dt = dtstart.dt
-                        end_dt = dtend.dt
-                        
-                        # Handle all-day events (date objects instead of datetime)
-                        if not hasattr(start_dt, 'hour'):
-                            # All-day event blocks the entire day
-                            return time_slots  # All slots blocked
-                        
-                        # For multi-day events, determine blocking hours for THIS specific date
-                        event_start_date = start_dt.date() if hasattr(start_dt, 'date') else start_dt
-                        event_end_date = end_dt.date() if hasattr(end_dt, 'date') else end_dt
-                        requested_date = date.date()
-                        
-                        # Calculate effective blocking hours for this day
-                        if event_start_date == event_end_date == requested_date:
-                            # Single day event - use actual times
-                            block_start_hour = start_dt.hour
-                            block_start_min = start_dt.minute
-                            block_end_hour = end_dt.hour
-                            block_end_min = end_dt.minute
-                        elif event_start_date == requested_date:
-                            # First day of multi-day event
-                            block_start_hour = start_dt.hour
-                            block_start_min = start_dt.minute
-                            block_end_hour = 23
-                            block_end_min = 59
-                        elif event_end_date == requested_date:
-                            # Last day of multi-day event
-                            block_start_hour = 0
-                            block_start_min = 0
-                            block_end_hour = end_dt.hour
-                            block_end_min = end_dt.minute
-                        else:
-                            # Middle day of multi-day event - block entire day
-                            return time_slots  # All slots blocked
-                        
-                        calendar_events.append({
-                            "start_hour": block_start_hour,
-                            "start_minute": block_start_min,
-                            "end_hour": block_end_hour,
-                            "end_minute": block_end_min
-                        })
+                    # If event spans multiple days and covers requested date entirely
+                    if event_start_date <= requested_date < event_end_date:
+                        return time_slots  # All slots blocked
+                
+                # For multi-day events, determine blocking hours for THIS specific date
+                event_start_date = evt_start.date()
+                event_end_date = evt_end.date()
+                
+                # Calculate effective blocking hours for this day
+                if event_start_date == event_end_date == requested_date:
+                    # Single day event - use actual times
+                    block_start_hour = evt_start.hour
+                    block_start_min = evt_start.minute
+                    block_end_hour = evt_end.hour
+                    block_end_min = evt_end.minute
+                elif event_start_date == requested_date:
+                    # First day of multi-day event
+                    block_start_hour = evt_start.hour
+                    block_start_min = evt_start.minute
+                    block_end_hour = 23
+                    block_end_min = 59
+                elif event_end_date == requested_date:
+                    # Last day of multi-day event
+                    block_start_hour = 0
+                    block_start_min = 0
+                    block_end_hour = evt_end.hour
+                    block_end_min = evt_end.minute
+                elif event_start_date < requested_date < event_end_date:
+                    # Middle day of multi-day event - block entire day
+                    return time_slots  # All slots blocked
+                else:
+                    continue  # Event doesn't affect this date
+                
+                calendar_events.append({
+                    "start_hour": block_start_hour,
+                    "start_minute": block_start_min,
+                    "end_hour": block_end_hour,
+                    "end_minute": block_end_min
+                })
+            except Exception as e:
+                logger.error(f"Error processing calendar event: {e}")
+                continue
         
         # Check each time slot against calendar events
         for time_slot in time_slots:

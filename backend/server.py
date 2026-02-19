@@ -1697,11 +1697,39 @@ async def get_calendar_blocked_times(date_str: str, time_slots: List[str]) -> Li
                             # All-day event blocks the entire day
                             return time_slots  # All slots blocked
                         
+                        # For multi-day events, determine blocking hours for THIS specific date
+                        event_start_date = start_dt.date() if hasattr(start_dt, 'date') else start_dt
+                        event_end_date = end_dt.date() if hasattr(end_dt, 'date') else end_dt
+                        requested_date = date.date()
+                        
+                        # Calculate effective blocking hours for this day
+                        if event_start_date == event_end_date == requested_date:
+                            # Single day event - use actual times
+                            block_start_hour = start_dt.hour
+                            block_start_min = start_dt.minute
+                            block_end_hour = end_dt.hour
+                            block_end_min = end_dt.minute
+                        elif event_start_date == requested_date:
+                            # First day of multi-day event
+                            block_start_hour = start_dt.hour
+                            block_start_min = start_dt.minute
+                            block_end_hour = 23
+                            block_end_min = 59
+                        elif event_end_date == requested_date:
+                            # Last day of multi-day event
+                            block_start_hour = 0
+                            block_start_min = 0
+                            block_end_hour = end_dt.hour
+                            block_end_min = end_dt.minute
+                        else:
+                            # Middle day of multi-day event - block entire day
+                            return time_slots  # All slots blocked
+                        
                         calendar_events.append({
-                            "start_hour": start_dt.hour,
-                            "start_minute": start_dt.minute,
-                            "end_hour": end_dt.hour,
-                            "end_minute": end_dt.minute
+                            "start_hour": block_start_hour,
+                            "start_minute": block_start_min,
+                            "end_hour": block_end_hour,
+                            "end_minute": block_end_min
                         })
         
         # Check each time slot against calendar events

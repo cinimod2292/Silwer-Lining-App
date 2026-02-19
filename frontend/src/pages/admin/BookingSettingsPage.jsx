@@ -652,6 +652,109 @@ const BookingSettingsPage = () => {
           )}
         </div>
       </div>
+
+      {/* Copy to Days Modal */}
+      <Dialog open={showCopyToDaysModal} onOpenChange={setShowCopyToDaysModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copy Time Slots to Days</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Copying from <strong>{daysOfWeek.find(d => d.id === copyFromDay)?.name}</strong> ({getTimeSlotsForDay(activeSessionType, copyFromDay).length} slots)
+            </p>
+            
+            <div className="space-y-2">
+              <Label>Select days to copy to:</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {daysOfWeek.filter(d => d.id !== copyFromDay && settings.available_days.includes(d.id)).map((day) => (
+                  <div key={day.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`copy-day-${day.id}`}
+                      checked={selectedCopyDays.includes(day.id)}
+                      onCheckedChange={() => toggleCopyDay(day.id)}
+                    />
+                    <Label htmlFor={`copy-day-${day.id}`} className="font-normal cursor-pointer">
+                      {day.name}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCopyDays(settings.available_days.filter(d => d !== copyFromDay))}
+              >
+                Select All
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCopyDays([])}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCopyToDaysModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCopyToDays} disabled={selectedCopyDays.length === 0}>
+              Copy to {selectedCopyDays.length} Day(s)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy to Session Type Modal */}
+      <Dialog open={showCopyToSessionModal} onOpenChange={setShowCopyToSessionModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copy Time Slots to Session Type</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Copying <strong>{daysOfWeek.find(d => d.id === copyFromSessionDay)?.name}</strong> slots from <strong>{sessionTypes.find(s => s.id === activeSessionType)?.name}</strong>
+            </p>
+            
+            <div className="space-y-2">
+              <Label>Select target session type:</Label>
+              <Select value={selectedCopySession} onValueChange={setSelectedCopySession}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select session type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sessionTypes.filter(s => s.id !== activeSessionType).map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              This will copy the time slots for {daysOfWeek.find(d => d.id === copyFromSessionDay)?.name} to the selected session type.
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCopyToSessionModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCopyToSession} disabled={!selectedCopySession}>
+              Copy Slots
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

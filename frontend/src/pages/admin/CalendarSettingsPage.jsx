@@ -171,6 +171,26 @@ const CalendarSettingsPage = () => {
                 Default: https://caldav.icloud.com
               </p>
             </div>
+
+            {/* Test Connection Button */}
+            <Button
+              onClick={handleTestConnection}
+              disabled={testing || !settings.apple_calendar_user}
+              variant="outline"
+              className="w-full gap-2 mt-4"
+              data-testid="test-connection-btn"
+            >
+              <Link2 className={`w-4 h-4 ${testing ? "animate-pulse" : ""}`} />
+              {testing ? "Testing..." : "Test Connection"}
+            </Button>
+
+            {connectionStatus && (
+              <div className={`mt-3 p-3 rounded-lg ${connectionStatus.success ? "bg-green-50" : "bg-red-50"}`}>
+                <p className={`text-sm ${connectionStatus.success ? "text-green-700" : "text-red-700"}`}>
+                  {connectionStatus.message}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

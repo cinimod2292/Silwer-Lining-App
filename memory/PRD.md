@@ -143,13 +143,15 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - Password: Admin123!
 
 ## Notes
-- Apple Calendar sync logic is MOCKED - returns success but doesn't actually sync
-- Cloudflare R2 portfolio uploads are ready but need user credentials
+- Apple Calendar 2-way sync is now FULLY WORKING via CalDAV
+- Cloudflare R2 portfolio uploads are ready but need user to test
 - Content (logo, images, packages, testimonials) was scraped from silwerlining.co.za
 - All prices are in ZAR (South African Rand)
 - Questionnaire data: Maternity session has active questionnaire with 4 questions
+- Manual booking tokens expire after 7 days
 
 ## Test Reports
 - /app/test_reports/iteration_3.json - 100% pass rate (Feb 2026)
 - /app/test_reports/iteration_4.json - Previous testing
-- /app/test_reports/iteration_5.json - FAQ & Questionnaire features (100% pass) ✅ NEW
+- /app/test_reports/iteration_5.json - FAQ & Questionnaire features (100% pass)
+- /app/test_reports/iteration_6.json - Calendar View & Manual Booking (100% pass) ✅ NEW

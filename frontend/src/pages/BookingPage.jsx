@@ -213,6 +213,44 @@ const BookingPage = () => {
     });
   };
 
+  const handleQuestionnaireChange = (questionId, value, isCheckbox = false) => {
+    setQuestionnaireResponses((prev) => {
+      if (isCheckbox) {
+        const current = prev[questionId] || [];
+        if (current.includes(value)) {
+          return { ...prev, [questionId]: current.filter(v => v !== value) };
+        } else {
+          return { ...prev, [questionId]: [...current, value] };
+        }
+      }
+      return { ...prev, [questionId]: value };
+    });
+  };
+
+  const getTotalSteps = () => {
+    return questionnaire?.questions?.length > 0 ? 4 : 3;
+  };
+
+  const getStepLabel = (stepNum) => {
+    const totalSteps = getTotalSteps();
+    if (totalSteps === 4) {
+      switch (stepNum) {
+        case 1: return "Session & Add-ons";
+        case 2: return "Date & Time";
+        case 3: return "Questionnaire";
+        case 4: return "Your Details";
+        default: return "";
+      }
+    } else {
+      switch (stepNum) {
+        case 1: return "Session & Add-ons";
+        case 2: return "Date & Time";
+        case 3: return "Details & Payment";
+        default: return "";
+      }
+    }
+  };
+
   const getFilteredPackages = () => {
     if (!formData.session_type) return [];
     return packages.filter((pkg) => pkg.session_type === formData.session_type);

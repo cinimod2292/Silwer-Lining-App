@@ -146,6 +146,8 @@ class Booking(BaseModel):
     is_weekend: bool = False
     weekend_surcharge: int = 0
     total_price: int = 0
+    # Questionnaire responses
+    questionnaire_responses: dict = {}  # {question_id: answer}
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

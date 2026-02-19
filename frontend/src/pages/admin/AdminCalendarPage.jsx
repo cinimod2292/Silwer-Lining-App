@@ -85,7 +85,7 @@ const AdminCalendarPage = () => {
   };
 
   const handleDateClick = (info) => {
-    // Clicked on a date cell
+    // Clicked on a date cell (empty area)
     const clickedDate = info.dateStr;
     const time = info.date.getHours();
     
@@ -100,6 +100,17 @@ const AdminCalendarPage = () => {
   const handleEventClick = (info) => {
     const event = info.event;
     const props = event.extendedProps;
+    
+    // Handle open slot clicks - open the slot action modal
+    if (props.type === "open") {
+      setSelectedSlot({
+        date: props.date,
+        time: props.time,
+        dateTime: `${props.date}T${props.time}`
+      });
+      setShowSlotModal(true);
+      return;
+    }
     
     setSelectedEvent({
       id: event.id,

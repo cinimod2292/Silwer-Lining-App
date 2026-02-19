@@ -155,4 +155,5 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - /app/test_reports/iteration_3.json - 100% pass rate (Feb 2026)
 - /app/test_reports/iteration_4.json - Previous testing
 - /app/test_reports/iteration_5.json - FAQ & Questionnaire features (100% pass)
-- /app/test_reports/iteration_6.json - Calendar View & Manual Booking (100% pass) ✅ NEW
+- /app/test_reports/iteration_6.json - Calendar View & Manual Booking (100% pass)
+- /app/test_reports/iteration_7.json - Booking Settings Simplification (100% pass) ✅ NEW

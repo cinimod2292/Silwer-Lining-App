@@ -1180,11 +1180,18 @@ async def get_caldav_client():
         principal = client.principal()
         calendars = principal.calendars()
         
-        # Find or use the first calendar (usually "Calendar" or "Silwer Lining")
+        # Get the calendar for bookings (from settings, or first one)
+        booking_calendar_name = settings.get("booking_calendar", "")
         target_calendar = None
+        
         for cal in calendars:
             cal_name = cal.name.lower() if cal.name else ""
-            if "silwer" in cal_name or "photography" in cal_name or "booking" in cal_name:
+            # Use the configured booking calendar if set
+            if booking_calendar_name and cal.name == booking_calendar_name:
+                target_calendar = cal
+                break
+            # Otherwise look for photography/booking related calendar
+            if "silwer" in cal_name or "photography" in cal_name or "booking" in cal_name or "work" in cal_name:
                 target_calendar = cal
                 break
         
@@ -1195,6 +1202,126 @@ async def get_caldav_client():
     except Exception as e:
         logger.error(f"CalDAV connection error: {e}")
         return None, None
+
+async def get_all_caldav_calendars():
+    """Get all CalDAV calendars for the user"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("apple_calendar_password"):
+        return []
+    
+    url = settings.get("apple_calendar_url") or "https://caldav.icloud.com"
+    username = settings.get("apple_calendar_user")
+    password = settings.get("apple_calendar_password")
+    
+    if not username or not password:
+        return []
+    
+    try:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+        principal = client.principal()
+        calendars = principal.calendars()
+        return [{"name": cal.name, "id": str(cal.id)} for cal in calendars]
+    except Exception as e:
+        logger.error(f"Failed to get calendars: {e}")
+        return []
+
+async def get_events_from_all_calendars(start_date: datetime, end_date: datetime) -> List[dict]:
+    """Fetch events from ALL calendars (personal + work)"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("apple_calendar_password"):
+        return []
+    
+    url = settings.get("apple_calendar_url") or "https://caldav.icloud.com"
+    username = settings.get("apple_calendar_user")
+    password = settings.get("apple_calendar_password")
+    booking_calendar = settings.get("booking_calendar", "")
+    
+    if not username or not password:
+        return []
+    
+    all_events = []
+    
+    try:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+        principal = client.principal()
+        calendars = principal.calendars()
+        
+        for calendar in calendars:
+            try:
+                cal_events = calendar.search(start=start_date, end=end_date, expand=True)
+                
+                for event in cal_events:
+                    ical = event.icalendar_component
+                    for component in ical.walk():
+                        if component.name == "VEVENT":
+                            summary = str(component.get('summary', 'Personal Event'))
+                            
+                            # Skip our own booking events
+                            if '📸' in summary or 'silwerlining' in summary.lower():
+                                continue
+                            
+                            dtstart = component.get('dtstart')
+                            dtend = component.get('dtend')
+                            
+                            if dtstart:
+                                if hasattr(dtstart.dt, 'isoformat'):
+                                    start_str = dtstart.dt.isoformat()
+                                else:
+                                    start_str = f"{dtstart.dt}T00:00:00"
+                                
+                                if dtend:
+                                    if hasattr(dtend.dt, 'isoformat'):
+                                        end_str = dtend.dt.isoformat()
+                                    else:
+                                        end_str = f"{dtend.dt}T23:59:59"
+                                else:
+                                    end_str = start_str
+                                
+                                all_events.append({
+                                    "summary": summary,
+                                    "start": start_str,
+                                    "end": end_str,
+                                    "calendar_name": calendar.name,
+                                    "is_work_calendar": calendar.name == booking_calendar
+                                })
+            except Exception as e:
+                logger.error(f"Failed to fetch events from calendar {calendar.name}: {e}")
+                continue
+        
+        return all_events
+    except Exception as e:
+        logger.error(f"Failed to connect to CalDAV: {e}")
+        return []
+
+async def get_booking_calendar():
+    """Get the calendar designated for creating bookings"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("apple_calendar_password"):
+        return None
+    
+    url = settings.get("apple_calendar_url") or "https://caldav.icloud.com"
+    username = settings.get("apple_calendar_user")
+    password = settings.get("apple_calendar_password")
+    booking_calendar_name = settings.get("booking_calendar", "")
+    
+    if not username or not password:
+        return None
+    
+    try:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+        principal = client.principal()
+        calendars = principal.calendars()
+        
+        # Find the designated booking calendar
+        for cal in calendars:
+            if booking_calendar_name and cal.name == booking_calendar_name:
+                return cal
+        
+        # Fallback to first calendar
+        return calendars[0] if calendars else None
+    except Exception as e:
+        logger.error(f"Failed to get booking calendar: {e}")
+        return None
 
 async def create_calendar_event(booking: dict) -> Optional[str]:
     """Create a calendar event for a booking"""

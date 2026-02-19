@@ -951,7 +951,7 @@ const BookingPage = () => {
                   Back
                 </Button>
               )}
-              {step < 3 ? (
+              {step < getTotalSteps() ? (
                 <Button
                   onClick={() => setStep(step + 1)}
                   disabled={!validateStep(step)}

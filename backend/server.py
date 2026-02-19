@@ -538,14 +538,20 @@ async def get_available_times(date: str, session_type: Optional[str] = None):
     ).to_list(100)
     booked_times = [b["booking_time"] for b in booked]
     
-    available = [t for t in all_times if t not in booked_times]
+    # Check Apple Calendar for blocked times (2-way sync)
+    calendar_blocked_times = await get_calendar_blocked_times(date, all_times)
+    
+    # Combine booked times and calendar blocked times
+    unavailable_times = set(booked_times + calendar_blocked_times)
+    available = [t for t in all_times if t not in unavailable_times]
     
     return {
         "date": date,
         "available_times": available,
         "is_weekend": is_weekend,
         "weekend_surcharge": settings.get("weekend_surcharge", 750) if is_weekend else 0,
-        "session_type": session_type
+        "session_type": session_type,
+        "calendar_blocked": len(calendar_blocked_times) > 0
     }
 
 # ==================== BOOKINGS (Public Create) ====================

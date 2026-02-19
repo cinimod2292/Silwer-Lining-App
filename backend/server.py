@@ -1521,25 +1521,33 @@ async def admin_get_calendar_settings(admin=Depends(verify_token)):
             "id": "default",
             "apple_calendar_url": "",
             "apple_calendar_user": "",
-            "sync_enabled": False
+            "sync_enabled": False,
+            "booking_calendar": ""
         }
     # Don't return the password
     settings.pop("apple_calendar_password", None)
     return settings
 
+@api_router.get("/admin/calendars")
+async def admin_list_calendars(admin=Depends(verify_token)):
+    """List all available Apple Calendars"""
+    calendars = await get_all_caldav_calendars()
+    return {"calendars": calendars}
+
 @api_router.put("/admin/calendar-settings")
-async def admin_update_calendar_settings(data: CalendarSettings, admin=Depends(verify_token)):
+async def admin_update_calendar_settings(data: dict, admin=Depends(verify_token)):
     """Update calendar sync settings"""
     update_data = {
         "id": "default",
-        "apple_calendar_url": data.apple_calendar_url,
-        "apple_calendar_user": data.apple_calendar_user,
-        "sync_enabled": data.sync_enabled
+        "apple_calendar_url": data.get("apple_calendar_url", ""),
+        "apple_calendar_user": data.get("apple_calendar_user", ""),
+        "sync_enabled": data.get("sync_enabled", False),
+        "booking_calendar": data.get("booking_calendar", "")
     }
     
     # Only update password if provided
-    if data.apple_calendar_password:
-        update_data["apple_calendar_password"] = data.apple_calendar_password
+    if data.get("apple_calendar_password"):
+        update_data["apple_calendar_password"] = data.get("apple_calendar_password")
     
     await db.calendar_settings.update_one(
         {"id": "default"},

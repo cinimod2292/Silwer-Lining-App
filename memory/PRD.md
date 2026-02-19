@@ -39,48 +39,55 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 ## What's Been Implemented (Feb 2026)
 
 ### Frontend Pages
-- **HomePage**: Hero section, services overview, featured work, testimonials, CTA, **Instagram Recent Shoots** ✅
+- **HomePage**: Hero section, services overview, featured work, testimonials, CTA, **Instagram Recent Shoots**, **Dynamic FAQs** ✅
 - **PortfolioPage**: Collage gallery with lightbox navigation (prev/next)
 - **PricingPage**: Tabbed packages (12 total) with add-ons in ZAR
-- **BookingPage**: Enhanced 3-step booking flow:
+- **BookingPage**: Enhanced booking flow with **dynamic questionnaire step**:
   - Step 1: Session type, package selection, **dynamic add-ons from API**
   - Step 2: Date/time selection with **weekend surcharge popup**
-  - Step 3: Contact details with **full price breakdown**
+  - Step 3: **Questionnaire** (only if questionnaire exists for session type) ✅ NEW
+  - Step 3/4: Contact details with **full price breakdown**
 - **AboutPage**: Photographer story, stats, philosophy
-- **ContactPage**: Contact form, FAQ section
+- **ContactPage**: Contact form, **Dynamic FAQs** ✅
 - **Admin Dashboard**:
   - Login/Authentication
   - Dashboard Home (stats overview)
   - Bookings Management (view, edit, filter by status)
   - Packages Management (CRUD operations)
-  - **Add-ons Management** (CRUD with category filtering) ✅ NEW
+  - **Add-ons Management** (CRUD with category filtering) ✅
   - Booking Settings (available days, time slots, buffer, lead time, blocked dates, weekend surcharge)
   - Calendar Sync (Apple Calendar settings UI - sync logic MOCKED)
-  - Portfolio Management (**bulk upload with R2 support**) ✅ ENHANCED
+  - Portfolio Management (**bulk upload with R2 support**) ✅
   - Testimonials Management
   - Messages Management
-  - **Email Templates** (visual + raw HTML editor, multiple template types) ✅ NEW
-  - **Settings Page** (Cloudflare R2 storage, Instagram config) ✅ NEW
+  - **Email Templates** (visual + raw HTML editor, multiple template types) ✅
+  - **Settings Page** (Cloudflare R2 storage, Instagram config) ✅
+  - **Questionnaires Management** (Google Forms-style builder) ✅
+  - **FAQ Management** (CRUD with categories and ordering) ✅ NEW
 
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages
 - `/api/admin/packages` - CRUD for packages
-- `/api/addons` - Get active add-ons (filter by session_type) ✅ NEW
-- `/api/admin/addons` - CRUD for add-ons ✅ NEW
-- `/api/bookings` - Create bookings + email confirmation
+- `/api/addons` - Get active add-ons (filter by session_type)
+- `/api/admin/addons` - CRUD for add-ons
+- `/api/bookings` - Create bookings + email confirmation (includes questionnaire responses)
 - `/api/bookings/available-times` - Get available time slots
 - `/api/admin/booking-settings` - GET/PUT booking configuration
 - `/api/admin/calendar-settings` - GET/PUT calendar sync settings
 - `/api/admin/calendar/sync` - Trigger calendar sync (MOCKED)
-- `/api/admin/email-templates` - CRUD for email templates ✅ NEW
-- `/api/admin/storage-settings` - GET/PUT R2 storage config ✅ NEW
-- `/api/admin/instagram-settings` - GET/PUT Instagram config ✅ NEW
-- `/api/instagram/feed` - Get Instagram posts for homepage ✅ NEW
-- `/api/admin/upload-image` - Single image upload to R2 ✅ NEW
-- `/api/admin/upload-images` - Multi-image upload to R2 ✅ NEW
+- `/api/admin/email-templates` - CRUD for email templates
+- `/api/admin/storage-settings` - GET/PUT R2 storage config
+- `/api/admin/instagram-settings` - GET/PUT Instagram config
+- `/api/instagram/feed` - Get Instagram posts for homepage
+- `/api/admin/upload-image` - Single image upload to R2
+- `/api/admin/upload-images` - Multi-image upload to R2
 - `/api/portfolio` - Get portfolio images
 - `/api/testimonials` - Get approved testimonials
 - `/api/contact` - Submit contact messages
+- `/api/faqs` - Get active FAQs (public) ✅ NEW
+- `/api/admin/faqs` - CRUD for FAQs ✅ NEW
+- `/api/questionnaire/{session_type}` - Get questionnaire for booking ✅ NEW
+- `/api/admin/questionnaires` - CRUD for questionnaires ✅
 - `/api/admin/*` - Protected admin routes (login, CRUD operations, stats)
 
 ### Design Features
@@ -99,13 +106,15 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Packages management in admin
 - [x] Booking settings configuration
 - [x] Calendar sync UI
+- [x] FAQ management with dynamic display ✅ NEW
+- [x] Questionnaire integration in booking flow ✅ NEW
 
 ### P1 (Next Priority - Blocked)
 - [ ] Apple Calendar 2-way sync logic (BLOCKED - awaiting user's Apple ID credentials)
+- [ ] Test Cloudflare R2 Portfolio Upload (BLOCKED - awaiting user's R2 credentials)
 - [ ] Google Reviews integration (needs clarification - manual entry or automated widget?)
 
 ### P2 (Future)
-- [ ] Image upload to cloud storage (currently URL-based)
 - [ ] SEO meta tags per page
 - [ ] Google Analytics integration
 - [ ] Shop section for sublimation/personalized gifts
@@ -124,8 +133,12 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 
 ## Notes
 - Apple Calendar sync logic is MOCKED - returns success but doesn't actually sync
+- Cloudflare R2 portfolio uploads are ready but need user credentials
 - Content (logo, images, packages, testimonials) was scraped from silwerlining.co.za
 - All prices are in ZAR (South African Rand)
+- Questionnaire data: Maternity session has active questionnaire with 4 questions
 
 ## Test Reports
 - /app/test_reports/iteration_3.json - 100% pass rate (Feb 2026)
+- /app/test_reports/iteration_4.json - Previous testing
+- /app/test_reports/iteration_5.json - FAQ & Questionnaire features (100% pass) ✅ NEW

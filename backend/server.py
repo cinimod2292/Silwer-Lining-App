@@ -211,6 +211,41 @@ class InstagramSettingsUpdate(BaseModel):
     enabled: bool = True
     post_count: int = 6
 
+# ==================== QUESTIONNAIRE MODELS ====================
+
+class QuestionOption(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    label: str
+    value: str = ""
+
+class Question(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # text, textarea, radio, checkbox, dropdown, date, time, number, email, phone
+    label: str
+    description: str = ""
+    required: bool = False
+    options: List[QuestionOption] = []  # For radio, checkbox, dropdown
+    placeholder: str = ""
+    validation: dict = {}  # min, max, pattern, etc.
+    order: int = 0
+
+class QuestionnaireCreate(BaseModel):
+    session_type: str
+    title: str = ""
+    description: str = ""
+    questions: List[Question] = []
+    active: bool = True
+
+class Questionnaire(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    session_type: str  # maternity, newborn, family, etc.
+    title: str = ""
+    description: str = ""
+    questions: List[Question] = []
+    active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 class PortfolioCreate(BaseModel):
     title: str
     category: str

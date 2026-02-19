@@ -817,13 +817,23 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
     """
     events = []
     
-    # 1. Get all bookings in date range
+    # 1. Get booking settings for time slots
+    booking_settings = await db.booking_settings.find_one({"id": "default"}, {"_id": 0})
+    if not booking_settings:
+        booking_settings = {"time_slots": ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"], "available_days": [1,2,3,4,5]}
+    
+    # Get all bookings in date range
     bookings = await db.bookings.find({
         "booking_date": {"$gte": start_date, "$lte": end_date},
         "status": {"$nin": ["cancelled"]}
     }, {"_id": 0}).to_list(500)
     
+    # Track booked slots
+    booked_slots = {}
     for booking in bookings:
+        key = f"{booking['booking_date']}_{booking['booking_time']}"
+        booked_slots[key] = booking
+        
         # Parse time for proper event display
         hour, minute = parse_time_slot(booking["booking_time"])
         if hour is not None:

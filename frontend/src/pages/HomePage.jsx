@@ -138,6 +138,14 @@ const HomePage = () => {
     { icon: Camera, title: "Brand/Product", description: "Professional product and brand photography", image: "https://images-pw.pixieset.com/site/Nzv0dL/70GxyA/_DSC6154-17ae8b12-1500.jpg", link: "/portfolio?category=brand-product" },
   ];
 
+  // Default FAQs (fallback if API empty)
+  const defaultFAQs = [
+    { id: "1", question: "Where are you located?", answer: "My studio is home-based in Helderkruin, Roodepoort JHB." },
+    { id: "2", question: "When should I book?", answer: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome!" },
+    { id: "3", question: "Do you provide outfits?", answer: "Yes! Beautiful outfits are provided for maternity and newborn sessions. You can also bring your own special pieces." },
+    { id: "4", question: "When will I get my photos?", answer: "Editing is done within 2 weeks after confirmation of your final selections (excluding public holidays and weekends)." },
+  ];
+
   return (
     <div>
       {/* Hero Section */}

@@ -61,6 +61,16 @@ const BookingSettingsPage = () => {
   const [activeSessionType, setActiveSessionType] = useState("maternity");
   const [expandedDays, setExpandedDays] = useState({});
   
+  // Copy to days modal
+  const [showCopyToDaysModal, setShowCopyToDaysModal] = useState(false);
+  const [copyFromDay, setCopyFromDay] = useState(null);
+  const [selectedCopyDays, setSelectedCopyDays] = useState([]);
+  
+  // Copy to session type modal
+  const [showCopyToSessionModal, setShowCopyToSessionModal] = useState(false);
+  const [copyFromSessionDay, setCopyFromSessionDay] = useState(null);
+  const [selectedCopySession, setSelectedCopySession] = useState("");
+  
   // Time slot schedule: { sessionType: { dayId: ["09:00", "13:00"], ... }, ... }
   const [timeSlotSchedule, setTimeSlotSchedule] = useState({});
   

@@ -940,6 +940,12 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
     }, {"_id": 0}).to_list(500)
     blocked_set = {f"{s['date']}_{s['time']}" for s in blocked_slots_db}
     
+    # Get custom slots (manually added available slots)
+    custom_slots_db = await db.custom_slots.find({
+        "date": {"$gte": start_date, "$lte": end_date}
+    }, {"_id": 0}).to_list(500)
+    custom_slots_dict = {f"{s['date']}_{s['time']}": s for s in custom_slots_db}
+    
     # Get calendar blocked times
     calendar_blocked = {}
     if settings and settings.get("sync_enabled"):
@@ -970,7 +976,55 @@ async def admin_get_calendar_view(start_date: str, end_date: str, admin=Depends(
     time_slots = booking_settings.get("time_slots", ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"])
     available_days = booking_settings.get("available_days", [1,2,3,4,5])  # Mon-Fri by default
     
-    # Generate dates in range
+    # First, add custom slots (these override normal schedule)
+    for slot_key, slot_data in custom_slots_dict.items():
+        date_str = slot_data["date"]
+        time_slot = slot_data["time"]
+        
+        # Skip if booked or blocked
+        if slot_key in booked_slots or slot_key in blocked_set:
+            continue
+        
+        hour, minute = parse_time_slot(time_slot)
+        if hour is None:
+            continue
+        
+        # Check calendar blocking
+        is_calendar_blocked = False
+        if date_str in calendar_blocked:
+            slot_start = hour * 60 + minute
+            slot_end = (hour + 2) * 60 + minute
+            for cal_evt in calendar_blocked[date_str]:
+                evt_start = cal_evt["start_hour"] * 60 + cal_evt["start_min"]
+                evt_end = cal_evt["end_hour"] * 60 + cal_evt["end_min"]
+                if not (slot_end <= evt_start or slot_start >= evt_end):
+                    is_calendar_blocked = True
+                    break
+        
+        if is_calendar_blocked:
+            continue
+        
+        start_dt = f"{date_str}T{hour:02d}:{minute:02d}:00"
+        end_hour = hour + 2
+        end_dt = f"{date_str}T{end_hour:02d}:{minute:02d}:00"
+        
+        events.append({
+            "id": f"open-{date_str}-{time_slot}",
+            "title": "✅ Available",
+            "start": start_dt,
+            "end": end_dt,
+            "backgroundColor": "#22C55E",
+            "borderColor": "#22C55E",
+            "display": "block",
+            "extendedProps": {
+                "type": "open",
+                "date": date_str,
+                "time": time_slot,
+                "isCustom": True
+            }
+        })
+    
+    # Generate dates in range for regular schedule
     current = datetime.strptime(start_date, "%Y-%m-%d")
     end = datetime.strptime(end_date, "%Y-%m-%d")
     

@@ -70,6 +70,7 @@ const AdminDashboard = () => {
     { icon: Calendar, label: "Bookings", path: "/admin/bookings" },
     { icon: Package, label: "Packages", path: "/admin/packages" },
     { icon: Tag, label: "Add-ons", path: "/admin/addons" },
+    { icon: ClipboardList, label: "Questionnaires", path: "/admin/questionnaires" },
     { icon: Clock, label: "Booking Settings", path: "/admin/booking-settings" },
     { icon: CalendarDays, label: "Calendar Sync", path: "/admin/calendar" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },

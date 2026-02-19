@@ -457,26 +457,22 @@ const BookingPage = () => {
       {/* Progress Steps */}
       <div className="max-w-4xl mx-auto px-6 md:px-12 py-8">
         <div className="flex items-center justify-center gap-4 md:gap-8">
-          {[
-            { num: 1, label: "Session & Add-ons" },
-            { num: 2, label: "Date & Time" },
-            { num: 3, label: "Details & Payment" },
-          ].map((s, i) => (
-            <div key={s.num} className="flex items-center">
+          {Array.from({ length: getTotalSteps() }, (_, i) => i + 1).map((s, i) => (
+            <div key={s} className="flex items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                  step >= s.num
+                  step >= s
                     ? "bg-primary text-white"
                     : "bg-warm-sand text-muted-foreground"
                 }`}
               >
-                {s.num}
+                {s}
               </div>
-              <span className="ml-2 text-sm hidden md:block">{s.label}</span>
-              {i < 2 && (
+              <span className="ml-2 text-sm hidden md:block">{getStepLabel(s)}</span>
+              {i < getTotalSteps() - 1 && (
                 <div
                   className={`w-12 md:w-24 h-0.5 ml-4 ${
-                    step > s.num ? "bg-primary" : "bg-warm-sand"
+                    step > s ? "bg-primary" : "bg-warm-sand"
                   }`}
                 />
               )}

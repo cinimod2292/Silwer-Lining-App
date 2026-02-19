@@ -913,6 +913,106 @@ async def get_blocked_times_from_calendar(date_str: str) -> List[dict]:
         logger.error(f"Failed to get calendar events: {e}")
         return []
 
+async def get_calendar_blocked_times(date_str: str, time_slots: List[str]) -> List[str]:
+    """Check which time slots are blocked by calendar events"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return []
+    
+    _, calendar = await get_caldav_client()
+    if not calendar:
+        return []
+    
+    blocked_slots = []
+    
+    try:
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+        # Set timezone to South Africa (UTC+2)
+        start_of_day = date.replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
+        end_of_day = date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        
+        events = calendar.search(start=start_of_day, end=end_of_day, expand=True)
+        
+        calendar_events = []
+        for event in events:
+            ical = event.icalendar_component
+            for component in ical.walk():
+                if component.name == "VEVENT":
+                    dtstart = component.get('dtstart')
+                    dtend = component.get('dtend')
+                    summary = str(component.get('summary', ''))
+                    
+                    # Skip events that are bookings we created (they have 📸 in title)
+                    if '📸' in summary or 'silwerlining' in summary.lower():
+                        continue
+                    
+                    if dtstart and dtend:
+                        start_dt = dtstart.dt
+                        end_dt = dtend.dt
+                        
+                        # Handle all-day events (date objects instead of datetime)
+                        if not hasattr(start_dt, 'hour'):
+                            # All-day event blocks the entire day
+                            return time_slots  # All slots blocked
+                        
+                        calendar_events.append({
+                            "start_hour": start_dt.hour,
+                            "start_minute": start_dt.minute,
+                            "end_hour": end_dt.hour,
+                            "end_minute": end_dt.minute
+                        })
+        
+        # Check each time slot against calendar events
+        for time_slot in time_slots:
+            # Parse time slot (formats: "09:00", "9:00 AM", "14:00", "2:00 PM")
+            slot_hour, slot_minute = parse_time_slot(time_slot)
+            if slot_hour is None:
+                continue
+            
+            # Check if this slot overlaps with any calendar event
+            # Assume 2-hour session duration
+            slot_end_hour = slot_hour + 2
+            
+            for evt in calendar_events:
+                evt_start = evt["start_hour"] * 60 + evt["start_minute"]
+                evt_end = evt["end_hour"] * 60 + evt["end_minute"]
+                slot_start = slot_hour * 60 + slot_minute
+                slot_end = slot_end_hour * 60 + slot_minute
+                
+                # Check for overlap
+                if not (slot_end <= evt_start or slot_start >= evt_end):
+                    blocked_slots.append(time_slot)
+                    break
+        
+        return blocked_slots
+        
+    except Exception as e:
+        logger.error(f"Failed to check calendar blocked times: {e}")
+        return []
+
+def parse_time_slot(time_str: str) -> tuple:
+    """Parse a time slot string into hour and minute"""
+    try:
+        time_str = time_str.strip().upper()
+        
+        # Handle AM/PM format
+        is_pm = "PM" in time_str
+        is_am = "AM" in time_str
+        time_str = time_str.replace("AM", "").replace("PM", "").strip()
+        
+        parts = time_str.split(":")
+        hour = int(parts[0])
+        minute = int(parts[1]) if len(parts) > 1 else 0
+        
+        if is_pm and hour != 12:
+            hour += 12
+        elif is_am and hour == 12:
+            hour = 0
+        
+        return hour, minute
+    except:
+        return None, None
+
 @api_router.get("/admin/calendar-settings")
 async def admin_get_calendar_settings(admin=Depends(verify_token)):
     """Get calendar sync settings"""

@@ -572,9 +572,6 @@ const BookingSettingsPage = () => {
             </div>
           </div>
         </div>
-            </div>
-          </div>
-        </div>
 
         {/* Blocked Dates */}
         <div className="bg-white rounded-xl shadow-soft p-6">

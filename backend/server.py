@@ -1296,12 +1296,13 @@ async def get_booking_calendar():
         return None
 
 async def create_calendar_event(booking: dict) -> Optional[str]:
-    """Create a calendar event for a booking"""
+    """Create a calendar event for a booking on the designated booking calendar"""
     settings = await db.calendar_settings.find_one({"id": "default"})
     if not settings or not settings.get("sync_enabled"):
         return None
     
-    _, calendar = await get_caldav_client()
+    # Use the designated booking calendar
+    calendar = await get_booking_calendar()
     if not calendar:
         logger.warning("No calendar available for sync")
         return None
@@ -1345,9 +1346,9 @@ Notes: {booking.get('notes', 'None')}
         
         cal.add_component(event)
         
-        # Save to CalDAV
+        # Save to CalDAV - use the booking calendar
         calendar.save_event(cal.to_ical().decode('utf-8'))
-        logger.info(f"Calendar event created for booking {booking['id']}")
+        logger.info(f"Calendar event created for booking {booking['id']} on calendar: {calendar.name}")
         return event_uid
         
     except Exception as e:

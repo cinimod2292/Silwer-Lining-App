@@ -1128,6 +1128,59 @@ async def admin_test_calendar_connection(admin=Depends(verify_token)):
         "message": f"Successfully connected to calendar: {calendar.name}"
     }
 
+@api_router.get("/admin/calendar/events")
+async def admin_get_calendar_events(date: str, admin=Depends(verify_token)):
+    """Get calendar events for a specific date (for debugging 2-way sync)"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        raise HTTPException(status_code=400, detail="Calendar sync not enabled")
+    
+    _, calendar = await get_caldav_client()
+    if not calendar:
+        raise HTTPException(status_code=400, detail="Failed to connect to calendar")
+    
+    try:
+        date_obj = datetime.strptime(date, "%Y-%m-%d")
+        start = date_obj.replace(hour=0, minute=0, second=0, tzinfo=timezone.utc)
+        end = date_obj.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+        
+        events = calendar.search(start=start, end=end, expand=True)
+        
+        event_list = []
+        for event in events:
+            ical = event.icalendar_component
+            for component in ical.walk():
+                if component.name == "VEVENT":
+                    dtstart = component.get('dtstart')
+                    dtend = component.get('dtend')
+                    summary = str(component.get('summary', 'No Title'))
+                    
+                    start_str = dtstart.dt.isoformat() if dtstart and hasattr(dtstart.dt, 'isoformat') else str(dtstart.dt) if dtstart else "Unknown"
+                    end_str = dtend.dt.isoformat() if dtend and hasattr(dtend.dt, 'isoformat') else str(dtend.dt) if dtend else "Unknown"
+                    
+                    is_booking = '📸' in summary or 'silwerlining' in summary.lower()
+                    
+                    event_list.append({
+                        "summary": summary,
+                        "start": start_str,
+                        "end": end_str,
+                        "is_booking_event": is_booking,
+                        "blocks_availability": not is_booking
+                    })
+        
+        return {
+            "date": date,
+            "calendar_name": calendar.name,
+            "event_count": len(event_list),
+            "events": event_list
+        }
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
+    except Exception as e:
+        logger.error(f"Failed to get calendar events: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching events: {str(e)}")
+
 # ==================== ADMIN - PORTFOLIO ====================
 
 @api_router.get("/admin/portfolio")

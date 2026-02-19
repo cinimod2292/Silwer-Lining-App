@@ -323,45 +323,37 @@ const ContactPage = () => {
             Frequently Asked Questions
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left mt-10">
-            {[
-              {
-                q: "Do you shoot/book weekends?",
-                a: "Shoots take place between Mon-Fri 9am-4pm. Weekend and public holiday sessions are available upon request at an additional cost of R500.",
-              },
-              {
-                q: "Where am I located?",
-                a: "My studio is home-based in Helderkruin, Roodepoort JHB.",
-              },
-              {
-                q: "Do you provide hair and makeup?",
-                a: "Makeup services are an add-on option. Hair is NOT provided - this should be arranged by you and done before you arrive for your session.",
-              },
-              {
-                q: "How far in advance should I book?",
-                a: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome where possible.",
-              },
-              {
-                q: "When will I get my photos?",
-                a: "Editing is done within 2 weeks after confirmation of your final selections (excluding public holidays and weekends).",
-              },
-              {
-                q: "Do you have a cancellation fee?",
-                a: "Yes, it is 25% of your invoiced total.",
-              },
-              {
-                q: "Do you have a reschedule fee?",
-                a: "Yes, it is R550 and is applicable when you request a reschedule of your shoot date.",
-              },
-              {
-                q: "Why do a studio session?",
-                a: "The studio is booked for only 1 family per slot which makes it private and allows for a relaxing atmosphere. Your session will also not be affected by mother nature.",
-              },
-            ].map((faq, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-soft" data-testid={`faq-${index}`}>
-                <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground text-sm">{faq.a}</p>
+            {faqs.length > 0 ? faqs.map((faq, index) => (
+              <div key={faq.id} className="bg-white rounded-xl p-6 shadow-soft" data-testid={`faq-${index}`}>
+                <h3 className="font-semibold text-foreground mb-2">{faq.question}</h3>
+                <p className="text-muted-foreground text-sm">{faq.answer}</p>
               </div>
-            ))}
+            )) : (
+              // Default fallback FAQs
+              [
+                {
+                  q: "Do you shoot/book weekends?",
+                  a: "Shoots take place between Mon-Fri 9am-4pm. Weekend and public holiday sessions are available upon request at an additional cost of R500.",
+                },
+                {
+                  q: "Where am I located?",
+                  a: "My studio is home-based in Helderkruin, Roodepoort JHB.",
+                },
+                {
+                  q: "Do you provide hair and makeup?",
+                  a: "Makeup services are an add-on option. Hair is NOT provided - this should be arranged by you and done before you arrive for your session.",
+                },
+                {
+                  q: "How far in advance should I book?",
+                  a: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome where possible.",
+                },
+              ].map((faq, index) => (
+                <div key={index} className="bg-white rounded-xl p-6 shadow-soft" data-testid={`faq-${index}`}>
+                  <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
+                  <p className="text-muted-foreground text-sm">{faq.a}</p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>

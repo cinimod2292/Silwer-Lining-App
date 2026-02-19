@@ -161,6 +161,33 @@ class CalendarSettings(BaseModel):
     apple_calendar_password: str = ""
     sync_enabled: bool = False
 
+# ==================== MANUAL BOOKING MODELS ====================
+
+class ManualBookingCreate(BaseModel):
+    """Admin creates a placeholder booking, sends link to client"""
+    client_name: str
+    client_email: EmailStr
+    client_phone: str = ""
+    session_type: str
+    booking_date: str
+    booking_time: str
+    notes: str = ""
+
+class ManualBookingToken(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    booking_id: str
+    token: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    expires_at: str = ""
+    used: bool = False
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class BlockedSlot(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    date: str
+    time: str
+    reason: str = "Blocked"
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 # ==================== ADD-ONS MODELS ====================
 
 class AddOnCreate(BaseModel):

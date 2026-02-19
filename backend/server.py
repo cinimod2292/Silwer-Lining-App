@@ -110,6 +110,8 @@ class BookingCreate(BaseModel):
     is_weekend: bool = False
     weekend_surcharge: int = 0
     total_price: int = 0
+    # Questionnaire responses
+    questionnaire_responses: dict = {}
 
 class BookingUpdate(BaseModel):
     client_name: Optional[str] = None

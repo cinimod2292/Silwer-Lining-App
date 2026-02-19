@@ -655,9 +655,164 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Step 3: Contact Details & Summary */}
-            {step === 3 && (
-              <div className="space-y-6" data-testid="step-3">
+            {/* Step 3: Questionnaire (only if questionnaire exists) */}
+            {step === 3 && getTotalSteps() === 4 && questionnaire && (
+              <div className="space-y-6" data-testid="step-3-questionnaire">
+                <div className="text-center mb-8">
+                  <ClipboardList className="w-10 h-10 text-primary mx-auto mb-3" />
+                  <h2 className="font-display text-xl font-semibold">
+                    {questionnaire.title || `${formData.session_type?.replace('-', ' ')} Session Questionnaire`}
+                  </h2>
+                  {questionnaire.description && (
+                    <p className="text-muted-foreground mt-2">{questionnaire.description}</p>
+                  )}
+                </div>
+                
+                {questionnaire.questions?.map((question) => (
+                  <div key={question.id} className="space-y-2" data-testid={`question-${question.id}`}>
+                    <Label className="flex items-center gap-1 text-base">
+                      {question.label}
+                      {question.required && <span className="text-red-500">*</span>}
+                    </Label>
+                    {question.description && (
+                      <p className="text-xs text-muted-foreground">{question.description}</p>
+                    )}
+                    
+                    {/* Text input */}
+                    {question.type === "text" && (
+                      <Input
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        placeholder={question.placeholder}
+                        className="h-12"
+                      />
+                    )}
+                    
+                    {/* Textarea */}
+                    {question.type === "textarea" && (
+                      <Textarea
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        placeholder={question.placeholder}
+                        rows={3}
+                      />
+                    )}
+                    
+                    {/* Email */}
+                    {question.type === "email" && (
+                      <Input
+                        type="email"
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        placeholder={question.placeholder || "email@example.com"}
+                        className="h-12"
+                      />
+                    )}
+                    
+                    {/* Phone */}
+                    {question.type === "phone" && (
+                      <Input
+                        type="tel"
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        placeholder={question.placeholder || "+27 12 345 6789"}
+                        className="h-12"
+                      />
+                    )}
+                    
+                    {/* Number */}
+                    {question.type === "number" && (
+                      <Input
+                        type="number"
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        placeholder={question.placeholder || "0"}
+                        className="h-12 w-32"
+                      />
+                    )}
+                    
+                    {/* Date */}
+                    {question.type === "date" && (
+                      <Input
+                        type="date"
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        className="h-12 w-48"
+                      />
+                    )}
+                    
+                    {/* Time */}
+                    {question.type === "time" && (
+                      <Input
+                        type="time"
+                        value={questionnaireResponses[question.id] || ""}
+                        onChange={(e) => handleQuestionnaireChange(question.id, e.target.value)}
+                        className="h-12 w-32"
+                      />
+                    )}
+                    
+                    {/* Radio (Multiple Choice) */}
+                    {question.type === "radio" && (
+                      <RadioGroup
+                        value={questionnaireResponses[question.id] || ""}
+                        onValueChange={(value) => handleQuestionnaireChange(question.id, value)}
+                        className="space-y-2"
+                      >
+                        {question.options?.map((opt) => (
+                          <div key={opt.id} className="flex items-center space-x-2">
+                            <RadioGroupItem value={opt.label} id={opt.id} />
+                            <Label htmlFor={opt.id} className="font-normal cursor-pointer">
+                              {opt.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )}
+                    
+                    {/* Checkbox (Multiple Select) */}
+                    {question.type === "checkbox" && (
+                      <div className="space-y-2">
+                        {question.options?.map((opt) => (
+                          <div key={opt.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={opt.id}
+                              checked={(questionnaireResponses[question.id] || []).includes(opt.label)}
+                              onCheckedChange={() => handleQuestionnaireChange(question.id, opt.label, true)}
+                            />
+                            <Label htmlFor={opt.id} className="font-normal cursor-pointer">
+                              {opt.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Dropdown */}
+                    {question.type === "dropdown" && (
+                      <Select
+                        value={questionnaireResponses[question.id] || ""}
+                        onValueChange={(value) => handleQuestionnaireChange(question.id, value)}
+                      >
+                        <SelectTrigger className="w-full md:w-64">
+                          <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {question.options?.map((opt) => (
+                            <SelectItem key={opt.id} value={opt.label}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Step 3 (no questionnaire) or Step 4 (with questionnaire): Contact Details & Summary */}
+            {((step === 3 && getTotalSteps() === 3) || (step === 4 && getTotalSteps() === 4)) && (
+              <div className="space-y-6" data-testid="step-details">
                 <div>
                   <Label htmlFor="name" className="flex items-center gap-2 mb-2">
                     <User className="w-4 h-4" /> Full Name

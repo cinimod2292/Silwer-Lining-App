@@ -284,6 +284,24 @@ class Testimonial(BaseModel):
     approved: bool = False
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+# ==================== FAQ MODELS ====================
+
+class FAQCreate(BaseModel):
+    question: str
+    answer: str
+    category: str = "general"  # general, booking, pricing, session, etc.
+    order: int = 0
+    active: bool = True
+
+class FAQ(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    question: str
+    answer: str
+    category: str = "general"
+    order: int = 0
+    active: bool = True
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
 class ContactMessageCreate(BaseModel):
     name: str
     email: EmailStr

@@ -415,7 +415,11 @@ const AdminCalendarPage = () => {
                   <Plus className="w-4 h-4" />
                   Create Manual Booking
                 </Button>
-                <Button variant="outline" onClick={handleBlockSlot} className="w-full gap-2">
+                <Button variant="outline" onClick={handleAddSlot} className="w-full gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Add as Available Slot
+                </Button>
+                <Button variant="outline" onClick={handleBlockSlot} className="w-full gap-2 text-red-600 hover:text-red-700">
                   <Lock className="w-4 h-4" />
                   Block This Slot
                 </Button>

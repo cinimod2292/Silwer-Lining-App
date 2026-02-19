@@ -215,7 +215,11 @@ const AdminCalendarPage = () => {
         </div>
         <div className="flex items-center gap-4">
           {/* Legend */}
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm flex-wrap">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-[#22C55E]"></div>
+              <span>Available</span>
+            </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
               <span>Confirmed</span>

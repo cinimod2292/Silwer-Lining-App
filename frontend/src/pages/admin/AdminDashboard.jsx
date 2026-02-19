@@ -3,7 +3,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom"
 import {
   Camera, LayoutDashboard, Calendar, Image, MessageSquare,
   Mail, LogOut, Menu, X, ChevronRight, Package, Settings, CalendarDays,
-  Tag, Users, Clock, RefreshCcw
+  Tag, Users, Clock, RefreshCcw, ClipboardList
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -21,6 +21,7 @@ import MessagesManage from "./MessagesManage";
 import AddOnsManage from "./AddOnsManage";
 import EmailTemplatesManage from "./EmailTemplatesManage";
 import SettingsPage from "./SettingsPage";
+import QuestionnairesManage from "./QuestionnairesManage";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

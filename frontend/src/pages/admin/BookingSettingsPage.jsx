@@ -78,13 +78,11 @@ const BookingSettingsPage = () => {
   const [newSlotInputs, setNewSlotInputs] = useState({});
   
   const [settings, setSettings] = useState({
-    available_days: [1, 2, 3, 4, 5, 6],
     buffer_minutes: 30,
     min_lead_days: 3,
     max_advance_days: 90,
     blocked_dates: [],
     weekend_surcharge: 750,
-    session_duration_default: 120,
   });
 
   useEffect(() => {

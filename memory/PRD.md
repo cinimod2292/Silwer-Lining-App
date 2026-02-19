@@ -73,10 +73,16 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - `/api/addons` - Get active add-ons (filter by session_type)
 - `/api/admin/addons` - CRUD for add-ons
 - `/api/bookings` - Create bookings + email confirmation (includes questionnaire responses)
-- `/api/bookings/available-times` - Get available time slots
+- `/api/bookings/available-times` - Get available time slots (**with calendar blocking**) ✅
 - `/api/admin/booking-settings` - GET/PUT booking configuration
 - `/api/admin/calendar-settings` - GET/PUT calendar sync settings
-- `/api/admin/calendar/sync` - Trigger calendar sync (MOCKED)
+- `/api/admin/calendar/sync` - Trigger calendar sync (**WORKING - CalDAV**) ✅
+- `/api/admin/calendar/test` - Test Apple Calendar connection ✅ NEW
+- `/api/admin/calendar/events` - Get calendar events for date (debug) ✅ NEW
+- `/api/admin/calendar-view` - Get all events for calendar view ✅ NEW
+- `/api/admin/blocked-slots` - CRUD for manually blocked time slots ✅ NEW
+- `/api/admin/manual-booking` - Create manual booking with client link ✅ NEW
+- `/api/booking-token/{token}` - Get/complete booking by token ✅ NEW
 - `/api/admin/email-templates` - CRUD for email templates
 - `/api/admin/storage-settings` - GET/PUT R2 storage config
 - `/api/admin/instagram-settings` - GET/PUT Instagram config
@@ -86,10 +92,10 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - `/api/portfolio` - Get portfolio images
 - `/api/testimonials` - Get approved testimonials
 - `/api/contact` - Submit contact messages
-- `/api/faqs` - Get active FAQs (public) ✅ NEW
-- `/api/admin/faqs` - CRUD for FAQs ✅ NEW
-- `/api/questionnaire/{session_type}` - Get questionnaire for booking ✅ NEW
-- `/api/admin/questionnaires` - CRUD for questionnaires ✅
+- `/api/faqs` - Get active FAQs (public)
+- `/api/admin/faqs` - CRUD for FAQs
+- `/api/questionnaire/{session_type}` - Get questionnaire for booking
+- `/api/admin/questionnaires` - CRUD for questionnaires
 - `/api/admin/*` - Protected admin routes (login, CRUD operations, stats)
 
 ### Design Features

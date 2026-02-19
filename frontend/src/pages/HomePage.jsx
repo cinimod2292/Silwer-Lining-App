@@ -456,15 +456,10 @@ const HomePage = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              { q: "Where are you located?", a: "My studio is home-based in Helderkruin, Roodepoort JHB." },
-              { q: "When should I book?", a: "Bookings need to be made at least 3 months in advance, especially for weekend dates. Last minute bookings are also welcome!" },
-              { q: "Do you provide outfits?", a: "Yes! Beautiful outfits are provided for maternity and newborn sessions. You can also bring your own special pieces." },
-              { q: "When will I get my photos?", a: "Editing is done within 2 weeks after confirmation of your final selections (excluding public holidays and weekends)." },
-            ].map((faq, index) => (
-              <div key={index} className="bg-white rounded-xl p-6 shadow-soft">
-                <h3 className="font-semibold text-foreground mb-2">{faq.q}</h3>
-                <p className="text-muted-foreground text-sm">{faq.a}</p>
+            {(faqs.length > 0 ? faqs.slice(0, 4) : defaultFAQs).map((faq, index) => (
+              <div key={faq.id || index} className="bg-white rounded-xl p-6 shadow-soft">
+                <h3 className="font-semibold text-foreground mb-2">{faq.question}</h3>
+                <p className="text-muted-foreground text-sm">{faq.answer}</p>
               </div>
             ))}
           </div>

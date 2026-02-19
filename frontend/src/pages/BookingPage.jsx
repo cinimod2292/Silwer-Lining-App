@@ -124,6 +124,32 @@ const BookingPage = () => {
     }
   };
 
+  const fetchQuestionnaire = async (sessionType) => {
+    try {
+      const res = await axios.get(`${API}/questionnaire/${sessionType}`);
+      if (res.data && res.data.questions && res.data.questions.length > 0) {
+        setQuestionnaire(res.data);
+        // Initialize responses object
+        const initialResponses = {};
+        res.data.questions.forEach(q => {
+          if (q.type === "checkbox") {
+            initialResponses[q.id] = [];
+          } else {
+            initialResponses[q.id] = "";
+          }
+        });
+        setQuestionnaireResponses(initialResponses);
+      } else {
+        setQuestionnaire(null);
+        setQuestionnaireResponses({});
+      }
+    } catch (e) {
+      console.error("No questionnaire for this session type");
+      setQuestionnaire(null);
+      setQuestionnaireResponses({});
+    }
+  };
+
   const fetchAvailableTimes = async (date, sessionType = null) => {
     try {
       let url = `${API}/bookings/available-times?date=${date}`;

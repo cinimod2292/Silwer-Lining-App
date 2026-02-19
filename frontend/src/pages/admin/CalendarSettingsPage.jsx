@@ -203,6 +203,31 @@ const CalendarSettingsPage = () => {
               </p>
             </div>
 
+            {/* Calendar Selection for Bookings */}
+            {availableCalendars.length > 0 && (
+              <div>
+                <Label className="mb-2 block">Calendar for New Bookings</Label>
+                <Select
+                  value={settings.booking_calendar}
+                  onValueChange={(v) => setSettings((prev) => ({ ...prev, booking_calendar: v }))}
+                >
+                  <SelectTrigger data-testid="select-booking-calendar">
+                    <SelectValue placeholder="Select calendar for bookings" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCalendars.map((cal) => (
+                      <SelectItem key={cal.name} value={cal.name}>
+                        {cal.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  New bookings will be created on this calendar. Events from ALL calendars will block availability.
+                </p>
+              </div>
+            )}
+
             {/* Test Connection Button */}
             <Button
               onClick={handleTestConnection}

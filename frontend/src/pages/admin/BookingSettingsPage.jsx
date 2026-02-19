@@ -189,24 +189,81 @@ const BookingSettingsPage = () => {
     }));
   };
 
-  const copyToAllDays = (sessionType, fromDayId) => {
-    const slots = getTimeSlotsForDay(sessionType, fromDayId);
+  const openCopyToDaysModal = (dayId) => {
+    const slots = getTimeSlotsForDay(activeSessionType, dayId);
     if (slots.length === 0) {
       toast.error("No time slots to copy");
       return;
     }
-    
-    const newSchedule = { ...timeSlotSchedule };
-    if (!newSchedule[sessionType]) {
-      newSchedule[sessionType] = {};
+    setCopyFromDay(dayId);
+    // Pre-select all available days except the source day
+    setSelectedCopyDays(settings.available_days.filter(d => d !== dayId));
+    setShowCopyToDaysModal(true);
+  };
+
+  const handleCopyToDays = () => {
+    if (selectedCopyDays.length === 0) {
+      toast.error("Please select at least one day");
+      return;
     }
     
-    settings.available_days.forEach((dayId) => {
-      newSchedule[sessionType][dayId] = [...slots];
+    const slots = getTimeSlotsForDay(activeSessionType, copyFromDay);
+    const newSchedule = { ...timeSlotSchedule };
+    
+    if (!newSchedule[activeSessionType]) {
+      newSchedule[activeSessionType] = {};
+    }
+    
+    selectedCopyDays.forEach((dayId) => {
+      newSchedule[activeSessionType][dayId] = [...slots];
     });
     
     setTimeSlotSchedule(newSchedule);
-    toast.success(`Copied ${slots.length} slots to all available days`);
+    setShowCopyToDaysModal(false);
+    toast.success(`Copied ${slots.length} slots to ${selectedCopyDays.length} day(s)`);
+  };
+
+  const toggleCopyDay = (dayId) => {
+    setSelectedCopyDays(prev => 
+      prev.includes(dayId) 
+        ? prev.filter(d => d !== dayId)
+        : [...prev, dayId]
+    );
+  };
+
+  const openCopyToSessionModal = (dayId) => {
+    const slots = getTimeSlotsForDay(activeSessionType, dayId);
+    if (slots.length === 0) {
+      toast.error("No time slots to copy");
+      return;
+    }
+    setCopyFromSessionDay(dayId);
+    setSelectedCopySession("");
+    setShowCopyToSessionModal(true);
+  };
+
+  const handleCopyToSession = () => {
+    if (!selectedCopySession) {
+      toast.error("Please select a session type");
+      return;
+    }
+    
+    const slots = getTimeSlotsForDay(activeSessionType, copyFromSessionDay);
+    const newSchedule = { ...timeSlotSchedule };
+    
+    if (!newSchedule[selectedCopySession]) {
+      newSchedule[selectedCopySession] = {};
+    }
+    
+    // Copy to the same day in the target session type
+    newSchedule[selectedCopySession][copyFromSessionDay] = [...slots];
+    
+    setTimeSlotSchedule(newSchedule);
+    setShowCopyToSessionModal(false);
+    
+    const targetName = sessionTypes.find(s => s.id === selectedCopySession)?.name;
+    const dayName = daysOfWeek.find(d => d.id === copyFromSessionDay)?.name;
+    toast.success(`Copied ${slots.length} slots to ${targetName} (${dayName})`);
   };
 
   const toggleDayExpanded = (dayId) => {

@@ -13,6 +13,8 @@ const CalendarSettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState(null);
   
   const [settings, setSettings] = useState({
     apple_calendar_url: "",

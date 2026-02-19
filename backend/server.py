@@ -1053,6 +1053,29 @@ async def admin_delete_blocked_slot(slot_id: str, admin=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="Blocked slot not found")
     return {"message": "Slot unblocked"}
 
+@api_router.post("/admin/custom-slots")
+async def admin_create_custom_slot(data: dict, admin=Depends(verify_token)):
+    """Add a custom available time slot for a specific date"""
+    slot = CustomSlot(
+        date=data["date"],
+        time=data["time"]
+    )
+    # Check if slot already exists
+    existing = await db.custom_slots.find_one({"date": data["date"], "time": data["time"]})
+    if existing:
+        raise HTTPException(status_code=400, detail="This time slot already exists")
+    
+    await db.custom_slots.insert_one(slot.model_dump())
+    return {"message": "Time slot added", "id": slot.id}
+
+@api_router.delete("/admin/custom-slots/{slot_id}")
+async def admin_delete_custom_slot(slot_id: str, admin=Depends(verify_token)):
+    """Remove a custom time slot"""
+    result = await db.custom_slots.delete_one({"id": slot_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custom slot not found")
+    return {"message": "Time slot removed"}
+
 # ==================== MANUAL BOOKING FLOW ====================
 
 @api_router.post("/admin/manual-booking")

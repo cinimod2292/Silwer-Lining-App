@@ -3,7 +3,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom"
 import {
   Camera, LayoutDashboard, Calendar, Image, MessageSquare,
   Mail, LogOut, Menu, X, ChevronRight, Package, Settings, CalendarDays,
-  Tag, Users, Clock, RefreshCcw, ClipboardList, HelpCircle
+  Tag, Users, Clock, RefreshCcw, ClipboardList, HelpCircle, CalendarRange
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import BookingsManage from "./BookingsManage";
 import PackagesManage from "./PackagesManage";
 import BookingSettingsPage from "./BookingSettingsPage";
 import CalendarSettingsPage from "./CalendarSettingsPage";
+import AdminCalendarPage from "./AdminCalendarPage";
 import PortfolioManage from "./PortfolioManage";
 import TestimonialsManage from "./TestimonialsManage";
 import MessagesManage from "./MessagesManage";
@@ -68,6 +69,7 @@ const AdminDashboard = () => {
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
+    { icon: CalendarRange, label: "Calendar View", path: "/admin/calendar-view" },
     { icon: Calendar, label: "Bookings", path: "/admin/bookings" },
     { icon: Package, label: "Packages", path: "/admin/packages" },
     { icon: Tag, label: "Add-ons", path: "/admin/addons" },

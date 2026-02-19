@@ -189,6 +189,7 @@ const AdminDashboard = () => {
             <Route path="calendar" element={<CalendarSettingsPage />} />
             <Route path="portfolio" element={<PortfolioManage />} />
             <Route path="testimonials" element={<TestimonialsManage />} />
+            <Route path="faqs" element={<FAQManage />} />
             <Route path="messages" element={<MessagesManage />} />
             <Route path="email-templates" element={<EmailTemplatesManage />} />
             <Route path="settings" element={<SettingsPage />} />

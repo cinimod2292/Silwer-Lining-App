@@ -113,6 +113,8 @@ const CalendarSettingsPage = () => {
       });
       setConnectionStatus({ success: true, message: res.data.message, calendar: res.data.calendar_name });
       toast.success(res.data.message);
+      // Fetch available calendars on successful connection
+      fetchAvailableCalendars();
     } catch (e) {
       setConnectionStatus({ success: false, message: e.response?.data?.detail || "Connection failed" });
       toast.error(e.response?.data?.detail || "Failed to connect to Apple Calendar");

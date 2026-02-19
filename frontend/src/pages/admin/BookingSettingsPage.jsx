@@ -463,14 +463,26 @@ const BookingSettingsPage = () => {
                                   Add Slot
                                 </Button>
                                 {slots.length > 0 && (
-                                  <Button
-                                    onClick={() => copyToAllDays(type.id, day.id)}
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-muted-foreground"
-                                  >
-                                    Copy to all days
-                                  </Button>
+                                  <>
+                                    <Button
+                                      onClick={() => openCopyToDaysModal(day.id)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-muted-foreground gap-1"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                      Copy to days...
+                                    </Button>
+                                    <Button
+                                      onClick={() => openCopyToSessionModal(day.id)}
+                                      variant="ghost"
+                                      size="sm"
+                                      className="text-muted-foreground gap-1"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                      Copy to session...
+                                    </Button>
+                                  </>
                                 )}
                               </div>
                             </div>

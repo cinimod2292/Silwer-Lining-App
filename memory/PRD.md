@@ -114,12 +114,15 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Packages management in admin
 - [x] Booking settings configuration
 - [x] Calendar sync UI
-- [x] FAQ management with dynamic display ✅ NEW
-- [x] Questionnaire integration in booking flow ✅ NEW
+- [x] FAQ management with dynamic display ✅
+- [x] Questionnaire integration in booking flow ✅
+- [x] Apple Calendar 2-way sync (CalDAV) ✅ NEW
+- [x] Admin Calendar View (FullCalendar) ✅ NEW
+- [x] Manual Booking Flow with client completion link ✅ NEW
+- [x] Block/Unblock time slots ✅ NEW
 
-### P1 (Next Priority - Blocked)
-- [ ] Apple Calendar 2-way sync logic (BLOCKED - awaiting user's Apple ID credentials)
-- [ ] Test Cloudflare R2 Portfolio Upload (BLOCKED - awaiting user's R2 credentials)
+### P1 (Next Priority)
+- [ ] Test Cloudflare R2 Portfolio Upload (credentials configured, needs end-to-end test)
 - [ ] Google Reviews integration (needs clarification - manual entry or automated widget?)
 
 ### P2 (Future)

@@ -3300,33 +3300,108 @@ async def get_payment_status(booking_id: str):
         "package_name": booking.get("package_name", "")
     }
 
-@api_router.post("/payments/confirm-return")
-async def confirm_payment_return(data: dict):
-    """Confirm payment when user returns from PayFast (for sandbox/fallback)"""
+@api_router.post("/payments/verify")
+async def verify_payment_with_payfast(data: dict):
+    """Verify payment status with PayFast API"""
     booking_id = data.get("booking_id")
     
     booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     
-    # Only confirm if payment was initiated with PayFast and status is pending
-    if booking.get("payment_method") == "payfast" and booking.get("payment_status") in ["pending", None]:
-        total_price = booking.get("total_price", 0)
-        payment_type = booking.get("payment_type", "deposit")
-        amount_paid = total_price if payment_type == "full" else int(total_price * 0.5)
-        
-        await db.bookings.update_one(
-            {"id": booking_id},
-            {"$set": {
-                "payment_status": "complete",
-                "status": "confirmed",
-                "amount_paid": amount_paid,
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
-        return {"success": True, "message": "Payment confirmed"}
+    # If already confirmed, return success
+    if booking.get("payment_status") == "complete" or booking.get("status") == "confirmed":
+        return {
+            "verified": True,
+            "status": "complete",
+            "message": "Payment already confirmed"
+        }
     
-    return {"success": False, "message": "Payment already processed or invalid state"}
+    # Only verify PayFast payments
+    if booking.get("payment_method") != "payfast":
+        return {
+            "verified": False,
+            "status": booking.get("payment_status", "unknown"),
+            "message": "Not a PayFast payment"
+        }
+    
+    # Query PayFast to verify payment
+    try:
+        import httpx
+        
+        # Build verification request
+        # PayFast validate endpoint
+        validate_url = "https://sandbox.payfast.co.za/eng/query/validate" if PAYFAST_SANDBOX else "https://www.payfast.co.za/eng/query/validate"
+        
+        # Prepare data for verification
+        verify_data = {
+            "merchant_id": PAYFAST_MERCHANT_ID,
+            "merchant_key": PAYFAST_MERCHANT_KEY,
+            "m_payment_id": booking_id
+        }
+        
+        # Calculate signature for verification request
+        pf_string = "&".join([f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in verify_data.items()])
+        if PAYFAST_PASSPHRASE:
+            pf_string += f"&passphrase={urllib.parse.quote_plus(PAYFAST_PASSPHRASE)}"
+        signature = hashlib.md5(pf_string.encode()).hexdigest()
+        verify_data["signature"] = signature
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(validate_url, data=verify_data, timeout=10.0)
+            
+            if response.status_code == 200:
+                # Parse response - PayFast returns URL-encoded data
+                result = {}
+                for pair in response.text.split("&"):
+                    if "=" in pair:
+                        key, value = pair.split("=", 1)
+                        result[key] = urllib.parse.unquote_plus(value)
+                
+                payment_status = result.get("payment_status", "").upper()
+                
+                if payment_status == "COMPLETE":
+                    # Update booking as confirmed
+                    total_price = booking.get("total_price", 0)
+                    payment_type = booking.get("payment_type", "deposit")
+                    amount_paid = total_price if payment_type == "full" else int(total_price * 0.5)
+                    
+                    await db.bookings.update_one(
+                        {"id": booking_id},
+                        {"$set": {
+                            "payment_status": "complete",
+                            "status": "confirmed",
+                            "amount_paid": amount_paid,
+                            "pf_payment_id": result.get("pf_payment_id", ""),
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }}
+                    )
+                    return {
+                        "verified": True,
+                        "status": "complete",
+                        "message": "Payment verified successfully"
+                    }
+                else:
+                    return {
+                        "verified": False,
+                        "status": payment_status.lower() if payment_status else "pending",
+                        "message": f"Payment status: {payment_status or 'PENDING'}"
+                    }
+            else:
+                logger.error(f"PayFast verify failed: {response.status_code} - {response.text}")
+                return {
+                    "verified": False,
+                    "status": "unknown",
+                    "message": "Could not verify with PayFast"
+                }
+                
+    except Exception as e:
+        logger.error(f"PayFast verification error: {str(e)}")
+        return {
+            "verified": False,
+            "status": "error",
+            "message": "Verification failed - please contact support"
+        }
 
 @api_router.post("/payments/send-reminder")
 async def send_payment_reminder(data: dict, admin=Depends(verify_token)):

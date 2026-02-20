@@ -157,7 +157,7 @@ class Booking(BaseModel):
     booking_time: str
     notes: str = ""
     admin_notes: str = ""
-    status: str = "pending"  # pending, confirmed, completed, cancelled, rescheduled
+    status: str = "pending"  # pending, confirmed, completed, cancelled, rescheduled, awaiting_payment, awaiting_eft
     calendar_event_id: Optional[str] = None
     # Add-ons and pricing
     selected_addons: List[str] = []
@@ -170,6 +170,13 @@ class Booking(BaseModel):
     # Contract data
     contract_signed: bool = False
     contract_data: dict = {}  # {field_responses, signature_data, signed_at}
+    # Payment data
+    payment_method: str = ""  # payfast, payflex, eft, none
+    payment_status: str = ""  # pending, complete, failed
+    payment_type: str = ""  # deposit, full
+    amount_paid: int = 0
+    payment_reference: str = ""
+    payment_id: str = ""
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

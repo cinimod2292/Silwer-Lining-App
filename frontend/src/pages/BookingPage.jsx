@@ -386,6 +386,8 @@ const BookingPage = () => {
         weekend_surcharge: formData.is_weekend ? getWeekendSurcharge() : 0,
         total_price: calculateTotal(),
         questionnaire_responses: questionnaire ? questionnaireResponses : {},
+        contract_signed: contractData !== null,
+        contract_data: contractData || {},
       };
       await axios.post(`${API}/bookings`, payload);
       setBookingComplete(true);

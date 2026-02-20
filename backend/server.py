@@ -129,6 +129,26 @@ class BookingCreate(BaseModel):
     # Contract data
     contract_signed: bool = False
     contract_data: dict = {}  # {field_responses, signature_data, signed_at}
+    # Payment data
+    payment_method: str = ""  # payfast, payflex, eft, none
+    payment_type: str = ""  # deposit, full
+    
+class PaymentSettings(BaseModel):
+    """Admin payment configuration"""
+    id: str = "default"
+    # Bank details for EFT
+    bank_name: str = ""
+    account_holder: str = ""
+    account_number: str = ""
+    branch_code: str = ""
+    account_type: str = ""  # Savings, Cheque
+    reference_format: str = "BOOKING-{booking_id}"
+    # PayFlex credentials (for future)
+    payflex_api_key: str = ""
+    payflex_enabled: bool = False
+    # PayFast status
+    payfast_enabled: bool = True
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class BookingUpdate(BaseModel):
     client_name: Optional[str] = None

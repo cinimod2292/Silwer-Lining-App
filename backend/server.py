@@ -3005,6 +3005,339 @@ async def admin_download_booking_contract_pdf(booking_id: str, admin=Depends(ver
         }
     )
 
+# ==================== PAYMENT ENDPOINTS ====================
+
+def calculate_payfast_signature(data: dict) -> str:
+    """Calculate MD5 signature for PayFast"""
+    # Field order as per PayFast documentation
+    field_order = [
+        "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
+        "name_first", "name_last", "email_address", "cell_number",
+        "m_payment_id", "amount", "item_name", "item_description",
+        "custom_str1", "custom_str2", "custom_str3", "custom_str4", "custom_str5",
+        "custom_int1", "custom_int2", "custom_int3", "custom_int4", "custom_int5",
+        "email_confirmation", "confirmation_address", "payment_method"
+    ]
+    
+    # Build string in correct order, filtering empty values
+    pf_string = ""
+    for field in field_order:
+        if field in data and data[field]:
+            pf_string += f"{field}={urllib.parse.quote_plus(str(data[field]))}&"
+    
+    # Remove trailing &
+    pf_string = pf_string.rstrip("&")
+    
+    # Add passphrase
+    if PAYFAST_PASSPHRASE:
+        pf_string += f"&passphrase={urllib.parse.quote_plus(PAYFAST_PASSPHRASE)}"
+    
+    # Generate MD5 hash
+    return hashlib.md5(pf_string.encode()).hexdigest()
+
+def verify_payfast_signature(data: dict, signature: str) -> bool:
+    """Verify ITN signature from PayFast"""
+    # Remove signature from data for verification
+    verify_data = {k: v for k, v in data.items() if k != "signature"}
+    calculated = calculate_payfast_signature(verify_data)
+    return calculated.lower() == signature.lower()
+
+@api_router.get("/payment-settings")
+async def get_payment_settings():
+    """Get payment settings (public - for booking flow)"""
+    settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        settings = {
+            "bank_name": "",
+            "account_holder": "",
+            "account_number": "",
+            "branch_code": "",
+            "account_type": "",
+            "payfast_enabled": True,
+            "payflex_enabled": False
+        }
+    # Don't expose sensitive fields
+    return {
+        "bank_name": settings.get("bank_name", ""),
+        "account_holder": settings.get("account_holder", ""),
+        "account_number": settings.get("account_number", ""),
+        "branch_code": settings.get("branch_code", ""),
+        "account_type": settings.get("account_type", ""),
+        "reference_format": settings.get("reference_format", "BOOKING-{booking_id}"),
+        "payfast_enabled": settings.get("payfast_enabled", True),
+        "payflex_enabled": settings.get("payflex_enabled", False)
+    }
+
+@api_router.get("/admin/payment-settings")
+async def admin_get_payment_settings(admin=Depends(verify_token)):
+    """Get full payment settings for admin"""
+    settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        return PaymentSettings().model_dump()
+    return settings
+
+@api_router.put("/admin/payment-settings")
+async def admin_update_payment_settings(data: dict, admin=Depends(verify_token)):
+    """Update payment settings"""
+    data["id"] = "default"
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.payment_settings.update_one(
+        {"id": "default"},
+        {"$set": data},
+        upsert=True
+    )
+    return {"message": "Payment settings updated"}
+
+@api_router.post("/payments/initiate")
+async def initiate_payment(data: dict):
+    """Initiate a payment for a booking"""
+    booking_id = data.get("booking_id")
+    payment_method = data.get("payment_method")  # payfast, payflex, eft
+    payment_type = data.get("payment_type", "deposit")  # deposit or full
+    
+    # Get booking
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    total_price = booking.get("total_price", 0)
+    amount = total_price if payment_type == "full" else int(total_price * 0.5)
+    
+    # Update booking with payment info
+    await db.bookings.update_one(
+        {"id": booking_id},
+        {"$set": {
+            "payment_method": payment_method,
+            "payment_type": payment_type,
+            "payment_status": "pending",
+            "status": "awaiting_payment" if payment_method != "eft" else "awaiting_eft",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if payment_method == "payfast":
+        # Generate PayFast payment form data
+        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://portrait-bookings.preview.emergentagent.com').replace('/api', '')
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://portrait-bookings.preview.emergentagent.com')
+        
+        # Split name
+        name_parts = booking.get("client_name", "").split(" ", 1)
+        first_name = name_parts[0] if name_parts else ""
+        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        form_data = {
+            "merchant_id": PAYFAST_MERCHANT_ID,
+            "merchant_key": PAYFAST_MERCHANT_KEY,
+            "return_url": f"{frontend_url}/payment/return?booking_id={booking_id}",
+            "cancel_url": f"{frontend_url}/payment/cancel?booking_id={booking_id}",
+            "notify_url": f"{backend_url}/api/payments/payfast-itn",
+            "name_first": first_name,
+            "name_last": last_name,
+            "email_address": booking.get("client_email", ""),
+            "cell_number": booking.get("client_phone", "").replace("+27", "0").replace(" ", ""),
+            "m_payment_id": booking_id,
+            "amount": f"{amount / 100:.2f}",  # Convert cents to rands
+            "item_name": f"{booking.get('session_type', 'Photography').title()} Session",
+            "item_description": f"{booking.get('package_name', 'Package')} - {'50% Deposit' if payment_type == 'deposit' else 'Full Payment'}",
+            "custom_str1": booking_id,
+            "custom_str2": payment_type
+        }
+        
+        # Calculate signature
+        form_data["signature"] = calculate_payfast_signature(form_data)
+        
+        return {
+            "payment_method": "payfast",
+            "payment_url": PAYFAST_URL,
+            "form_data": form_data,
+            "amount": amount
+        }
+    
+    elif payment_method == "eft":
+        # Get bank details
+        settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+        reference = settings.get("reference_format", "BOOKING-{booking_id}").replace("{booking_id}", booking_id[:8].upper())
+        
+        return {
+            "payment_method": "eft",
+            "bank_details": {
+                "bank_name": settings.get("bank_name", ""),
+                "account_holder": settings.get("account_holder", ""),
+                "account_number": settings.get("account_number", ""),
+                "branch_code": settings.get("branch_code", ""),
+                "account_type": settings.get("account_type", ""),
+                "reference": reference
+            },
+            "amount": amount
+        }
+    
+    elif payment_method == "payflex":
+        # Placeholder for PayFlex integration
+        return {
+            "payment_method": "payflex",
+            "message": "PayFlex integration coming soon",
+            "amount": amount
+        }
+    
+    else:
+        raise HTTPException(status_code=400, detail="Invalid payment method")
+
+@api_router.post("/payments/payfast-itn")
+async def handle_payfast_itn(request: Request):
+    """Handle PayFast ITN (Instant Transaction Notification) webhook"""
+    try:
+        # Parse form data
+        form_data = await request.form()
+        data = dict(form_data)
+        
+        logger.info(f"PayFast ITN received: {data}")
+        
+        # Verify signature
+        signature = data.get("signature", "")
+        if not verify_payfast_signature(data, signature):
+            logger.error("PayFast ITN: Invalid signature")
+            return Response(content="Invalid signature", status_code=400)
+        
+        # Verify merchant ID
+        if data.get("merchant_id") != PAYFAST_MERCHANT_ID:
+            logger.error("PayFast ITN: Invalid merchant ID")
+            return Response(content="Invalid merchant", status_code=400)
+        
+        # Get booking
+        booking_id = data.get("custom_str1") or data.get("m_payment_id")
+        if not booking_id:
+            logger.error("PayFast ITN: No booking ID")
+            return Response(content="No booking ID", status_code=400)
+        
+        booking = await db.bookings.find_one({"id": booking_id})
+        if not booking:
+            logger.error(f"PayFast ITN: Booking not found: {booking_id}")
+            return Response(content="Booking not found", status_code=404)
+        
+        # Process payment status
+        payment_status = data.get("payment_status", "")
+        pf_payment_id = data.get("pf_payment_id", "")
+        amount_gross = float(data.get("amount_gross", 0))
+        
+        if payment_status == "COMPLETE":
+            # Payment successful
+            await db.bookings.update_one(
+                {"id": booking_id},
+                {"$set": {
+                    "payment_status": "complete",
+                    "payment_id": pf_payment_id,
+                    "amount_paid": int(amount_gross * 100),  # Convert to cents
+                    "status": "confirmed",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Send confirmation email
+            updated_booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+            if updated_booking:
+                await send_booking_confirmation_email(updated_booking)
+                await create_calendar_event_background(updated_booking)
+            
+            logger.info(f"PayFast payment successful for booking {booking_id}")
+        else:
+            # Payment failed or pending
+            await db.bookings.update_one(
+                {"id": booking_id},
+                {"$set": {
+                    "payment_status": payment_status.lower(),
+                    "payment_id": pf_payment_id,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            logger.info(f"PayFast payment status {payment_status} for booking {booking_id}")
+        
+        return Response(content="OK", status_code=200)
+        
+    except Exception as e:
+        logger.error(f"PayFast ITN error: {e}")
+        return Response(content=str(e), status_code=500)
+
+@api_router.get("/payments/status/{booking_id}")
+async def get_payment_status(booking_id: str):
+    """Get payment status for a booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    return {
+        "booking_id": booking_id,
+        "status": booking.get("status"),
+        "payment_status": booking.get("payment_status"),
+        "payment_method": booking.get("payment_method"),
+        "amount_paid": booking.get("amount_paid", 0),
+        "total_price": booking.get("total_price", 0)
+    }
+
+@api_router.post("/payments/send-reminder")
+async def send_payment_reminder(data: dict, admin=Depends(verify_token)):
+    """Send payment reminder email to client"""
+    booking_id = data.get("booking_id")
+    
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Generate payment link
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://portrait-bookings.preview.emergentagent.com').replace('/api', '')
+    payment_link = f"{frontend_url}/complete-payment/{booking_id}"
+    
+    # Send reminder email
+    try:
+        html_content = f"""
+        <html>
+        <body style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDFCF8;">
+            <div style="text-align: center; padding: 30px 0; border-bottom: 2px solid #C6A87C;">
+                <h1 style="color: #2D2A26; font-size: 28px; margin: 0;">Silwer Lining Photography</h1>
+            </div>
+            
+            <div style="padding: 30px 0;">
+                <h2 style="color: #2D2A26;">Payment Reminder</h2>
+                <p>Dear {booking['client_name']},</p>
+                <p>This is a friendly reminder to complete your payment for your upcoming photography session.</p>
+                
+                <div style="background-color: #F5F2EE; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <p><strong>Session:</strong> {booking['session_type'].title()}</p>
+                    <p><strong>Package:</strong> {booking['package_name']}</p>
+                    <p><strong>Date:</strong> {booking['booking_date']}</p>
+                    <p><strong>Time:</strong> {booking['booking_time']}</p>
+                    <p><strong>Total:</strong> R{booking['total_price'] / 100:,.2f}</p>
+                </div>
+                
+                <p>Click the button below to complete your payment:</p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{payment_link}" style="background-color: #C6A87C; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; font-weight: bold;">
+                        Complete Payment
+                    </a>
+                </div>
+                
+                <p style="color: #8A847C; font-size: 14px;">If you have any questions, please don't hesitate to contact us.</p>
+            </div>
+        </body>
+        </html>
+        """
+        
+        message = Mail(
+            from_email=SENDER_EMAIL,
+            to_emails=booking['client_email'],
+            subject=f"Payment Reminder - {booking['session_type'].title()} Session",
+            html_content=html_content
+        )
+        
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg.send(message)
+        
+        return {"message": "Payment reminder sent"}
+    except Exception as e:
+        logger.error(f"Failed to send payment reminder: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send reminder")
+
 # Include the router
 app.include_router(api_router)
 

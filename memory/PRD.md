@@ -120,7 +120,14 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Admin Calendar View (FullCalendar) ✅
 - [x] Manual Booking Flow with client completion link ✅
 - [x] Block/Unblock time slots ✅
-- [x] Simplified Booking Settings (removed Available Days checkboxes & Default Session Duration) ✅ NEW
+- [x] Simplified Booking Settings (removed Available Days checkboxes & Default Session Duration) ✅
+- [x] Multi-day calendar event blocking (properly blocks availability when events span multiple days) ✅
+- [x] **Contract Signing System** ✅ NEW
+  - Admin contract editor with smart field builder
+  - Smart field types: Agree/Disagree, Initials, Signature (draw), Date (auto-filled)
+  - Contract step in booking flow (required before final confirmation)
+  - PDF generation with weasyprint
+  - Contract PDF emailed to client + CC to admin
 
 ### P1 (Next Priority)
 - [ ] Test Cloudflare R2 Portfolio Upload (credentials configured, needs end-to-end test)

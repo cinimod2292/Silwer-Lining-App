@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, Clock, Home, Calendar } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Home, RefreshCw, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -12,9 +12,50 @@ const PaymentReturnPage = () => {
   const [status, setStatus] = useState("loading");
   const [booking, setBooking] = useState(null);
   const [pollCount, setPollCount] = useState(0);
-  const maxPolls = 5; // Poll for ~15 seconds max
+  const [verifying, setVerifying] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const maxPolls = 5; // Poll for ~15 seconds max before showing manual verify option
 
   const bookingId = searchParams.get("booking_id");
+
+  const checkPaymentStatus = async () => {
+    try {
+      const res = await axios.get(`${API}/payments/status/${bookingId}`);
+      setBooking(res.data);
+      
+      if (res.data.payment_status === "complete" || res.data.status === "confirmed") {
+        setStatus("success");
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error("Failed to check payment status", e);
+      return false;
+    }
+  };
+
+  const verifyWithPayFast = async () => {
+    setVerifying(true);
+    setErrorMessage("");
+    try {
+      const res = await axios.post(`${API}/payments/verify`, { booking_id: bookingId });
+      
+      if (res.data.verified && res.data.status === "complete") {
+        // Refresh booking data
+        await checkPaymentStatus();
+        setStatus("success");
+      } else {
+        setErrorMessage(res.data.message || "Payment not yet confirmed");
+        setStatus("pending_manual");
+      }
+    } catch (e) {
+      console.error("Verification failed", e);
+      setErrorMessage("Could not verify payment. Please contact support.");
+      setStatus("pending_manual");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   useEffect(() => {
     if (!bookingId) {
@@ -22,45 +63,26 @@ const PaymentReturnPage = () => {
       return;
     }
 
-    const checkPaymentStatus = async () => {
-      try {
-        const res = await axios.get(`${API}/payments/status/${bookingId}`);
-        setBooking(res.data);
-        
-        if (res.data.payment_status === "complete" || res.data.status === "confirmed") {
-          setStatus("success");
-        } else if (pollCount < maxPolls) {
-          setStatus("pending");
-          setPollCount(prev => prev + 1);
-          setTimeout(checkPaymentStatus, 3000);
-        } else {
-          // After max polls, assume payment was successful since user returned from PayFast
-          // In sandbox mode, ITN may not work reliably
-          setStatus("success");
-          // Mark payment as complete since they returned from PayFast
-          try {
-            await axios.post(`${API}/payments/confirm-return`, { booking_id: bookingId });
-          } catch (e) {
-            console.log("Could not auto-confirm, but showing success");
-          }
-        }
-      } catch (e) {
-        console.error("Failed to check payment status", e);
-        // If we get an error but user returned from PayFast, assume success
-        if (pollCount >= maxPolls - 1) {
-          setStatus("success");
-        } else {
-          setPollCount(prev => prev + 1);
-          setTimeout(checkPaymentStatus, 3000);
-        }
+    const pollPaymentStatus = async () => {
+      const isComplete = await checkPaymentStatus();
+      
+      if (isComplete) {
+        setStatus("success");
+      } else if (pollCount < maxPolls) {
+        setStatus("pending");
+        setPollCount(prev => prev + 1);
+        setTimeout(pollPaymentStatus, 3000);
+      } else {
+        // After max polls, try to verify with PayFast API
+        setStatus("verifying");
+        await verifyWithPayFast();
       }
     };
 
-    checkPaymentStatus();
+    pollPaymentStatus();
   }, [bookingId]);
 
   const formatPrice = (amount) => {
-    // Amount is in Rands (not cents)
     return `R${(amount || 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}`;
   };
 
@@ -68,6 +90,7 @@ const PaymentReturnPage = () => {
     <div className="min-h-screen bg-warm-cream flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-soft p-8 text-center">
+          {/* Loading State */}
           {status === "loading" && (
             <>
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
@@ -82,6 +105,7 @@ const PaymentReturnPage = () => {
             </>
           )}
 
+          {/* Pending - Waiting for ITN */}
           {status === "pending" && (
             <>
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
@@ -91,17 +115,88 @@ const PaymentReturnPage = () => {
                 Confirming Payment...
               </h1>
               <p className="text-muted-foreground mb-6">
-                We're waiting for confirmation from the payment provider
+                Waiting for confirmation from PayFast
               </p>
               <div className="animate-pulse flex justify-center">
                 <div className="h-2 w-32 bg-amber-200 rounded"></div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                This may take a few moments...
+                Attempt {pollCount} of {maxPolls}...
               </p>
             </>
           )}
 
+          {/* Verifying with PayFast API */}
+          {status === "verifying" && (
+            <>
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-blue-100 flex items-center justify-center">
+                <RefreshCw className="w-8 h-8 text-blue-600 animate-spin" />
+              </div>
+              <h1 className="text-2xl font-display font-semibold mb-2">
+                Verifying with PayFast...
+              </h1>
+              <p className="text-muted-foreground">
+                Checking payment status directly with PayFast
+              </p>
+            </>
+          )}
+
+          {/* Pending Manual - Need user action */}
+          {status === "pending_manual" && (
+            <>
+              <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-amber-100 flex items-center justify-center">
+                <Clock className="w-8 h-8 text-amber-600" />
+              </div>
+              <h1 className="text-2xl font-display font-semibold mb-2">
+                Payment Pending Verification
+              </h1>
+              <p className="text-muted-foreground mb-4">
+                Your payment is being processed. This can take a few minutes.
+              </p>
+              
+              {errorMessage && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-sm text-amber-800">
+                  {errorMessage}
+                </div>
+              )}
+              
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={verifyWithPayFast}
+                  disabled={verifying}
+                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                >
+                  {verifying ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Check Again
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={() => navigate("/")}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Back to Home
+                </Button>
+              </div>
+              
+              <p className="text-xs text-muted-foreground mt-4">
+                If your payment was successful, you'll receive a confirmation email shortly.
+                <br />
+                Contact us if you don't receive confirmation within 30 minutes.
+              </p>
+            </>
+          )}
+
+          {/* Success */}
           {status === "success" && (
             <>
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
@@ -117,14 +212,17 @@ const PaymentReturnPage = () => {
               {booking && (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-left">
                   <p className="text-sm text-green-800">
-                    <strong>Session:</strong> {booking.session_type || "Photography"} Session
+                    <strong>Session:</strong> {booking.session_type?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || "Photography"} Session
+                  </p>
+                  <p className="text-sm text-green-800">
+                    <strong>Package:</strong> {booking.package_name}
                   </p>
                   <p className="text-sm text-green-800">
                     <strong>Total:</strong> {formatPrice(booking.total_price)}
                   </p>
-                  {booking.payment_type === "deposit" && booking.amount_paid > 0 && (
-                    <p className="text-sm text-green-700 mt-1">
-                      Deposit paid: {formatPrice(booking.amount_paid)}
+                  {booking.payment_type === "deposit" && (
+                    <p className="text-sm text-green-700 mt-2 pt-2 border-t border-green-200">
+                      <strong>Deposit Paid:</strong> {formatPrice(booking.amount_paid || booking.total_price / 2)}
                     </p>
                   )}
                 </div>
@@ -142,6 +240,7 @@ const PaymentReturnPage = () => {
             </>
           )}
 
+          {/* Error */}
           {status === "error" && (
             <>
               <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-100 flex items-center justify-center">
@@ -151,7 +250,7 @@ const PaymentReturnPage = () => {
                 Something Went Wrong
               </h1>
               <p className="text-muted-foreground mb-6">
-                We couldn't verify your payment. Please contact us if you believe this is an error.
+                We couldn't find your booking. Please contact us for assistance.
               </p>
               <div className="flex flex-col gap-3">
                 <Button 

@@ -77,6 +77,7 @@ const AdminDashboard = () => {
     { icon: Tag, label: "Add-ons", path: "/admin/addons" },
     { icon: ClipboardList, label: "Questionnaires", path: "/admin/questionnaires" },
     { icon: FileSignature, label: "Contract", path: "/admin/contract" },
+    { icon: CreditCard, label: "Payments", path: "/admin/payments" },
     { icon: Clock, label: "Booking Settings", path: "/admin/booking-settings" },
     { icon: CalendarDays, label: "Calendar Sync", path: "/admin/calendar" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },

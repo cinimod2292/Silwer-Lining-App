@@ -564,28 +564,67 @@ const BookingPage = () => {
                       Choose your package
                     </Label>
                     <div className="grid gap-4">
-                      {getFilteredPackages().map((pkg) => (
-                        <button
-                          key={pkg.id}
-                          onClick={() => handleInputChange("package_name", pkg.name)}
-                          className={`p-5 rounded-xl border-2 transition-all text-left flex items-center justify-between ${
-                            formData.package_name === pkg.name
-                              ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                          data-testid={`package-option-${pkg.id}`}
-                        >
-                          <div>
-                            <span className="font-semibold block">{pkg.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              {pkg.duration} • {pkg.includes?.slice(0, 2).join(", ")}...
-                            </span>
+                      {getFilteredPackages().map((pkg) => {
+                        const isSelected = formData.package_name === pkg.name;
+                        return (
+                          <div
+                            key={pkg.id}
+                            className={`rounded-xl border-2 transition-all overflow-hidden ${
+                              isSelected
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <button
+                              onClick={() => handleInputChange("package_name", pkg.name)}
+                              className="w-full p-5 text-left flex items-center justify-between"
+                              data-testid={`package-option-${pkg.id}`}
+                            >
+                              <div>
+                                <span className="font-semibold block">{pkg.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  {pkg.duration}
+                                </span>
+                              </div>
+                              <span className="font-display text-xl font-semibold text-primary">
+                                R{pkg.price?.toLocaleString()}
+                              </span>
+                            </button>
+                            
+                            {/* Expanded details when selected */}
+                            {isSelected && (
+                              <div className="px-5 pb-5 pt-0 border-t border-primary/20">
+                                <div className="pt-4 space-y-3">
+                                  {pkg.description && (
+                                    <p className="text-sm text-muted-foreground">{pkg.description}</p>
+                                  )}
+                                  
+                                  {pkg.includes && pkg.includes.length > 0 && (
+                                    <div>
+                                      <p className="text-sm font-medium mb-2">What's included:</p>
+                                      <ul className="space-y-1">
+                                        {pkg.includes.map((item, idx) => (
+                                          <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                                            <span>{item}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="flex items-center gap-4 pt-2 text-sm">
+                                    <span className="flex items-center gap-1 text-muted-foreground">
+                                      <Clock className="w-4 h-4" />
+                                      {pkg.duration}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          <span className="font-display text-xl font-semibold text-primary">
-                            R{pkg.price?.toLocaleString()}
-                          </span>
-                        </button>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

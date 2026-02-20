@@ -3293,9 +3293,40 @@ async def get_payment_status(booking_id: str):
         "status": booking.get("status"),
         "payment_status": booking.get("payment_status"),
         "payment_method": booking.get("payment_method"),
+        "payment_type": booking.get("payment_type"),
         "amount_paid": booking.get("amount_paid", 0),
-        "total_price": booking.get("total_price", 0)
+        "total_price": booking.get("total_price", 0),
+        "session_type": booking.get("session_type", ""),
+        "package_name": booking.get("package_name", "")
     }
+
+@api_router.post("/payments/confirm-return")
+async def confirm_payment_return(data: dict):
+    """Confirm payment when user returns from PayFast (for sandbox/fallback)"""
+    booking_id = data.get("booking_id")
+    
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Only confirm if payment was initiated with PayFast and status is pending
+    if booking.get("payment_method") == "payfast" and booking.get("payment_status") in ["pending", None]:
+        total_price = booking.get("total_price", 0)
+        payment_type = booking.get("payment_type", "deposit")
+        amount_paid = total_price if payment_type == "full" else int(total_price * 0.5)
+        
+        await db.bookings.update_one(
+            {"id": booking_id},
+            {"$set": {
+                "payment_status": "complete",
+                "status": "confirmed",
+                "amount_paid": amount_paid,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        return {"success": True, "message": "Payment confirmed"}
+    
+    return {"success": False, "message": "Payment already processed or invalid state"}
 
 @api_router.post("/payments/send-reminder")
 async def send_payment_reminder(data: dict, admin=Depends(verify_token)):

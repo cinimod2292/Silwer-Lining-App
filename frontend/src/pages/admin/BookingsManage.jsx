@@ -443,6 +443,46 @@ const BookingsManage = () => {
                   <p className="bg-warm-sand p-3 rounded-lg text-sm mt-1">{selectedBooking.admin_notes}</p>
                 </div>
               )}
+              
+              {/* Contract Section */}
+              <div className="pt-4 border-t">
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <FileSignature className="w-4 h-4" />
+                  Contract
+                </Label>
+                {selectedBooking.contract_signed ? (
+                  <div className="mt-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-800 font-medium flex items-center gap-2">
+                          <Check className="w-4 h-4" />
+                          Contract Signed
+                        </p>
+                        <p className="text-sm text-green-700 mt-1">
+                          Signed on: {selectedBooking.contract_data?.signed_at 
+                            ? new Date(selectedBooking.contract_data.signed_at).toLocaleString() 
+                            : "N/A"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadContract(selectedBooking.id)}
+                        className="gap-2"
+                        data-testid="download-contract-btn"
+                      >
+                        <FileDown className="w-4 h-4" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-2 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-amber-800 text-sm">Contract not signed</p>
+                  </div>
+                )}
+              </div>
+              
               <div className="text-xs text-muted-foreground">
                 Created: {new Date(selectedBooking.created_at).toLocaleString()}
                 {selectedBooking.updated_at && selectedBooking.updated_at !== selectedBooking.created_at && (

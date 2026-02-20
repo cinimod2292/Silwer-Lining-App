@@ -244,27 +244,46 @@ const BookingPage = () => {
   };
 
   const getTotalSteps = () => {
-    return questionnaire?.questions?.length > 0 ? 4 : 3;
+    // Base steps: 1. Session & Add-ons, 2. Date & Time, 3. Contract, 4. Details
+    // If questionnaire exists, add it before contract
+    let steps = 4; // base without questionnaire
+    if (questionnaire?.questions?.length > 0) {
+      steps = 5; // with questionnaire
+    }
+    return steps;
   };
 
   const getStepLabel = (stepNum) => {
-    const totalSteps = getTotalSteps();
-    if (totalSteps === 4) {
+    const hasQuestionnaire = questionnaire?.questions?.length > 0;
+    
+    if (hasQuestionnaire) {
+      // 5 steps: Session, Date, Questionnaire, Contract, Details
       switch (stepNum) {
         case 1: return "Session & Add-ons";
         case 2: return "Date & Time";
         case 3: return "Questionnaire";
-        case 4: return "Your Details";
+        case 4: return "Contract";
+        case 5: return "Your Details";
         default: return "";
       }
     } else {
+      // 4 steps: Session, Date, Contract, Details
       switch (stepNum) {
         case 1: return "Session & Add-ons";
         case 2: return "Date & Time";
-        case 3: return "Details & Payment";
+        case 3: return "Contract";
+        case 4: return "Your Details";
         default: return "";
       }
     }
+  };
+
+  const getContractStep = () => {
+    return questionnaire?.questions?.length > 0 ? 4 : 3;
+  };
+
+  const getDetailsStep = () => {
+    return questionnaire?.questions?.length > 0 ? 5 : 4;
   };
 
   const getFilteredPackages = () => {

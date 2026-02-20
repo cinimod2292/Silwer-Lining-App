@@ -1,16 +1,25 @@
-import { useState, useEffect, useRef } from "react";
-import { FileText, Plus, Trash2, Save, Eye, GripVertical, Type, Check, PenTool, Calendar, AlertCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import {
+  Save, Plus, Bold, Italic, Underline as UnderlineIcon, 
+  AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
+  Heading1, Heading2, Heading3, Undo, Redo, Check, Type, 
+  PenTool, Calendar, Trash2, GripVertical
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -18,44 +27,196 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { toast } from "sonner";
 import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const smartFieldTypes = [
-  { id: "agree_disagree", name: "Agree/Disagree Checkbox", icon: Check, description: "Client must check to agree" },
-  { id: "initials", name: "Initials Box", icon: Type, description: "Client enters their initials" },
-  { id: "signature", name: "Signature (Draw)", icon: PenTool, description: "Client draws signature" },
-  { id: "date", name: "Date (Auto-filled)", icon: Calendar, description: "Automatically fills with signing date" },
+  { id: "agree_disagree", name: "Agree/Disagree Checkbox", icon: Check, color: "bg-green-100 border-green-300 text-green-800" },
+  { id: "initials", name: "Initials Box", icon: Type, color: "bg-yellow-100 border-yellow-300 text-yellow-800" },
+  { id: "signature", name: "Signature Field", icon: PenTool, color: "bg-purple-100 border-purple-300 text-purple-800" },
+  { id: "date", name: "Date (Auto-filled)", icon: Calendar, color: "bg-blue-100 border-blue-300 text-blue-800" },
 ];
+
+// Menu bar component
+const MenuBar = ({ editor }) => {
+  if (!editor) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().undo().run()}
+        disabled={!editor.can().undo()}
+        className="h-8 w-8 p-0"
+        title="Undo"
+      >
+        <Undo className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().redo().run()}
+        disabled={!editor.can().redo()}
+        className="h-8 w-8 p-0"
+        title="Redo"
+      >
+        <Redo className="w-4 h-4" />
+      </Button>
+
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("heading", { level: 1 }) ? "bg-primary/20" : ""}`}
+        title="Heading 1"
+      >
+        <Heading1 className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("heading", { level: 2 }) ? "bg-primary/20" : ""}`}
+        title="Heading 2"
+      >
+        <Heading2 className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20" : ""}`}
+        title="Heading 3"
+      >
+        <Heading3 className="w-4 h-4" />
+      </Button>
+
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("bold") ? "bg-primary/20" : ""}`}
+        title="Bold"
+      >
+        <Bold className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("italic") ? "bg-primary/20" : ""}`}
+        title="Italic"
+      >
+        <Italic className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleUnderline().run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("underline") ? "bg-primary/20" : ""}`}
+        title="Underline"
+      >
+        <UnderlineIcon className="w-4 h-4" />
+      </Button>
+
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().setTextAlign("left").run()}
+        className={`h-8 w-8 p-0 ${editor.isActive({ textAlign: "left" }) ? "bg-primary/20" : ""}`}
+        title="Align Left"
+      >
+        <AlignLeft className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().setTextAlign("center").run()}
+        className={`h-8 w-8 p-0 ${editor.isActive({ textAlign: "center" }) ? "bg-primary/20" : ""}`}
+        title="Align Center"
+      >
+        <AlignCenter className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().setTextAlign("right").run()}
+        className={`h-8 w-8 p-0 ${editor.isActive({ textAlign: "right" }) ? "bg-primary/20" : ""}`}
+        title="Align Right"
+      >
+        <AlignRight className="w-4 h-4" />
+      </Button>
+
+      <div className="w-px h-6 bg-gray-300 mx-1" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("bulletList") ? "bg-primary/20" : ""}`}
+        title="Bullet List"
+      >
+        <List className="w-4 h-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`h-8 w-8 p-0 ${editor.isActive("orderedList") ? "bg-primary/20" : ""}`}
+        title="Numbered List"
+      >
+        <ListOrdered className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+};
 
 const ContractManage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [contract, setContract] = useState({
-    title: "Photography Session Contract",
-    content: "",
-    smart_fields: [],
-  });
-  const [activeTab, setActiveTab] = useState("editor");
+  const [contractTitle, setContractTitle] = useState("Photography Session Contract");
+  const [smartFields, setSmartFields] = useState([]);
   const [showAddFieldModal, setShowAddFieldModal] = useState(false);
-  const [newField, setNewField] = useState({
-    type: "agree_disagree",
-    label: "",
-    required: true,
+  const [newFieldType, setNewFieldType] = useState("agree_disagree");
+  const [newFieldLabel, setNewFieldLabel] = useState("");
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Underline,
+      Placeholder.configure({
+        placeholder: "Start typing your contract here...",
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+    ],
+    content: "",
+    editorProps: {
+      attributes: {
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[500px] p-6",
+      },
+    },
   });
-  const textareaRef = useRef(null);
 
   useEffect(() => {
     fetchContract();
   }, []);
+
+  useEffect(() => {
+    if (editor && !loading) {
+      // Re-render smart field placeholders whenever smartFields change
+    }
+  }, [smartFields, editor, loading]);
 
   const fetchContract = async () => {
     const token = localStorage.getItem("admin_token");
@@ -63,7 +224,20 @@ const ContractManage = () => {
       const res = await axios.get(`${API}/admin/contract`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setContract(res.data);
+      setContractTitle(res.data.title || "Photography Session Contract");
+      setSmartFields(res.data.smart_fields || []);
+      
+      // Set editor content after it's ready
+      if (editor) {
+        editor.commands.setContent(res.data.content || "");
+      } else {
+        // Wait for editor to be ready
+        setTimeout(() => {
+          if (editor) {
+            editor.commands.setContent(res.data.content || "");
+          }
+        }, 100);
+      }
     } catch (e) {
       console.error("Failed to fetch contract", e);
     } finally {
@@ -71,13 +245,39 @@ const ContractManage = () => {
     }
   };
 
+  // Update editor content when it becomes available
+  useEffect(() => {
+    if (editor && !loading) {
+      const fetchAndSetContent = async () => {
+        const token = localStorage.getItem("admin_token");
+        try {
+          const res = await axios.get(`${API}/admin/contract`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          editor.commands.setContent(res.data.content || "");
+        } catch (e) {
+          console.error("Failed to set content", e);
+        }
+      };
+      fetchAndSetContent();
+    }
+  }, [editor]);
+
   const handleSave = async () => {
+    if (!editor) return;
+    
     const token = localStorage.getItem("admin_token");
     setSaving(true);
     try {
-      await axios.put(`${API}/admin/contract`, contract, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        `${API}/admin/contract`,
+        {
+          title: contractTitle,
+          content: editor.getHTML(),
+          smart_fields: smartFields,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       toast.success("Contract saved successfully");
     } catch (e) {
       toast.error("Failed to save contract");
@@ -86,131 +286,114 @@ const ContractManage = () => {
     }
   };
 
-  const addSmartField = () => {
-    if (!newField.label.trim()) {
-      toast.error("Please enter a label for the field");
-      return;
-    }
+  const insertSmartField = (fieldType, label) => {
+    if (!editor || !label.trim()) return;
 
-    const fieldId = newField.label
+    const fieldId = label
       .toUpperCase()
       .replace(/[^A-Z0-9]/g, "_")
       .replace(/_+/g, "_")
       .replace(/^_|_$/g, "");
 
-    // Check if field ID already exists
-    if (contract.smart_fields.some((f) => f.id === fieldId)) {
+    // Check for duplicates
+    if (smartFields.some((f) => f.id === fieldId)) {
       toast.error("A field with this label already exists");
       return;
     }
 
-    const field = {
+    // Add to smart fields list
+    const newField = {
       id: fieldId,
-      type: newField.type,
-      label: newField.label,
-      required: newField.required,
+      type: fieldType,
+      label: label,
+      required: true,
     };
+    setSmartFields((prev) => [...prev, newField]);
 
-    setContract((prev) => ({
-      ...prev,
-      smart_fields: [...prev.smart_fields, field],
-    }));
-
-    // Insert placeholder at cursor position or at end
+    // Insert visual placeholder in editor
+    const fieldTypeInfo = smartFieldTypes.find((t) => t.id === fieldType);
     const placeholder = `{{${fieldId}}}`;
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent =
-        contract.content.substring(0, start) +
-        placeholder +
-        contract.content.substring(end);
-      setContract((prev) => ({ ...prev, content: newContent }));
-    } else {
-      setContract((prev) => ({
-        ...prev,
-        content: prev.content + "\n" + placeholder,
-      }));
-    }
+    
+    editor.chain().focus().insertContent(placeholder).run();
 
-    setNewField({ type: "agree_disagree", label: "", required: true });
     setShowAddFieldModal(false);
-    toast.success(`Smart field "${newField.label}" added`);
+    setNewFieldLabel("");
+    toast.success(`"${label}" field added`);
   };
 
   const removeSmartField = (fieldId) => {
-    // Remove from smart_fields array
-    setContract((prev) => ({
-      ...prev,
-      smart_fields: prev.smart_fields.filter((f) => f.id !== fieldId),
-      // Also remove placeholder from content
-      content: prev.content.replace(new RegExp(`\\{\\{${fieldId}\\}\\}`, "g"), ""),
-    }));
-    toast.success("Smart field removed");
-  };
-
-  const insertFieldPlaceholder = (fieldId) => {
-    const placeholder = `{{${fieldId}}}`;
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent =
-        contract.content.substring(0, start) +
-        placeholder +
-        contract.content.substring(end);
-      setContract((prev) => ({ ...prev, content: newContent }));
-      
-      // Focus back on textarea
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + placeholder.length, start + placeholder.length);
-      }, 0);
+    setSmartFields((prev) => prev.filter((f) => f.id !== fieldId));
+    
+    // Remove from editor content
+    if (editor) {
+      const currentContent = editor.getHTML();
+      const updatedContent = currentContent.replace(
+        new RegExp(`\\{\\{${fieldId}\\}\\}`, "g"),
+        ""
+      );
+      editor.commands.setContent(updatedContent);
     }
+    
+    toast.success("Field removed");
   };
 
-  const renderPreview = () => {
-    let previewContent = contract.content;
+  const renderSmartFieldInline = (field) => {
+    const fieldType = smartFieldTypes.find((t) => t.id === field.type);
+    const Icon = fieldType?.icon || Check;
+    
+    return (
+      <span
+        key={field.id}
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded border text-xs font-medium ${fieldType?.color}`}
+      >
+        <Icon className="w-3 h-3" />
+        {field.label}
+      </span>
+    );
+  };
 
-    // Replace smart field placeholders with visual representations
-    contract.smart_fields.forEach((field) => {
+  // Convert placeholders to visual elements for display
+  const getDisplayContent = () => {
+    if (!editor) return "";
+    
+    let content = editor.getHTML();
+    
+    smartFields.forEach((field) => {
       const placeholder = `{{${field.id}}}`;
-      let replacement = "";
-
+      const fieldType = smartFieldTypes.find((t) => t.id === field.type);
+      
+      let visual = "";
       switch (field.type) {
         case "agree_disagree":
-          replacement = `<div style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px;">
-            <input type="checkbox" disabled /> <span style="font-weight: 500;">${field.label}</span>
-          </div>`;
+          visual = `<span class="inline-flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm font-medium my-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            ${field.label}
+          </span>`;
           break;
         case "initials":
-          replacement = `<div style="display: inline-block; padding: 8px 16px; background: #fefce8; border: 1px solid #fde047; border-radius: 6px;">
-            <span style="font-style: italic; color: #854d0e;">Initials: </span>
-            <span style="border-bottom: 2px solid #000; padding: 0 20px; font-family: cursive;">___</span>
-          </div>`;
+          visual = `<span class="inline-flex items-center gap-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-800 text-sm font-medium my-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            ${field.label}: ____
+          </span>`;
           break;
         case "signature":
-          replacement = `<div style="display: block; padding: 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 8px; text-align: center; margin: 10px 0;">
-            <span style="color: #64748b;">✍️ ${field.label} - Draw Signature Here</span>
+          visual = `<div class="block my-3 p-4 bg-purple-50 border-2 border-dashed border-purple-200 rounded-lg text-center text-purple-700">
+            <svg class="w-6 h-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+            <span class="text-sm font-medium">${field.label}</span>
           </div>`;
           break;
         case "date":
-          replacement = `<div style="display: inline-block; padding: 8px 16px; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 6px;">
-            <span style="color: #1e40af;">📅 ${new Date().toLocaleDateString()}</span>
-          </div>`;
+          visual = `<span class="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-800 text-sm font-medium my-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            ${new Date().toLocaleDateString()}
+          </span>`;
           break;
-        default:
-          replacement = `[${field.label}]`;
       }
-
-      previewContent = previewContent.replace(
-        new RegExp(placeholder.replace(/[{}]/g, "\\$&"), "g"),
-        replacement
-      );
+      
+      content = content.replace(new RegExp(placeholder.replace(/[{}]/g, "\\$&"), "g"), visual);
     });
-
-    return previewContent;
+    
+    return content;
   };
 
   if (loading) {
@@ -223,13 +406,12 @@ const ContractManage = () => {
 
   return (
     <div data-testid="contract-manage">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold">
-            Contract Editor
-          </h1>
+          <h1 className="font-display text-2xl md:text-3xl font-semibold">Contract Editor</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Create and manage your booking contract with smart fields
+            Create your booking contract - what you see is what clients will sign
           </p>
         </div>
         <Button
@@ -244,185 +426,181 @@ const ContractManage = () => {
       </div>
 
       {/* Contract Title */}
-      <div className="bg-white rounded-xl shadow-soft p-6 mb-6">
-        <Label className="mb-2 block">Contract Title</Label>
+      <div className="bg-white rounded-xl shadow-soft p-4 mb-4">
+        <Label className="text-sm text-muted-foreground mb-1 block">Contract Title</Label>
         <Input
-          value={contract.title}
-          onChange={(e) => setContract((prev) => ({ ...prev, title: e.target.value }))}
+          value={contractTitle}
+          onChange={(e) => setContractTitle(e.target.value)}
+          className="text-xl font-semibold border-0 px-0 focus-visible:ring-0 shadow-none"
           placeholder="Photography Session Contract"
-          className="max-w-md"
           data-testid="contract-title-input"
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Smart Fields Panel */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-soft p-6 sticky top-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Smart Fields Sidebar */}
+        <div className="lg:col-span-1 order-2 lg:order-1">
+          <div className="bg-white rounded-xl shadow-soft p-4 sticky top-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-lg">Smart Fields</h2>
-              <Button
-                onClick={() => setShowAddFieldModal(true)}
-                size="sm"
-                variant="outline"
-                className="gap-1"
-                data-testid="add-field-btn"
-              >
-                <Plus className="w-4 h-4" />
-                Add
-              </Button>
+              <h2 className="font-semibold">Smart Fields</h2>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" className="gap-1 h-8" data-testid="add-field-dropdown">
+                    <Plus className="w-4 h-4" />
+                    Insert
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {smartFieldTypes.map((type) => (
+                    <DropdownMenuItem
+                      key={type.id}
+                      onClick={() => {
+                        setNewFieldType(type.id);
+                        setShowAddFieldModal(true);
+                      }}
+                      className="gap-2"
+                    >
+                      <type.icon className="w-4 h-4" />
+                      {type.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            <p className="text-xs text-muted-foreground mb-4">
-              Click a field to insert its placeholder at cursor position
+            <p className="text-xs text-muted-foreground mb-3">
+              Fields clients must complete when signing
             </p>
 
-            <div className="space-y-2">
-              {contract.smart_fields.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No smart fields added yet
-                </p>
-              ) : (
-                contract.smart_fields.map((field) => {
+            {smartFields.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No fields yet</p>
+                <p className="text-xs">Click "Insert" to add fields</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {smartFields.map((field) => {
                   const fieldType = smartFieldTypes.find((t) => t.id === field.type);
-                  const Icon = fieldType?.icon || FileText;
+                  const Icon = fieldType?.icon || Check;
                   return (
                     <div
                       key={field.id}
-                      className="flex items-center gap-2 p-2 bg-warm-sand/30 rounded-lg group"
+                      className={`flex items-center gap-2 p-2 rounded-lg border ${fieldType?.color} group`}
                     >
-                      <button
-                        onClick={() => insertFieldPlaceholder(field.id)}
-                        className="flex-1 flex items-center gap-2 text-left hover:bg-primary/10 rounded p-1 transition-colors"
-                        title="Click to insert at cursor"
-                      >
-                        <Icon className="w-4 h-4 text-primary" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{field.label}</p>
-                          <p className="text-xs text-muted-foreground">{fieldType?.name}</p>
-                        </div>
-                      </button>
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span className="flex-1 text-sm font-medium truncate">{field.label}</span>
                       <Button
-                        onClick={() => removeSmartField(field.id)}
                         variant="ghost"
                         size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => removeSmartField(field.id)}
+                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100 hover:text-red-600"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3" />
                       </Button>
                     </div>
                   );
-                })
-              )}
-            </div>
-
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-xs text-muted-foreground">
-                <strong>Tip:</strong> Use placeholders like <code className="bg-gray-100 px-1 rounded">{"{{FIELD_ID}}"}</code> in your content
-              </p>
-            </div>
+                })}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Editor / Preview */}
-        <div className="lg:col-span-3">
-          <div className="bg-white rounded-xl shadow-soft">
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <div className="border-b px-6 pt-4">
-                <TabsList className="bg-transparent p-0 h-auto">
-                  <TabsTrigger
-                    value="editor"
-                    className="px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-t-lg border-b-2 border-transparent data-[state=active]:border-primary"
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Editor
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="preview"
-                    className="px-4 py-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-t-lg border-b-2 border-transparent data-[state=active]:border-primary"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Preview
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+        {/* WYSIWYG Editor */}
+        <div className="lg:col-span-3 order-1 lg:order-2">
+          <div className="bg-white rounded-xl shadow-soft overflow-hidden">
+            <MenuBar editor={editor} />
+            
+            {/* Insert Field Button in toolbar */}
+            <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Insert:</span>
+              {smartFieldTypes.map((type) => (
+                <Button
+                  key={type.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setNewFieldType(type.id);
+                    setShowAddFieldModal(true);
+                  }}
+                  className={`h-7 text-xs gap-1 ${type.color} border hover:opacity-80`}
+                >
+                  <type.icon className="w-3 h-3" />
+                  {type.name.split(" ")[0]}
+                </Button>
+              ))}
+            </div>
 
-              <TabsContent value="editor" className="p-6 mt-0">
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-blue-800">
-                    <p className="font-medium">HTML Supported</p>
-                    <p>Use HTML tags for formatting: &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;, &lt;li&gt;, etc.</p>
-                  </div>
-                </div>
-                <Textarea
-                  ref={textareaRef}
-                  value={contract.content}
-                  onChange={(e) => setContract((prev) => ({ ...prev, content: e.target.value }))}
-                  placeholder="Enter your contract content here. Use HTML for formatting and {{FIELD_ID}} placeholders for smart fields."
-                  className="min-h-[500px] font-mono text-sm"
-                  data-testid="contract-content-input"
-                />
-              </TabsContent>
+            {/* Editor Area */}
+            <div className="contract-editor">
+              <EditorContent editor={editor} />
+            </div>
+          </div>
 
-              <TabsContent value="preview" className="p-6 mt-0">
-                <div className="border rounded-lg p-6 bg-white min-h-[500px]">
-                  <h2 className="text-2xl font-display text-center mb-6 pb-4 border-b-2 border-primary/30">
-                    {contract.title}
-                  </h2>
-                  <div
-                    className="prose prose-sm max-w-none contract-preview"
-                    dangerouslySetInnerHTML={{ __html: renderPreview() }}
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+          {/* Preview Section */}
+          <div className="mt-4 bg-white rounded-xl shadow-soft p-6">
+            <h3 className="font-semibold mb-4 text-lg flex items-center gap-2">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              Live Preview
+            </h3>
+            <div className="border rounded-lg p-6 bg-warm-sand/20">
+              <h2 className="text-2xl font-display text-center mb-6 pb-4 border-b-2 border-primary/30">
+                {contractTitle}
+              </h2>
+              <div
+                className="prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: getDisplayContent() }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Add Smart Field Modal */}
+      {/* Add Field Modal */}
       <Dialog open={showAddFieldModal} onOpenChange={setShowAddFieldModal}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Smart Field</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {(() => {
+                const type = smartFieldTypes.find((t) => t.id === newFieldType);
+                const Icon = type?.icon || Check;
+                return (
+                  <>
+                    <Icon className="w-5 h-5 text-primary" />
+                    Add {type?.name}
+                  </>
+                );
+              })()}
+            </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div>
-              <Label className="mb-2 block">Field Type</Label>
-              <Select
-                value={newField.type}
-                onValueChange={(val) => setNewField((prev) => ({ ...prev, type: val }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {smartFieldTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      <div className="flex items-center gap-2">
-                        <type.icon className="w-4 h-4" />
-                        <span>{type.name}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">
-                {smartFieldTypes.find((t) => t.id === newField.type)?.description}
-              </p>
-            </div>
-
+          <div className="space-y-4 py-4">
             <div>
               <Label className="mb-2 block">Field Label</Label>
               <Input
-                value={newField.label}
-                onChange={(e) => setNewField((prev) => ({ ...prev, label: e.target.value }))}
-                placeholder="e.g., I agree to the terms"
+                value={newFieldLabel}
+                onChange={(e) => setNewFieldLabel(e.target.value)}
+                placeholder={
+                  newFieldType === "agree_disagree"
+                    ? "e.g., I agree to the terms"
+                    : newFieldType === "initials"
+                    ? "e.g., Please initial here"
+                    : newFieldType === "signature"
+                    ? "e.g., Client Signature"
+                    : "e.g., Date Signed"
+                }
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    insertSmartField(newFieldType, newFieldLabel);
+                  }
+                }}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                This label will be shown to the client
+              <p className="text-xs text-muted-foreground mt-2">
+                {newFieldType === "agree_disagree" && "Client must check this box to agree"}
+                {newFieldType === "initials" && "Client will type their initials"}
+                {newFieldType === "signature" && "Client will draw their signature"}
+                {newFieldType === "date" && "Date will be auto-filled when signing"}
               </p>
             </div>
           </div>
@@ -431,36 +609,57 @@ const ContractManage = () => {
             <Button variant="outline" onClick={() => setShowAddFieldModal(false)}>
               Cancel
             </Button>
-            <Button onClick={addSmartField}>Add Field</Button>
+            <Button onClick={() => insertSmartField(newFieldType, newFieldLabel)}>
+              Insert Field
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <style>{`
-        .contract-preview h2 {
-          font-size: 1.5rem;
-          font-weight: 600;
+        .contract-editor .ProseMirror {
+          min-height: 400px;
+          padding: 1.5rem;
+        }
+        .contract-editor .ProseMirror:focus {
+          outline: none;
+        }
+        .contract-editor .ProseMirror h1 {
+          font-size: 1.75rem;
+          font-weight: 700;
           margin-top: 1.5rem;
           margin-bottom: 0.75rem;
-          color: #2D2A26;
         }
-        .contract-preview h3 {
-          font-size: 1.25rem;
+        .contract-editor .ProseMirror h2 {
+          font-size: 1.5rem;
           font-weight: 600;
           margin-top: 1.25rem;
           margin-bottom: 0.5rem;
-          color: #2D2A26;
         }
-        .contract-preview p {
+        .contract-editor .ProseMirror h3 {
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-top: 1rem;
+          margin-bottom: 0.5rem;
+        }
+        .contract-editor .ProseMirror p {
           margin-bottom: 0.75rem;
           line-height: 1.7;
         }
-        .contract-preview ul, .contract-preview ol {
+        .contract-editor .ProseMirror ul,
+        .contract-editor .ProseMirror ol {
           margin-left: 1.5rem;
           margin-bottom: 0.75rem;
         }
-        .contract-preview li {
+        .contract-editor .ProseMirror li {
           margin-bottom: 0.25rem;
+        }
+        .contract-editor .ProseMirror p.is-editor-empty:first-child::before {
+          color: #adb5bd;
+          content: attr(data-placeholder);
+          float: left;
+          height: 0;
+          pointer-events: none;
         }
       `}</style>
     </div>

@@ -47,6 +47,8 @@ const BookingPage = () => {
   const [bookingSettings, setBookingSettings] = useState(null);
   const [questionnaire, setQuestionnaire] = useState(null);
   const [questionnaireResponses, setQuestionnaireResponses] = useState({});
+  const [contract, setContract] = useState(null);
+  const [contractData, setContractData] = useState(null);
   
   // Weekend popup state
   const [showWeekendPopup, setShowWeekendPopup] = useState(false);
@@ -69,6 +71,7 @@ const BookingPage = () => {
     fetchPackages();
     fetchBookingSettings();
     fetchAddOns();
+    fetchContract();
   }, []);
 
   // Fetch available times when date OR session type changes

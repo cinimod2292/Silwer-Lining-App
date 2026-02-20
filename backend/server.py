@@ -3019,18 +3019,21 @@ def calculate_payfast_signature(data: dict) -> str:
         "email_confirmation", "confirmation_address", "payment_method"
     ]
     
-    # Build string in correct order, filtering empty values
-    pf_string = ""
+    # Build parameter string in correct order
+    params = []
     for field in field_order:
-        if field in data and data[field]:
-            pf_string += f"{field}={urllib.parse.quote_plus(str(data[field]))}&"
+        if field in data and data[field] is not None and str(data[field]).strip() != "":
+            # URL encode the value, but PayFast expects spaces as + not %20
+            value = str(data[field]).strip()
+            encoded_value = urllib.parse.quote_plus(value)
+            params.append(f"{field}={encoded_value}")
     
-    # Remove trailing &
-    pf_string = pf_string.rstrip("&")
+    pf_string = "&".join(params)
     
-    # Add passphrase
-    if PAYFAST_PASSPHRASE:
-        pf_string += f"&passphrase={urllib.parse.quote_plus(PAYFAST_PASSPHRASE)}"
+    # Add passphrase only if it's set and not empty
+    passphrase = PAYFAST_PASSPHRASE.strip() if PAYFAST_PASSPHRASE else ""
+    if passphrase:
+        pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     
     # Generate MD5 hash
     return hashlib.md5(pf_string.encode()).hexdigest()

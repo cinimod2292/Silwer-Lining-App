@@ -128,16 +128,27 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - [x] Block/Unblock time slots ✅
 - [x] Simplified Booking Settings (removed Available Days checkboxes & Default Session Duration) ✅
 - [x] Multi-day calendar event blocking (properly blocks availability when events span multiple days) ✅
-- [x] **Contract Signing System** ✅ NEW
-  - Admin contract editor with smart field builder
+- [x] **Contract Signing System** ✅
+  - Admin contract editor with smart field builder (WYSIWYG with TipTap)
   - Smart field types: Agree/Disagree, Initials, Signature (draw), Date (auto-filled)
   - Contract step in booking flow (required before final confirmation)
   - PDF generation with weasyprint
   - Contract PDF emailed to client + CC to admin
+  - Download signed contract button in admin booking details
+- [x] **Payment System** ✅ NEW
+  - PayFast integration (Sandbox mode - ready for production)
+  - Manual EFT with bank details from admin settings
+  - PayFlex placeholder (ready for credentials)
+  - Deposit (50%) or Full payment options
+  - Payment status tracking (awaiting_payment, awaiting_eft, confirmed)
+  - Payment reminder emails with link to complete payment
+  - Payment return/cancel pages
+  - Admin Payment Settings page
 
 ### P1 (Next Priority)
 - [ ] Test Cloudflare R2 Portfolio Upload (credentials configured, needs end-to-end test)
 - [ ] Google Reviews integration (needs clarification - manual entry or automated widget?)
+- [ ] PayFlex integration (when credentials provided)
 
 ### P2 (Future)
 - [ ] SEO meta tags per page

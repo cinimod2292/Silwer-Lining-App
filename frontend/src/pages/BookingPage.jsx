@@ -38,17 +38,25 @@ const sessionTypes = [
 // Available add-ons with prices in ZAR
 const BookingPage = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const payfastFormRef = useRef(null);
   const [step, setStep] = useState(1);
   const [packages, setPackages] = useState([]);
   const [availableAddOns, setAvailableAddOns] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
+  const [createdBookingId, setCreatedBookingId] = useState(null);
   const [bookingSettings, setBookingSettings] = useState(null);
   const [questionnaire, setQuestionnaire] = useState(null);
   const [questionnaireResponses, setQuestionnaireResponses] = useState({});
   const [contract, setContract] = useState(null);
   const [contractData, setContractData] = useState(null);
+  const [paymentSettings, setPaymentSettings] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentType, setPaymentType] = useState("deposit");
+  const [payfastFormData, setPayfastFormData] = useState(null);
+  const [bankDetails, setBankDetails] = useState(null);
   
   // Weekend popup state
   const [showWeekendPopup, setShowWeekendPopup] = useState(false);
@@ -72,7 +80,15 @@ const BookingPage = () => {
     fetchBookingSettings();
     fetchAddOns();
     fetchContract();
+    fetchPaymentSettings();
   }, []);
+
+  // Auto-submit PayFast form
+  useEffect(() => {
+    if (payfastFormData && payfastFormRef.current) {
+      payfastFormRef.current.submit();
+    }
+  }, [payfastFormData]);
 
   // Fetch available times when date OR session type changes
   useEffect(() => {

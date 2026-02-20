@@ -11,12 +11,13 @@ const PaymentReturnPage = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState("loading");
   const [booking, setBooking] = useState(null);
-  const [pollCount, setPollCount] = useState(0);
   const [verifying, setVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const maxPolls = 5; // Poll for ~15 seconds max before showing manual verify option
-
+  
   const bookingId = searchParams.get("booking_id");
+  const pollCountRef = useRef(0);
+  const maxPolls = 5;
+  const isPollingRef = useRef(false);
 
   const checkPaymentStatus = async () => {
     try {
@@ -24,13 +25,12 @@ const PaymentReturnPage = () => {
       setBooking(res.data);
       
       if (res.data.payment_status === "complete" || res.data.status === "confirmed") {
-        setStatus("success");
-        return true;
+        return "success";
       }
-      return false;
+      return "pending";
     } catch (e) {
       console.error("Failed to check payment status", e);
-      return false;
+      return "error";
     }
   };
 
@@ -41,17 +41,19 @@ const PaymentReturnPage = () => {
       const res = await axios.post(`${API}/payments/verify`, { booking_id: bookingId });
       
       if (res.data.verified && res.data.status === "complete") {
-        // Refresh booking data
         await checkPaymentStatus();
         setStatus("success");
+        return true;
       } else {
         setErrorMessage(res.data.message || "Payment not yet confirmed");
         setStatus("pending_manual");
+        return false;
       }
     } catch (e) {
       console.error("Verification failed", e);
       setErrorMessage("Could not verify payment. Please contact support.");
       setStatus("pending_manual");
+      return false;
     } finally {
       setVerifying(false);
     }
@@ -63,23 +65,33 @@ const PaymentReturnPage = () => {
       return;
     }
 
-    const pollPaymentStatus = async () => {
-      const isComplete = await checkPaymentStatus();
-      
-      if (isComplete) {
-        setStatus("success");
-      } else if (pollCount < maxPolls) {
+    // Prevent multiple polling cycles
+    if (isPollingRef.current) return;
+    isPollingRef.current = true;
+
+    const startPolling = async () => {
+      while (pollCountRef.current < maxPolls) {
+        const result = await checkPaymentStatus();
+        
+        if (result === "success") {
+          setStatus("success");
+          return;
+        }
+        
+        pollCountRef.current += 1;
         setStatus("pending");
-        setPollCount(prev => prev + 1);
-        setTimeout(pollPaymentStatus, 3000);
-      } else {
-        // After max polls, try to verify with PayFast API
-        setStatus("verifying");
-        await verifyWithPayFast();
+        
+        if (pollCountRef.current < maxPolls) {
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
       }
+      
+      // After max polls, verify with PayFast API
+      setStatus("verifying");
+      await verifyWithPayFast();
     };
 
-    pollPaymentStatus();
+    startPolling();
   }, [bookingId]);
 
   const formatPrice = (amount) => {
@@ -121,7 +133,7 @@ const PaymentReturnPage = () => {
                 <div className="h-2 w-32 bg-amber-200 rounded"></div>
               </div>
               <p className="text-xs text-muted-foreground mt-4">
-                Attempt {pollCount} of {maxPolls}...
+                Checking... ({pollCountRef.current}/{maxPolls})
               </p>
             </>
           )}

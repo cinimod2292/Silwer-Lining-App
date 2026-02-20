@@ -42,11 +42,12 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - **HomePage**: Hero section, services overview, featured work, testimonials, CTA, **Instagram Recent Shoots**, **Dynamic FAQs** ✅
 - **PortfolioPage**: Collage gallery with lightbox navigation (prev/next)
 - **PricingPage**: Tabbed packages (12 total) with add-ons in ZAR
-- **BookingPage**: Enhanced booking flow with **dynamic questionnaire step**:
+- **BookingPage**: Enhanced booking flow with **dynamic questionnaire step** and **Contract signing**:
   - Step 1: Session type, package selection, **dynamic add-ons from API**
   - Step 2: Date/time selection with **weekend surcharge popup**
   - Step 3: **Questionnaire** (only if questionnaire exists for session type) ✅
-  - Step 3/4: Contact details with **full price breakdown**
+  - Step 3/4: **Contract** (required - signature, initials, agree/disagree fields) ✅ NEW
+  - Step 4/5: Contact details with **full price breakdown**
 - **CompleteBookingPage**: Client-facing page for manual booking completion ✅ NEW
 - **AboutPage**: Photographer story, stats, philosophy
 - **ContactPage**: Contact form, **Dynamic FAQs** ✅

@@ -10,6 +10,9 @@ import BookingPage from "@/pages/BookingPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import CompleteBookingPage from "@/pages/CompleteBookingPage";
+import CompletePaymentPage from "@/pages/CompletePaymentPage";
+import PaymentReturnPage from "@/pages/PaymentReturnPage";
+import PaymentCancelPage from "@/pages/PaymentCancelPage";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 
@@ -29,6 +32,9 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
         </Route>
         <Route path="/complete-booking/:token" element={<CompleteBookingPage />} />
+        <Route path="/complete-payment/:bookingId" element={<CompletePaymentPage />} />
+        <Route path="/payment/return" element={<PaymentReturnPage />} />
+        <Route path="/payment/cancel" element={<PaymentCancelPage />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>

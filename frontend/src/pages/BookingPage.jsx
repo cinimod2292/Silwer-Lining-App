@@ -855,8 +855,19 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Step 3 (no questionnaire) or Step 4 (with questionnaire): Contact Details & Summary */}
-            {((step === 3 && getTotalSteps() === 3) || (step === 4 && getTotalSteps() === 4)) && (
+            {/* Contract Step */}
+            {step === getContractStep() && contract && (
+              <div data-testid="step-contract">
+                <ContractStep
+                  contract={contract}
+                  onComplete={handleContractComplete}
+                  clientName={formData.client_name || "Client"}
+                />
+              </div>
+            )}
+
+            {/* Details Step: Contact Details & Summary */}
+            {step === getDetailsStep() && (
               <div className="space-y-6" data-testid="step-details">
                 <div>
                   <Label htmlFor="name" className="flex items-center gap-2 mb-2">

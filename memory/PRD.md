@@ -98,6 +98,9 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - `/api/admin/faqs` - CRUD for FAQs
 - `/api/questionnaire/{session_type}` - Get questionnaire for booking
 - `/api/admin/questionnaires` - CRUD for questionnaires
+- `/api/contract` - Get contract template (public) ✅ NEW
+- `/api/admin/contract` - GET/PUT contract template ✅ NEW
+- `/api/admin/bookings/{id}/contract` - Get signed contract for booking ✅ NEW
 - `/api/admin/*` - Protected admin routes (login, CRUD operations, stats)
 
 ### Design Features

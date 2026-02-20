@@ -67,6 +67,7 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
   - **Settings Page** (Cloudflare R2 storage, Instagram config) ✅
   - **Questionnaires Management** (Google Forms-style builder) ✅
   - **FAQ Management** (CRUD with categories and ordering) ✅
+  - **Contract Editor** (smart field builder for booking contracts) ✅ NEW
 
 ### Backend API Endpoints
 - `/api/packages` - Get pricing packages

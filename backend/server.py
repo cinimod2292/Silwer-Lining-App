@@ -114,6 +114,9 @@ class BookingCreate(BaseModel):
     total_price: int = 0
     # Questionnaire responses
     questionnaire_responses: dict = {}
+    # Contract data
+    contract_signed: bool = False
+    contract_data: dict = {}  # {field_responses, signature_data, signed_at}
 
 class BookingUpdate(BaseModel):
     client_name: Optional[str] = None

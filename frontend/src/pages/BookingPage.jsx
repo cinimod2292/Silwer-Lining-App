@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle, Plus, X, AlertTriangle, ClipboardList } from "lucide-react";
+import { Calendar, Clock, User, Mail, Phone, FileText, CheckCircle, Plus, X, AlertTriangle, ClipboardList, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import axios from "axios";
 import { format, isBefore, startOfDay, isWeekend } from "date-fns";
+import ContractStep from "@/components/ContractStep";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

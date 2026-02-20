@@ -182,4 +182,8 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - /app/test_reports/iteration_5.json - FAQ & Questionnaire features (100% pass)
 - /app/test_reports/iteration_6.json - Calendar View & Manual Booking (100% pass)
 - /app/test_reports/iteration_7.json - Booking Settings Simplification (100% pass)
-- /app/test_reports/iteration_8.json - Contract Signing Feature (100% pass) ✅ NEW
+- /app/test_reports/iteration_8.json - Contract Signing Feature (100% pass)
+- /app/test_reports/iteration_9.json - Payment Step Verification (100% pass) ✅ NEW
+
+## Known Configuration Issue
+- Contract smart field placeholders ({{AGREE_PAYMENT}}, {{SIGNATURE}}, etc.) need to be added to contract content by admin via the Contract Editor's "Insert" buttons

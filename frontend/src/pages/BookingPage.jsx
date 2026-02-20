@@ -350,6 +350,7 @@ const BookingPage = () => {
     const hasQuestionnaire = questionnaire?.questions?.length > 0;
     const contractStep = getContractStep();
     const detailsStep = getDetailsStep();
+    const paymentStep = getPaymentStep();
     
     switch (currentStep) {
       case 1:
@@ -381,8 +382,16 @@ const BookingPage = () => {
           return formData.client_name && formData.client_email && formData.client_phone;
         }
       case 5:
-        // Details step (only when questionnaire exists)
-        return formData.client_name && formData.client_email && formData.client_phone;
+        if (hasQuestionnaire) {
+          // Details step (when questionnaire exists)
+          return formData.client_name && formData.client_email && formData.client_phone;
+        } else {
+          // Payment step - always valid (can skip)
+          return true;
+        }
+      case 6:
+        // Payment step (when questionnaire exists) - always valid
+        return true;
       default:
         return false;
     }
@@ -391,6 +400,87 @@ const BookingPage = () => {
   const handleContractComplete = (data) => {
     setContractData(data);
     setStep(step + 1);
+  };
+
+  // Create booking without payment (or prepare for payment)
+  const createBooking = async () => {
+    const selectedPkg = getSelectedPackage();
+    const selectedAddons = getSelectedAddons();
+    const addonsTotal = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+    
+    const payload = {
+      client_name: formData.client_name,
+      client_email: formData.client_email,
+      client_phone: formData.client_phone,
+      session_type: formData.session_type,
+      package_id: selectedPkg?.id || "",
+      package_name: formData.package_name,
+      package_price: selectedPkg?.price || 0,
+      booking_date: format(formData.booking_date, "yyyy-MM-dd"),
+      booking_time: formData.booking_time,
+      notes: formData.notes,
+      selected_addons: formData.selected_addons,
+      addons_total: addonsTotal,
+      is_weekend: formData.is_weekend,
+      weekend_surcharge: formData.is_weekend ? getWeekendSurcharge() : 0,
+      total_price: calculateTotal(),
+      questionnaire_responses: questionnaire ? questionnaireResponses : {},
+      contract_signed: contractData !== null,
+      contract_data: contractData || {},
+      payment_method: paymentMethod,
+      payment_type: paymentType,
+    };
+    
+    const res = await axios.post(`${API}/bookings`, payload);
+    return res.data;
+  };
+
+  const handlePayment = async () => {
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // First create the booking if not already created
+      let bookingId = createdBookingId;
+      if (!bookingId) {
+        const booking = await createBooking();
+        bookingId = booking.id;
+        setCreatedBookingId(bookingId);
+      }
+
+      // Initiate payment
+      const res = await axios.post(`${API}/payments/initiate`, {
+        booking_id: bookingId,
+        payment_method: paymentMethod,
+        payment_type: paymentType
+      });
+
+      if (paymentMethod === "payfast") {
+        setPayfastFormData(res.data.form_data);
+      } else if (paymentMethod === "eft") {
+        setBankDetails(res.data.bank_details);
+        setBookingComplete(true);
+      }
+    } catch (e) {
+      toast.error("Failed to process payment");
+      setLoading(false);
+    }
+  };
+
+  const handleSkipPayment = async () => {
+    setLoading(true);
+    try {
+      await createBooking();
+      setBookingComplete(true);
+      toast.success("Booking saved! Complete payment to confirm.");
+    } catch (e) {
+      toast.error("Failed to save booking");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {

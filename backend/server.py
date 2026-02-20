@@ -2935,6 +2935,39 @@ async def admin_get_booking_contract(booking_id: str, admin=Depends(verify_token
         "signed_at": booking.get("contract_data", {}).get("signed_at")
     }
 
+@api_router.get("/admin/bookings/{booking_id}/contract/pdf")
+async def admin_download_booking_contract_pdf(booking_id: str, admin=Depends(verify_token)):
+    """Generate and download the signed contract as PDF"""
+    from fastapi.responses import Response
+    
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if not booking.get("contract_signed"):
+        raise HTTPException(status_code=400, detail="Contract not signed")
+    
+    # Get the contract template
+    contract_template = await db.contract_template.find_one({"id": "default"}, {"_id": 0})
+    if not contract_template:
+        raise HTTPException(status_code=404, detail="Contract template not found")
+    
+    # Generate PDF
+    pdf_bytes = await generate_contract_pdf(booking, contract_template)
+    if not pdf_bytes:
+        raise HTTPException(status_code=500, detail="Failed to generate PDF")
+    
+    # Return as downloadable file
+    filename = f"contract_{booking.get('client_name', 'client').replace(' ', '_')}_{booking.get('booking_date', 'booking')}.pdf"
+    
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
 # Include the router
 app.include_router(api_router)
 

@@ -156,6 +156,15 @@ const BookingPage = () => {
     }
   };
 
+  const fetchPaymentSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/payment-settings`);
+      setPaymentSettings(res.data);
+    } catch (e) {
+      console.error("Failed to fetch payment settings");
+    }
+  };
+
   const fetchQuestionnaire = async (sessionType) => {
     try {
       const res = await axios.get(`${API}/questionnaire/${sessionType}`);

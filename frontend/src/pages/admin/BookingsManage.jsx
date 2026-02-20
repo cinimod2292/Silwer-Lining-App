@@ -207,6 +207,36 @@ const BookingsManage = () => {
     return packages.filter((pkg) => pkg.session_type === sessionType);
   };
 
+  const downloadContract = async (bookingId) => {
+    const token = localStorage.getItem("admin_token");
+    try {
+      toast.loading("Generating PDF...");
+      const response = await axios.get(`${API}/admin/bookings/${bookingId}/contract/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const booking = bookings.find(b => b.id === bookingId);
+      const filename = `contract_${booking?.client_name?.replace(/\s/g, "_") || "client"}_${booking?.booking_date || "booking"}.pdf`;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.dismiss();
+      toast.success("Contract downloaded");
+    } catch (e) {
+      toast.dismiss();
+      toast.error("Failed to download contract");
+      console.error(e);
+    }
+  };
+
   const filteredBookings = filter === "all"
     ? bookings
     : bookings.filter((b) => b.status === filter);

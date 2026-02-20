@@ -3126,8 +3126,27 @@ async def initiate_payment(data: dict):
         
         # Split name
         name_parts = booking.get("client_name", "").split(" ", 1)
-        first_name = name_parts[0] if name_parts else ""
-        last_name = name_parts[1] if len(name_parts) > 1 else ""
+        first_name = name_parts[0].strip() if name_parts else "Customer"
+        last_name = name_parts[1].strip() if len(name_parts) > 1 else "Customer"
+        
+        # Format cell number for South Africa (must be 10 digits starting with 0)
+        cell_raw = booking.get("client_phone", "").replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+        if cell_raw.startswith("+27"):
+            cell_number = "0" + cell_raw[3:]
+        elif cell_raw.startswith("27"):
+            cell_number = "0" + cell_raw[2:]
+        elif cell_raw.startswith("0"):
+            cell_number = cell_raw
+        else:
+            cell_number = cell_raw
+        # Ensure only digits
+        cell_number = ''.join(filter(str.isdigit, cell_number))
+        
+        # Amount - prices in database are in Rands (not cents), format with 2 decimals
+        amount_rands = float(amount) if amount >= 100 else float(amount)  # If amount < 100, assume it's already in Rands
+        # If prices are stored as whole numbers (e.g., 3200 for R3200), they're already in Rands
+        # PayFast expects amount in Rands with 2 decimal places
+        amount_str = f"{amount_rands:.2f}"
         
         form_data = {
             "merchant_id": PAYFAST_MERCHANT_ID,
@@ -3138,14 +3157,15 @@ async def initiate_payment(data: dict):
             "name_first": first_name,
             "name_last": last_name,
             "email_address": booking.get("client_email", ""),
-            "cell_number": booking.get("client_phone", "").replace("+27", "0").replace(" ", ""),
             "m_payment_id": booking_id,
-            "amount": f"{amount / 100:.2f}",  # Convert cents to rands
+            "amount": amount_str,
             "item_name": f"{booking.get('session_type', 'Photography').title()} Session",
-            "item_description": f"{booking.get('package_name', 'Package')} - {'50% Deposit' if payment_type == 'deposit' else 'Full Payment'}",
-            "custom_str1": booking_id,
-            "custom_str2": payment_type
+            "item_description": f"{booking.get('package_name', 'Package')} - {'Deposit' if payment_type == 'deposit' else 'Full Payment'}",
         }
+        
+        # Only add cell_number if valid (10 digits)
+        if cell_number and len(cell_number) == 10:
+            form_data["cell_number"] = cell_number
         
         # Calculate signature
         form_data["signature"] = calculate_payfast_signature(form_data)

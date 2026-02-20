@@ -128,6 +128,18 @@ const BookingPage = () => {
     }
   };
 
+  const fetchContract = async () => {
+    try {
+      const res = await axios.get(`${API}/contract`);
+      if (res.data && res.data.content) {
+        setContract(res.data);
+      }
+    } catch (e) {
+      console.error("No contract configured");
+      setContract(null);
+    }
+  };
+
   const fetchQuestionnaire = async (sessionType) => {
     try {
       const res = await axios.get(`${API}/questionnaire/${sessionType}`);

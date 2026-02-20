@@ -836,7 +836,36 @@ async def create_booking(booking_data: BookingCreate, background_tasks: Backgrou
     # Create calendar event in background (if sync enabled)
     background_tasks.add_task(create_calendar_event_background, doc)
     
+    # If contract was signed, generate and send contract PDF
+    if doc.get("contract_signed"):
+        background_tasks.add_task(send_contract_pdf_background, doc)
+    
     return booking
+
+async def send_contract_pdf_background(booking_dict: dict):
+    """Background task to generate and send contract PDF"""
+    try:
+        # Get contract template
+        contract_template = await db.contract_template.find_one({"id": "default"}, {"_id": 0})
+        if not contract_template:
+            logger.warning("No contract template found")
+            return
+        
+        # Generate PDF
+        pdf_bytes = await generate_contract_pdf(booking_dict, contract_template)
+        if not pdf_bytes:
+            logger.error("Failed to generate contract PDF")
+            return
+        
+        # Get admin email for CC
+        admin = await db.admin_users.find_one({}, {"_id": 0, "email": 1})
+        admin_email = admin.get("email") if admin else SENDER_EMAIL
+        
+        # Send email with PDF attachment
+        await send_contract_email(booking_dict, pdf_bytes, admin_email)
+        logger.info(f"Contract PDF sent for booking {booking_dict['id']}")
+    except Exception as e:
+        logger.error(f"Failed to send contract PDF: {e}")
 
 async def create_calendar_event_background(booking_dict: dict):
     """Background task to create calendar event"""

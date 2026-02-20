@@ -13,10 +13,12 @@ from datetime import datetime, timezone, timedelta
 import jwt
 import bcrypt
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import Mail, Attachment, FileContent, FileName, FileType, Disposition
 import httpx
 import caldav
 from icalendar import Calendar as ICalendar, Event as ICalEvent
+import base64
+import io
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

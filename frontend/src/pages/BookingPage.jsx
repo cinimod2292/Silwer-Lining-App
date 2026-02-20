@@ -995,38 +995,54 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-10">
-              {step > 1 && (
+            {/* Navigation Buttons - hide when on contract step as it has its own button */}
+            {step !== getContractStep() && (
+              <div className="flex justify-between mt-10">
+                {step > 1 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setStep(step - 1)}
+                    className="rounded-full px-8"
+                    data-testid="btn-back"
+                  >
+                    Back
+                  </Button>
+                )}
+                {step < getTotalSteps() ? (
+                  <Button
+                    onClick={() => setStep(step + 1)}
+                    disabled={!validateStep(step)}
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 ml-auto"
+                    data-testid="btn-next"
+                  >
+                    Continue
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!validateStep(step) || loading}
+                    className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 ml-auto"
+                    data-testid="btn-submit"
+                  >
+                    {loading ? "Booking..." : "Confirm Booking"}
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Back button only when on contract step */}
+            {step === getContractStep() && step > 1 && (
+              <div className="flex justify-start mt-6">
                 <Button
                   variant="outline"
                   onClick={() => setStep(step - 1)}
                   className="rounded-full px-8"
-                  data-testid="btn-back"
+                  data-testid="btn-back-contract"
                 >
                   Back
                 </Button>
-              )}
-              {step < getTotalSteps() ? (
-                <Button
-                  onClick={() => setStep(step + 1)}
-                  disabled={!validateStep(step)}
-                  className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 ml-auto"
-                  data-testid="btn-next"
-                >
-                  Continue
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!validateStep(step) || loading}
-                  className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 ml-auto"
-                  data-testid="btn-submit"
-                >
-                  {loading ? "Booking..." : "Confirm Booking"}
-                </Button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

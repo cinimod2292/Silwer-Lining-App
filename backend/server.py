@@ -2597,6 +2597,117 @@ async def admin_delete_questionnaire(questionnaire_id: str, admin=Depends(verify
         raise HTTPException(status_code=404, detail="Questionnaire not found")
     return {"message": "Questionnaire deleted"}
 
+# ==================== CONTRACT ENDPOINTS ====================
+
+@api_router.get("/contract")
+async def get_public_contract():
+    """Get the contract template for booking flow (public endpoint)"""
+    contract = await db.contract_template.find_one({"id": "default"}, {"_id": 0})
+    if not contract:
+        # Return default empty contract
+        return {
+            "id": "default",
+            "title": "Photography Session Contract",
+            "content": "",
+            "smart_fields": []
+        }
+    return contract
+
+@api_router.get("/admin/contract")
+async def admin_get_contract(admin=Depends(verify_token)):
+    """Get the contract template for admin editing"""
+    contract = await db.contract_template.find_one({"id": "default"}, {"_id": 0})
+    if not contract:
+        # Return default empty contract with sample content
+        return {
+            "id": "default",
+            "title": "Photography Session Contract",
+            "content": """<h2>Photography Session Agreement</h2>
+<p>This agreement is entered into between Silwer Lining Photography ("Photographer") and the client ("Client").</p>
+
+<h3>1. Session Details</h3>
+<p>The Photographer agrees to provide photography services as selected in the booking.</p>
+
+<h3>2. Payment Terms</h3>
+<p>A deposit is required to secure your booking date. The remaining balance is due on the day of the session.</p>
+
+<p>I acknowledge and agree to the payment terms:</p>
+{{AGREE_PAYMENT}}
+
+<h3>3. Cancellation Policy</h3>
+<p>Cancellations must be made at least 48 hours before the scheduled session. Deposits are non-refundable.</p>
+
+<p>I understand and accept the cancellation policy:</p>
+{{AGREE_CANCELLATION}}
+
+<h3>4. Image Usage Rights</h3>
+<p>The Photographer retains copyright of all images. Client receives a license for personal use. The Photographer may use images for portfolio, social media, and promotional purposes unless otherwise agreed.</p>
+
+<p>I agree to the image usage terms:</p>
+{{AGREE_USAGE}}
+
+<p>Please initial here to confirm you have read this section:</p>
+{{INITIALS_USAGE}}
+
+<h3>5. Agreement</h3>
+<p>By signing below, I confirm that I have read, understood, and agree to all terms and conditions of this contract.</p>
+
+<p>Date:</p>
+{{DATE_SIGNED}}
+
+<p>Client Signature:</p>
+{{SIGNATURE}}""",
+            "smart_fields": [
+                {"id": "AGREE_PAYMENT", "type": "agree_disagree", "label": "I agree to the payment terms", "required": True},
+                {"id": "AGREE_CANCELLATION", "type": "agree_disagree", "label": "I accept the cancellation policy", "required": True},
+                {"id": "AGREE_USAGE", "type": "agree_disagree", "label": "I agree to the image usage terms", "required": True},
+                {"id": "INITIALS_USAGE", "type": "initials", "label": "Initials", "required": True},
+                {"id": "DATE_SIGNED", "type": "date", "label": "Date", "required": True},
+                {"id": "SIGNATURE", "type": "signature", "label": "Signature", "required": True}
+            ],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    return contract
+
+@api_router.put("/admin/contract")
+async def admin_update_contract(data: dict, admin=Depends(verify_token)):
+    """Update the contract template"""
+    update_data = {
+        "id": "default",
+        "title": data.get("title", "Photography Session Contract"),
+        "content": data.get("content", ""),
+        "smart_fields": data.get("smart_fields", []),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.contract_template.update_one(
+        {"id": "default"},
+        {"$set": update_data},
+        upsert=True
+    )
+    return {"message": "Contract template updated"}
+
+@api_router.get("/admin/bookings/{booking_id}/contract")
+async def admin_get_booking_contract(booking_id: str, admin=Depends(verify_token)):
+    """Get the signed contract data for a specific booking"""
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if not booking.get("contract_signed"):
+        return {"signed": False, "message": "Contract not signed"}
+    
+    # Get the contract template to show with responses
+    contract = await db.contract_template.find_one({"id": "default"}, {"_id": 0})
+    
+    return {
+        "signed": True,
+        "contract_data": booking.get("contract_data", {}),
+        "contract_template": contract,
+        "client_name": booking.get("client_name"),
+        "signed_at": booking.get("contract_data", {}).get("signed_at")
+    }
+
 # Include the router
 app.include_router(api_router)
 

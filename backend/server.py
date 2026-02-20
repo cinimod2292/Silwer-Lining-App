@@ -195,6 +195,31 @@ class CustomSlot(BaseModel):
     time: str
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
+# ==================== CONTRACT MODELS ====================
+
+class ContractSmartField(BaseModel):
+    """A smart field that can be inserted into the contract"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # "agree_disagree", "initials", "signature", "date"
+    label: str  # Label shown to client
+    required: bool = True
+
+class ContractTemplate(BaseModel):
+    """The contract template that admin can edit"""
+    id: str = "default"
+    content: str = ""  # HTML content with {{FIELD_ID}} placeholders
+    smart_fields: List[dict] = []  # List of smart field definitions
+    title: str = "Photography Session Contract"
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+class SignedContractData(BaseModel):
+    """Data from a signed contract"""
+    field_responses: dict = {}  # {field_id: value} - for agree/disagree and initials
+    signature_data: str = ""  # Base64 encoded signature image
+    signed_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    client_name: str = ""
+    client_email: str = ""
+
 # ==================== ADD-ONS MODELS ====================
 
 class AddOnCreate(BaseModel):

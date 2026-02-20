@@ -1155,8 +1155,213 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Navigation Buttons - hide when on contract step as it has its own button */}
-            {step !== getContractStep() && (
+            {/* Payment Step */}
+            {step === getPaymentStep() && (
+              <div className="space-y-6" data-testid="step-payment">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-display font-semibold text-charcoal">
+                    Payment
+                  </h2>
+                  <p className="text-muted-foreground mt-2">
+                    Choose your payment method and amount
+                  </p>
+                </div>
+
+                {/* Payment Amount Selection */}
+                <div className="bg-white border rounded-xl p-6">
+                  <Label className="text-base font-semibold mb-4 block">
+                    Payment Amount
+                  </Label>
+                  <div className="space-y-3">
+                    <label 
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        paymentType === "deposit" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-gray-200 hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="radio" 
+                          name="paymentType" 
+                          value="deposit" 
+                          checked={paymentType === "deposit"}
+                          onChange={() => setPaymentType("deposit")}
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div>
+                          <p className="font-medium">50% Deposit</p>
+                          <p className="text-sm text-muted-foreground">Secure your booking now, pay the rest later</p>
+                        </div>
+                      </div>
+                      <span className="text-xl font-display font-semibold text-primary">
+                        R{Math.round(calculateTotal() / 2).toLocaleString()}
+                      </span>
+                    </label>
+                    
+                    <label 
+                      className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        paymentType === "full" 
+                          ? "border-primary bg-primary/5" 
+                          : "border-gray-200 hover:border-primary/50"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="radio" 
+                          name="paymentType" 
+                          value="full" 
+                          checked={paymentType === "full"}
+                          onChange={() => setPaymentType("full")}
+                          className="w-4 h-4 text-primary"
+                        />
+                        <div>
+                          <p className="font-medium">Full Payment</p>
+                          <p className="text-sm text-muted-foreground">Pay the full amount now</p>
+                        </div>
+                      </div>
+                      <span className="text-xl font-display font-semibold text-primary">
+                        R{calculateTotal().toLocaleString()}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Payment Method Selection */}
+                <div className="bg-white border rounded-xl p-6">
+                  <Label className="text-base font-semibold mb-4 block">
+                    Payment Method
+                  </Label>
+                  <div className="space-y-3">
+                    {/* PayFast */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("payfast")}
+                      className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
+                        paymentMethod === "payfast"
+                          ? "border-primary bg-primary/5"
+                          : "border-gray-200 hover:border-primary/50"
+                      }`}
+                      data-testid="payment-payfast"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          paymentMethod === "payfast" ? "bg-primary/20" : "bg-gray-100"
+                        }`}>
+                          <CreditCard className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">PayFast</p>
+                          <p className="text-sm text-muted-foreground">
+                            Credit/Debit Card, Instant EFT, SnapScan
+                          </p>
+                        </div>
+                      </div>
+                      {paymentMethod === "payfast" && (
+                        <CheckCircle className="w-5 h-5 text-primary" />
+                      )}
+                    </button>
+
+                    {/* Manual EFT */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("eft")}
+                      className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all text-left ${
+                        paymentMethod === "eft"
+                          ? "border-primary bg-primary/5"
+                          : "border-gray-200 hover:border-primary/50"
+                      }`}
+                      data-testid="payment-eft"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                          paymentMethod === "eft" ? "bg-green-100" : "bg-gray-100"
+                        }`}>
+                          <Building2 className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Manual EFT / Bank Transfer</p>
+                          <p className="text-sm text-muted-foreground">
+                            Transfer directly to our bank account
+                          </p>
+                        </div>
+                      </div>
+                      {paymentMethod === "eft" && (
+                        <CheckCircle className="w-5 h-5 text-primary" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bank Details (shown when EFT selected and bankDetails loaded) */}
+                {bankDetails && paymentMethod === "eft" && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+                    <h3 className="font-semibold text-green-800 mb-4 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Bank Transfer Details
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      <p><strong>Bank:</strong> {bankDetails.bank_name}</p>
+                      <p><strong>Account Holder:</strong> {bankDetails.account_holder}</p>
+                      <p><strong>Account Number:</strong> {bankDetails.account_number}</p>
+                      <p><strong>Branch Code:</strong> {bankDetails.branch_code}</p>
+                      <p><strong>Account Type:</strong> {bankDetails.account_type}</p>
+                      <div className="mt-4 p-3 bg-white rounded-lg border border-green-300">
+                        <p className="text-xs text-muted-foreground mb-1">Use this reference:</p>
+                        <p className="font-mono font-bold text-lg">{bankDetails.reference}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleSkipPayment}
+                    className="flex-1"
+                    disabled={loading}
+                  >
+                    Pay Later
+                  </Button>
+                  <Button
+                    onClick={handlePayment}
+                    disabled={!paymentMethod || loading}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+                    data-testid="proceed-payment-btn"
+                  >
+                    {loading ? (
+                      "Processing..."
+                    ) : (
+                      <>
+                        Pay R{(paymentType === "deposit" ? Math.round(calculateTotal() / 2) : calculateTotal()).toLocaleString()}
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-center text-muted-foreground">
+                  Your booking will be held for 24 hours. Complete payment to confirm.
+                </p>
+              </div>
+            )}
+
+            {/* Hidden PayFast Form */}
+            {payfastFormData && (
+              <form 
+                ref={payfastFormRef}
+                action="https://sandbox.payfast.co.za/eng/process" 
+                method="POST"
+                style={{ display: 'none' }}
+              >
+                {Object.entries(payfastFormData).map(([key, value]) => (
+                  <input key={key} type="hidden" name={key} value={value} />
+                ))}
+              </form>
+            )}
+
+            {/* Navigation Buttons - hide when on contract step or payment step */}
+            {step !== getContractStep() && step !== getPaymentStep() && (
               <div className="flex justify-between mt-10">
                 {step > 1 && (
                   <Button

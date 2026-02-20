@@ -700,8 +700,8 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Step 3: Questionnaire (only if questionnaire exists) */}
-            {step === 3 && getTotalSteps() === 4 && questionnaire && (
+            {/* Step 3: Questionnaire (only if questionnaire exists and has questions) */}
+            {step === 3 && questionnaire?.questions?.length > 0 && (
               <div className="space-y-6" data-testid="step-3-questionnaire">
                 <div className="text-center mb-8">
                   <ClipboardList className="w-10 h-10 text-primary mx-auto mb-3" />

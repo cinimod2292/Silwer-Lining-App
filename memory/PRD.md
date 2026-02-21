@@ -183,7 +183,15 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
 - /app/test_reports/iteration_6.json - Calendar View & Manual Booking (100% pass)
 - /app/test_reports/iteration_7.json - Booking Settings Simplification (100% pass)
 - /app/test_reports/iteration_8.json - Contract Signing Feature (100% pass)
-- /app/test_reports/iteration_9.json - Payment Step Verification (100% pass) ✅ NEW
+- /app/test_reports/iteration_9.json - Payment Step Verification (100% pass)
 
 ## Known Configuration Issue
 - Contract smart field placeholders ({{AGREE_PAYMENT}}, {{SIGNATURE}}, etc.) need to be added to contract content by admin via the Contract Editor's "Insert" buttons
+
+## Recent Updates (Feb 2026)
+- **PayFast Live/Sandbox Toggle** - Admin can switch between sandbox and live mode from Payment Settings
+- **Client Booking Management** - Clients receive a "Manage Booking" link in confirmation emails to:
+  - Complete session questionnaire (moved to post-payment)
+  - Email questionnaire link for later completion
+  - Request reschedule or cancellation
+- **Questionnaire Reminders** - Auto-send reminders 3 days before session if questionnaire not completed

@@ -51,6 +51,41 @@ APPLE_CALENDAR_URL = os.environ.get('APPLE_CALENDAR_URL', '')
 APPLE_CALENDAR_USER = os.environ.get('APPLE_CALENDAR_USER', '')
 APPLE_CALENDAR_PASSWORD = os.environ.get('APPLE_CALENDAR_PASSWORD', '')
 
+async def get_payfast_credentials():
+    """Get PayFast credentials from database settings, fallback to environment variables"""
+    try:
+        settings = await db.payment_settings.find_one({"id": "default"})
+        if settings:
+            is_sandbox = settings.get("payfast_sandbox", True)
+            if is_sandbox:
+                merchant_id = settings.get("payfast_sandbox_merchant_id") or PAYFAST_MERCHANT_ID
+                merchant_key = settings.get("payfast_sandbox_merchant_key") or PAYFAST_MERCHANT_KEY
+                passphrase = settings.get("payfast_sandbox_passphrase") or PAYFAST_PASSPHRASE
+                url = "https://sandbox.payfast.co.za/eng/process"
+            else:
+                merchant_id = settings.get("payfast_merchant_id") or PAYFAST_MERCHANT_ID
+                merchant_key = settings.get("payfast_merchant_key") or PAYFAST_MERCHANT_KEY
+                passphrase = settings.get("payfast_passphrase") or PAYFAST_PASSPHRASE
+                url = "https://www.payfast.co.za/eng/process"
+            return {
+                "merchant_id": merchant_id,
+                "merchant_key": merchant_key,
+                "passphrase": passphrase,
+                "is_sandbox": is_sandbox,
+                "url": url
+            }
+    except Exception as e:
+        logger.error(f"Error getting PayFast credentials: {e}")
+    
+    # Fallback to environment variables
+    return {
+        "merchant_id": PAYFAST_MERCHANT_ID,
+        "merchant_key": PAYFAST_MERCHANT_KEY,
+        "passphrase": PAYFAST_PASSPHRASE,
+        "is_sandbox": PAYFAST_SANDBOX,
+        "url": PAYFAST_URL
+    }
+
 app = FastAPI(title="Silwer Lining Photography API")
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()

@@ -3269,6 +3269,9 @@ async def initiate_payment(data: dict):
     )
     
     if payment_method == "payfast":
+        # Get PayFast credentials from database settings
+        pf_creds = await get_payfast_credentials()
+        
         # Generate PayFast payment form data
         frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-booking-22.preview.emergentagent.com').replace('/api', '')
         backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-booking-22.preview.emergentagent.com')
@@ -3292,14 +3295,12 @@ async def initiate_payment(data: dict):
         cell_number = ''.join(filter(str.isdigit, cell_number))
         
         # Amount - prices in database are in Rands (not cents), format with 2 decimals
-        amount_rands = float(amount) if amount >= 100 else float(amount)  # If amount < 100, assume it's already in Rands
-        # If prices are stored as whole numbers (e.g., 3200 for R3200), they're already in Rands
-        # PayFast expects amount in Rands with 2 decimal places
+        amount_rands = float(amount) if amount >= 100 else float(amount)
         amount_str = f"{amount_rands:.2f}"
         
         form_data = {
-            "merchant_id": PAYFAST_MERCHANT_ID,
-            "merchant_key": PAYFAST_MERCHANT_KEY,
+            "merchant_id": pf_creds["merchant_id"],
+            "merchant_key": pf_creds["merchant_key"],
             "return_url": f"{frontend_url}/payment/return?booking_id={booking_id}",
             "cancel_url": f"{frontend_url}/payment/cancel?booking_id={booking_id}",
             "notify_url": f"{backend_url}/api/payments/payfast-itn",
@@ -3316,14 +3317,15 @@ async def initiate_payment(data: dict):
         if cell_number and len(cell_number) == 10:
             form_data["cell_number"] = cell_number
         
-        # Calculate signature
-        form_data["signature"] = calculate_payfast_signature(form_data)
+        # Calculate signature using credentials from settings
+        form_data["signature"] = calculate_payfast_signature_with_creds(form_data, pf_creds["passphrase"])
         
         return {
             "payment_method": "payfast",
-            "payment_url": PAYFAST_URL,
+            "payment_url": pf_creds["url"],
             "form_data": form_data,
-            "amount": amount
+            "amount": amount,
+            "is_sandbox": pf_creds["is_sandbox"]
         }
     
     elif payment_method == "eft":

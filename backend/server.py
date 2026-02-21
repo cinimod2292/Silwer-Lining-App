@@ -487,6 +487,10 @@ def send_booking_confirmation_email(booking: dict):
             logger.warning("SendGrid API key not configured")
             return False
         
+        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', '').replace('/api', '')
+        manage_token = booking.get('manage_token') or booking.get('token', '')
+        manage_link = f"{frontend_url}/manage/{manage_token}" if manage_token else ""
+        
         html_content = f"""
         <html>
         <body style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FDFCF8;">
@@ -496,24 +500,28 @@ def send_booking_confirmation_email(booking: dict):
             </div>
             
             <div style="padding: 30px 0;">
-                <h2 style="color: #2D2A26; font-size: 22px;">Booking Request Received</h2>
+                <h2 style="color: #2D2A26; font-size: 22px;">Booking Confirmed!</h2>
                 <p style="color: #2D2A26; line-height: 1.8;">Dear {booking['client_name']},</p>
-                <p style="color: #2D2A26; line-height: 1.8;">Thank you for your booking request! We're excited to capture your special moments.</p>
+                <p style="color: #2D2A26; line-height: 1.8;">Thank you for your booking! We're excited to capture your special moments.</p>
                 
                 <div style="background-color: #F5F2EE; padding: 20px; border-radius: 8px; margin: 20px 0;">
                     <h3 style="color: #2D2A26; margin-top: 0;">Booking Details</h3>
-                    <p style="margin: 8px 0;"><strong>Session Type:</strong> {booking['session_type'].title()}</p>
+                    <p style="margin: 8px 0;"><strong>Session Type:</strong> {booking['session_type'].replace('-', ' ').title()}</p>
                     <p style="margin: 8px 0;"><strong>Package:</strong> {booking['package_name']}</p>
-                    <p style="margin: 8px 0;"><strong>Price:</strong> R{booking.get('package_price', 0):,}</p>
-                    <p style="margin: 8px 0;"><strong>Requested Date:</strong> {booking['booking_date']}</p>
-                    <p style="margin: 8px 0;"><strong>Requested Time:</strong> {booking['booking_time']}</p>
-                    {f"<p style='margin: 8px 0;'><strong>Notes:</strong> {booking['notes']}</p>" if booking.get('notes') else ""}
+                    <p style="margin: 8px 0;"><strong>Price:</strong> R{booking.get('total_price', booking.get('package_price', 0)):,}</p>
+                    <p style="margin: 8px 0;"><strong>Date:</strong> {booking['booking_date']}</p>
+                    <p style="margin: 8px 0;"><strong>Time:</strong> {booking['booking_time']}</p>
                 </div>
                 
-                <p style="color: #2D2A26; line-height: 1.8;"><strong>Next Steps:</strong></p>
-                <p style="color: #2D2A26; line-height: 1.8;">We will contact you shortly to confirm availability and send your invoice. Remember, a 50% deposit is required to secure your booking.</p>
+                {f'''<div style="background-color: #E8F5E9; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                    <p style="margin: 0 0 15px 0; color: #2D2A26;"><strong>Manage Your Booking</strong></p>
+                    <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">Complete your questionnaire, reschedule or make changes</p>
+                    <a href="{manage_link}" style="background-color: #A69F95; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                        Manage Booking
+                    </a>
+                </div>''' if manage_link else ""}
                 
-                <p style="color: #2D2A26; line-height: 1.8; margin-top: 20px;">
+                <p style="color: #2D2A26; line-height: 1.8;">
                     <strong>Studio Location:</strong><br>
                     Helderkruin, Roodepoort<br>
                     Johannesburg, Gauteng
@@ -539,7 +547,7 @@ def send_booking_confirmation_email(booking: dict):
         message = Mail(
             from_email=SENDER_EMAIL,
             to_emails=booking['client_email'],
-            subject=f"Booking Request - {booking['session_type'].title()} Session",
+            subject=f"Booking Confirmed - {booking['session_type'].replace('-', ' ').title()} Session",
             html_content=html_content
         )
         

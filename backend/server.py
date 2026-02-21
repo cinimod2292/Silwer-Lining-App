@@ -3573,6 +3573,246 @@ async def send_payment_reminder(data: dict, admin=Depends(verify_token)):
         logger.error(f"Failed to send payment reminder: {e}")
         raise HTTPException(status_code=500, detail="Failed to send reminder")
 
+# ==================== CLIENT BOOKING MANAGEMENT ====================
+
+@api_router.get("/client/booking/{token}")
+async def get_client_booking(token: str):
+    """Get booking details for client management page"""
+    booking = await db.bookings.find_one(
+        {"$or": [{"token": token}, {"manage_token": token}]},
+        {"_id": 0}
+    )
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    # Get questionnaire for this session type
+    questionnaire = await db.questionnaires.find_one(
+        {"session_type": booking.get("session_type"), "active": True},
+        {"_id": 0}
+    )
+    
+    return {
+        "booking": booking,
+        "questionnaire": questionnaire
+    }
+
+@api_router.post("/client/booking/{token}/questionnaire")
+async def save_client_questionnaire(token: str, data: dict):
+    """Save questionnaire responses from client"""
+    booking = await db.bookings.find_one(
+        {"$or": [{"token": token}, {"manage_token": token}]}
+    )
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    await db.bookings.update_one(
+        {"id": booking["id"]},
+        {"$set": {
+            "questionnaire_responses": data.get("responses", {}),
+            "questionnaire_completed": True,
+            "questionnaire_completed_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    return {"message": "Questionnaire saved"}
+
+@api_router.post("/client/booking/{token}/email-questionnaire")
+async def email_questionnaire_link(token: str):
+    """Send questionnaire link to client email"""
+    booking = await db.bookings.find_one(
+        {"$or": [{"token": token}, {"manage_token": token}]},
+        {"_id": 0}
+    )
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    if not SENDGRID_API_KEY:
+        raise HTTPException(status_code=500, detail="Email not configured")
+    
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', '').replace('/api', '')
+    manage_link = f"{frontend_url}/manage/{token}"
+    
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #A69F95;">Complete Your Session Questionnaire</h2>
+        <p>Hi {booking.get('client_name', 'there')},</p>
+        <p>Please complete your session questionnaire to help us prepare for your upcoming {booking.get('session_type', '').replace('-', ' ').title()} session.</p>
+        <p style="margin: 30px 0;">
+            <a href="{manage_link}" style="background-color: #A69F95; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                Complete Questionnaire
+            </a>
+        </p>
+        <p style="color: #666; font-size: 14px;">
+            <strong>Session Date:</strong> {booking.get('booking_date', 'TBD')}<br>
+            <strong>Time:</strong> {booking.get('booking_time', 'TBD')}
+        </p>
+        <p style="color: #888; font-size: 12px; margin-top: 30px;">
+            This link also allows you to manage your booking, request reschedule or cancellation.
+        </p>
+    </body>
+    </html>
+    """
+    
+    try:
+        message = Mail(
+            from_email=SENDER_EMAIL,
+            to_emails=booking['client_email'],
+            subject=f"Complete Your Session Questionnaire - Silwer Lining Photography",
+            html_content=html_content
+        )
+        sg = SendGridAPIClient(SENDGRID_API_KEY)
+        sg.send(message)
+        return {"message": "Email sent"}
+    except Exception as e:
+        logger.error(f"Failed to send questionnaire email: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send email")
+
+@api_router.post("/client/booking/{token}/request-reschedule")
+async def request_reschedule(token: str):
+    """Client requests to reschedule booking"""
+    booking = await db.bookings.find_one(
+        {"$or": [{"token": token}, {"manage_token": token}]}
+    )
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    await db.bookings.update_one(
+        {"id": booking["id"]},
+        {"$set": {
+            "reschedule_requested": True,
+            "reschedule_requested_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Send notification to admin
+    if SENDGRID_API_KEY:
+        try:
+            message = Mail(
+                from_email=SENDER_EMAIL,
+                to_emails=SENDER_EMAIL,
+                subject=f"Reschedule Request - {booking.get('client_name')}",
+                html_content=f"""
+                <p>Client <strong>{booking.get('client_name')}</strong> has requested to reschedule their booking.</p>
+                <p><strong>Session:</strong> {booking.get('session_type', '').title()}</p>
+                <p><strong>Current Date:</strong> {booking.get('booking_date')} at {booking.get('booking_time')}</p>
+                <p><strong>Email:</strong> {booking.get('client_email')}</p>
+                <p><strong>Phone:</strong> {booking.get('client_phone')}</p>
+                """
+            )
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            sg.send(message)
+        except Exception as e:
+            logger.error(f"Failed to send reschedule notification: {e}")
+    
+    return {"message": "Reschedule request sent"}
+
+@api_router.post("/client/booking/{token}/request-cancel")
+async def request_cancellation(token: str):
+    """Client requests to cancel booking"""
+    booking = await db.bookings.find_one(
+        {"$or": [{"token": token}, {"manage_token": token}]}
+    )
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    
+    await db.bookings.update_one(
+        {"id": booking["id"]},
+        {"$set": {
+            "cancellation_requested": True,
+            "cancellation_requested_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Send notification to admin
+    if SENDGRID_API_KEY:
+        try:
+            message = Mail(
+                from_email=SENDER_EMAIL,
+                to_emails=SENDER_EMAIL,
+                subject=f"Cancellation Request - {booking.get('client_name')}",
+                html_content=f"""
+                <p>Client <strong>{booking.get('client_name')}</strong> has requested to cancel their booking.</p>
+                <p><strong>Session:</strong> {booking.get('session_type', '').title()}</p>
+                <p><strong>Date:</strong> {booking.get('booking_date')} at {booking.get('booking_time')}</p>
+                <p><strong>Email:</strong> {booking.get('client_email')}</p>
+                """
+            )
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            sg.send(message)
+        except Exception as e:
+            logger.error(f"Failed to send cancellation notification: {e}")
+    
+    return {"message": "Cancellation request sent"}
+
+# ==================== QUESTIONNAIRE REMINDERS ====================
+
+@api_router.post("/admin/send-questionnaire-reminders")
+async def send_questionnaire_reminders(admin=Depends(verify_token)):
+    """Send questionnaire reminders for bookings 3 days before session (manual trigger or cron)"""
+    from datetime import timedelta
+    
+    three_days_from_now = (datetime.now(timezone.utc) + timedelta(days=3)).strftime("%Y-%m-%d")
+    
+    # Find bookings 3 days away without completed questionnaire
+    bookings = await db.bookings.find({
+        "booking_date": three_days_from_now,
+        "questionnaire_completed": {"$ne": True},
+        "questionnaire_reminder_sent": {"$ne": True},
+        "status": {"$in": ["confirmed", "pending"]}
+    }, {"_id": 0}).to_list(100)
+    
+    sent_count = 0
+    for booking in bookings:
+        token = booking.get("manage_token") or booking.get("token")
+        if token and booking.get("client_email"):
+            try:
+                # Reuse the email questionnaire function logic
+                frontend_url = os.environ.get('REACT_APP_BACKEND_URL', '').replace('/api', '')
+                manage_link = f"{frontend_url}/manage/{token}"
+                
+                html_content = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h2 style="color: #A69F95;">Reminder: Complete Your Session Questionnaire</h2>
+                    <p>Hi {booking.get('client_name', 'there')},</p>
+                    <p>Your {booking.get('session_type', '').replace('-', ' ').title()} session is coming up in <strong>3 days</strong>!</p>
+                    <p>Please complete your questionnaire so we can prepare for your session.</p>
+                    <p style="margin: 30px 0;">
+                        <a href="{manage_link}" style="background-color: #A69F95; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                            Complete Questionnaire Now
+                        </a>
+                    </p>
+                    <p style="color: #666; font-size: 14px;">
+                        <strong>Session Date:</strong> {booking.get('booking_date')}<br>
+                        <strong>Time:</strong> {booking.get('booking_time')}
+                    </p>
+                </body>
+                </html>
+                """
+                
+                message = Mail(
+                    from_email=SENDER_EMAIL,
+                    to_emails=booking['client_email'],
+                    subject=f"Reminder: Complete Your Questionnaire - Session in 3 Days",
+                    html_content=html_content
+                )
+                sg = SendGridAPIClient(SENDGRID_API_KEY)
+                sg.send(message)
+                
+                # Mark as sent
+                await db.bookings.update_one(
+                    {"id": booking["id"]},
+                    {"$set": {"questionnaire_reminder_sent": True}}
+                )
+                sent_count += 1
+            except Exception as e:
+                logger.error(f"Failed to send reminder for booking {booking['id']}: {e}")
+    
+    return {"message": f"Sent {sent_count} questionnaire reminders"}
+
 # Include the router
 app.include_router(api_router)
 

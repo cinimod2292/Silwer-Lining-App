@@ -3052,7 +3052,11 @@ async def admin_download_booking_contract_pdf(booking_id: str, admin=Depends(ver
 # ==================== PAYMENT ENDPOINTS ====================
 
 def calculate_payfast_signature(data: dict) -> str:
-    """Calculate MD5 signature for PayFast"""
+    """Calculate MD5 signature for PayFast (using env vars - legacy)"""
+    return calculate_payfast_signature_with_creds(data, PAYFAST_PASSPHRASE)
+
+def calculate_payfast_signature_with_creds(data: dict, passphrase: str = "") -> str:
+    """Calculate MD5 signature for PayFast with custom passphrase"""
     # Field order as per PayFast documentation
     field_order = [
         "merchant_id", "merchant_key", "return_url", "cancel_url", "notify_url",
@@ -3075,12 +3079,37 @@ def calculate_payfast_signature(data: dict) -> str:
     pf_string = "&".join(params)
     
     # Add passphrase only if it's set and not empty
-    passphrase = PAYFAST_PASSPHRASE.strip() if PAYFAST_PASSPHRASE else ""
+    passphrase_clean = passphrase.strip() if passphrase else ""
+    if passphrase_clean:
+        pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase_clean)}"
+    
+    # Generate MD5 hash
+    return hashlib.md5(pf_string.encode()).hexdigest()
+
+async def verify_payfast_signature_async(data: dict, signature: str) -> bool:
+    """Verify ITN signature from PayFast using database credentials"""
+    pf_creds = await get_payfast_credentials()
+    
+    # Build parameter string (excluding signature)
+    params = []
+    for key, value in data.items():
+        if key != "signature" and value is not None and str(value).strip() != "":
+            encoded_value = urllib.parse.quote_plus(str(value).strip())
+            params.append(f"{key}={encoded_value}")
+    
+    pf_string = "&".join(params)
+    
+    # Add passphrase if set
+    passphrase = pf_creds["passphrase"].strip() if pf_creds["passphrase"] else ""
     if passphrase:
         pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     
     # Generate MD5 hash
-    return hashlib.md5(pf_string.encode()).hexdigest()
+    calculated = hashlib.md5(pf_string.encode()).hexdigest()
+    
+    logger.info(f"ITN Signature verification - Received: {signature}, Calculated: {calculated}")
+    
+    return calculated.lower() == signature.lower()
 
 def verify_payfast_signature(data: dict, signature: str) -> bool:
     """Verify ITN signature from PayFast"""

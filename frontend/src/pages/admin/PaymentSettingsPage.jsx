@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, CreditCard, Save, Clock, CheckCircle } from "lucide-react";
+import { Building2, CreditCard, Save, Clock, CheckCircle, AlertTriangle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,13 @@ const PaymentSettingsPage = () => {
     payflex_api_key: "",
     payflex_enabled: false,
     payfast_enabled: true,
+    payfast_sandbox: true,
+    payfast_merchant_id: "",
+    payfast_merchant_key: "",
+    payfast_passphrase: "",
+    payfast_sandbox_merchant_id: "",
+    payfast_sandbox_merchant_key: "",
+    payfast_sandbox_passphrase: "",
   });
 
   useEffect(() => {

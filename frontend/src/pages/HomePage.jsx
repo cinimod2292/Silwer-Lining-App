@@ -38,12 +38,21 @@ const HomePage = () => {
     try {
       const res = await axios.get(`${API}/testimonials`);
       if (res.data.length > 0) {
-        setTestimonials(res.data.slice(0, 6));
+        setTestimonials(res.data.filter(t => t.source !== "google").slice(0, 6));
       } else {
         setTestimonials(defaultTestimonials);
       }
     } catch (e) {
       setTestimonials(defaultTestimonials);
+    }
+  };
+
+  const fetchGoogleReviews = async () => {
+    try {
+      const res = await axios.get(`${API}/google-reviews/public`);
+      setGoogleReviews(res.data);
+    } catch (e) {
+      // Google reviews not configured
     }
   };
 

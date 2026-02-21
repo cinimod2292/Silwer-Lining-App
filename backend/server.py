@@ -146,8 +146,17 @@ class PaymentSettings(BaseModel):
     # PayFlex credentials (for future)
     payflex_api_key: str = ""
     payflex_enabled: bool = False
-    # PayFast status
+    # PayFast settings
     payfast_enabled: bool = True
+    payfast_sandbox: bool = True
+    # Sandbox credentials
+    payfast_sandbox_merchant_id: str = ""
+    payfast_sandbox_merchant_key: str = ""
+    payfast_sandbox_passphrase: str = ""
+    # Live credentials
+    payfast_merchant_id: str = ""
+    payfast_merchant_key: str = ""
+    payfast_passphrase: str = ""
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 class BookingUpdate(BaseModel):

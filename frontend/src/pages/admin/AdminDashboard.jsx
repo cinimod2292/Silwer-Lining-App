@@ -81,11 +81,11 @@ const AdminDashboard = () => {
     { icon: CreditCard, label: "Payments", path: "/admin/payments" },
     { icon: Clock, label: "Booking Settings", path: "/admin/booking-settings" },
     { icon: CalendarDays, label: "Calendar Sync", path: "/admin/calendar" },
+    { icon: Mail, label: "Auto Reminders", path: "/admin/reminders" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },
     { icon: Users, label: "Testimonials", path: "/admin/testimonials" },
     { icon: HelpCircle, label: "FAQs", path: "/admin/faqs" },
     { icon: MessageSquare, label: "Messages", path: "/admin/messages" },
-    { icon: Mail, label: "Email Templates", path: "/admin/email-templates" },
     { icon: Settings, label: "Settings", path: "/admin/settings" },
   ];
 

@@ -242,10 +242,52 @@ const PaymentReturnPage = () => {
                 </div>
               )}
 
+              {/* Questionnaire CTA */}
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-primary mt-0.5" />
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-sm">Complete Your Session Questionnaire</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Help us prepare for your session by answering a few quick questions.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                  <Button 
+                    onClick={() => booking?.manage_token && navigate(`/manage/${booking.manage_token}`)}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white"
+                    disabled={!booking?.manage_token}
+                  >
+                    Complete Now
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={async () => {
+                      setEmailSending(true);
+                      try {
+                        await axios.post(`${API}/client/booking/${booking?.manage_token}/email-questionnaire`);
+                        toast.success("Questionnaire link sent to your email!");
+                      } catch (e) {
+                        toast.error("Failed to send email");
+                      } finally {
+                        setEmailSending(false);
+                      }
+                    }}
+                    disabled={emailSending || !booking?.manage_token}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {emailSending ? "Sending..." : "Email Me Later"}
+                  </Button>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3">
                 <Button 
                   onClick={() => navigate("/")}
-                  className="w-full bg-primary hover:bg-primary/90 text-white"
+                  variant="outline"
+                  className="w-full"
                 >
                   <Home className="w-4 h-4 mr-2" />
                   Back to Home

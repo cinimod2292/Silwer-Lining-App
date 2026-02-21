@@ -3400,7 +3400,8 @@ async def get_payment_status(booking_id: str):
         "amount_paid": booking.get("amount_paid", 0),
         "total_price": booking.get("total_price", 0),
         "session_type": booking.get("session_type", ""),
-        "package_name": booking.get("package_name", "")
+        "package_name": booking.get("package_name", ""),
+        "manage_token": booking.get("manage_token", booking.get("token", ""))
     }
 
 @api_router.post("/payments/verify")

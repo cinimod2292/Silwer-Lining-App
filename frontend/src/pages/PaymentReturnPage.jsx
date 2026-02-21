@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, Clock, Home, RefreshCw, Mail } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Home, RefreshCw, Mail, FileText, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { toast } from "sonner";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -13,6 +14,7 @@ const PaymentReturnPage = () => {
   const [booking, setBooking] = useState(null);
   const [verifying, setVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [emailSending, setEmailSending] = useState(false);
   
   const bookingId = searchParams.get("booking_id");
   const pollCountRef = useRef(0);

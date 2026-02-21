@@ -231,6 +231,8 @@ class Booking(BaseModel):
     total_price: int = 0
     # Questionnaire responses
     questionnaire_responses: dict = {}  # {question_id: answer}
+    questionnaire_completed: bool = False
+    questionnaire_reminder_sent: bool = False
     # Contract data
     contract_signed: bool = False
     contract_data: dict = {}  # {field_responses, signature_data, signed_at}
@@ -241,6 +243,8 @@ class Booking(BaseModel):
     amount_paid: int = 0
     payment_reference: str = ""
     payment_id: str = ""
+    # Client management token
+    manage_token: str = Field(default_factory=lambda: str(uuid.uuid4()))
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

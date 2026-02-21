@@ -3429,25 +3429,27 @@ async def verify_payment_with_payfast(data: dict):
             "message": "Not a PayFast payment"
         }
     
+    # Get PayFast credentials from database
+    pf_creds = await get_payfast_credentials()
+    
     # Query PayFast to verify payment
     try:
         import httpx
         
         # Build verification request
-        # PayFast validate endpoint
-        validate_url = "https://sandbox.payfast.co.za/eng/query/validate" if PAYFAST_SANDBOX else "https://www.payfast.co.za/eng/query/validate"
+        validate_url = "https://sandbox.payfast.co.za/eng/query/validate" if pf_creds["is_sandbox"] else "https://www.payfast.co.za/eng/query/validate"
         
         # Prepare data for verification
         verify_data = {
-            "merchant_id": PAYFAST_MERCHANT_ID,
-            "merchant_key": PAYFAST_MERCHANT_KEY,
+            "merchant_id": pf_creds["merchant_id"],
+            "merchant_key": pf_creds["merchant_key"],
             "m_payment_id": booking_id
         }
         
         # Calculate signature for verification request
         pf_string = "&".join([f"{k}={urllib.parse.quote_plus(str(v))}" for k, v in verify_data.items()])
-        if PAYFAST_PASSPHRASE:
-            pf_string += f"&passphrase={urllib.parse.quote_plus(PAYFAST_PASSPHRASE)}"
+        if pf_creds["passphrase"]:
+            pf_string += f"&passphrase={urllib.parse.quote_plus(pf_creds['passphrase'])}"
         signature = hashlib.md5(pf_string.encode()).hexdigest()
         verify_data["signature"] = signature
         

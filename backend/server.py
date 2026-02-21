@@ -3112,7 +3112,6 @@ async def verify_payfast_signature_async(data: dict, signature: str) -> bool:
     return calculated.lower() == signature.lower()
 
 def verify_payfast_signature(data: dict, signature: str) -> bool:
-def verify_payfast_signature(data: dict, signature: str) -> bool:
     """Verify ITN signature from PayFast (sync version using env vars)"""
     # Build parameter string (excluding signature)
     params = []

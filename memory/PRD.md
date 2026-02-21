@@ -135,14 +135,14 @@ Create a premium photography website for Silwer Lining Photography: a luxury bra
   - PDF generation with weasyprint
   - Contract PDF emailed to client + CC to admin
   - Download signed contract button in admin booking details
-- [x] **Payment System** ✅ NEW
-  - PayFast integration (Sandbox mode - ready for production)
+- [x] **Payment System (PayFast)** ✅ VERIFIED WORKING
+  - PayFast integration with sandbox credentials
+  - ITN webhook handler for payment confirmation
   - Manual EFT with bank details from admin settings
   - PayFlex placeholder (ready for credentials)
   - Deposit (50%) or Full payment options
-  - Payment status tracking (awaiting_payment, awaiting_eft, confirmed)
-  - Payment reminder emails with link to complete payment
-  - Payment return/cancel pages
+  - Payment status tracking (pending, complete, confirmed)
+  - Payment return page with verification
   - Admin Payment Settings page
 
 ### P1 (Next Priority)

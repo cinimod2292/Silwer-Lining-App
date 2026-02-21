@@ -21,6 +21,7 @@ import TestimonialsManage from "./TestimonialsManage";
 import MessagesManage from "./MessagesManage";
 import AddOnsManage from "./AddOnsManage";
 import EmailTemplatesManage from "./EmailTemplatesManage";
+import EmailSettingsPage from "./EmailSettingsPage";
 import SettingsPage from "./SettingsPage";
 import QuestionnairesManage from "./QuestionnairesManage";
 import FAQManage from "./FAQManage";

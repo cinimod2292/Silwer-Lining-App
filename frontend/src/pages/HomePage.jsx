@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowRight, Star, Heart, Users, Baby, Sparkles, Gift, Camera, Instagram } from "lucide-react";
+import { ArrowRight, Star, Heart, Users, Baby, Sparkles, Gift, Camera, Instagram, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
@@ -9,12 +9,14 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const HomePage = () => {
   const [featuredImages, setFeaturedImages] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
+  const [googleReviews, setGoogleReviews] = useState({ reviews: [], google_url: "" });
   const [instagramPosts, setInstagramPosts] = useState([]);
   const [faqs, setFaqs] = useState([]);
 
   useEffect(() => {
     fetchPortfolio();
     fetchTestimonials();
+    fetchGoogleReviews();
     fetchInstagramFeed();
     fetchFAQs();
   }, []);

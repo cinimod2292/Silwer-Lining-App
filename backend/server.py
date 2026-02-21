@@ -3825,6 +3825,149 @@ async def send_questionnaire_reminders(admin=Depends(verify_token)):
     
     return {"message": f"Sent {sent_count} questionnaire reminders"}
 
+# ==================== AUTOMATED REMINDERS MANAGEMENT ====================
+
+@api_router.get("/admin/automated-reminders")
+async def get_automated_reminders(admin=Depends(verify_token)):
+    """Get all automated reminder configurations"""
+    doc = await db.automated_reminders.find_one({"id": "default"}, {"_id": 0})
+    return doc.get("reminders", []) if doc else []
+
+@api_router.put("/admin/automated-reminders")
+async def save_automated_reminders(data: dict, admin=Depends(verify_token)):
+    """Save automated reminder configurations"""
+    await db.automated_reminders.update_one(
+        {"id": "default"},
+        {"$set": {
+            "id": "default",
+            "reminders": data.get("reminders", []),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "Reminders saved"}
+
+@api_router.post("/admin/run-reminder")
+async def run_reminder_manually(data: dict, admin=Depends(verify_token)):
+    """Manually trigger a specific reminder"""
+    reminder_id = data.get("reminder_id")
+    
+    doc = await db.automated_reminders.find_one({"id": "default"}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="No reminders configured")
+    
+    reminder = next((r for r in doc.get("reminders", []) if r.get("id") == reminder_id), None)
+    if not reminder:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    
+    sent_count = await process_reminder(reminder)
+    return {"sent_count": sent_count}
+
+@api_router.post("/cron/process-reminders")
+async def cron_process_reminders():
+    """Process all active reminders - call this from a daily cron job"""
+    doc = await db.automated_reminders.find_one({"id": "default"}, {"_id": 0})
+    if not doc:
+        return {"message": "No reminders configured", "total_sent": 0}
+    
+    total_sent = 0
+    for reminder in doc.get("reminders", []):
+        if reminder.get("active", False):
+            sent = await process_reminder(reminder)
+            total_sent += sent
+    
+    return {"message": f"Processed reminders", "total_sent": total_sent}
+
+async def process_reminder(reminder: dict) -> int:
+    """Process a single reminder and send emails"""
+    from datetime import timedelta
+    
+    if not SENDGRID_API_KEY:
+        return 0
+    
+    trigger_type = reminder.get("trigger_type", "days_before_session")
+    trigger_days = reminder.get("trigger_days", 1)
+    condition = reminder.get("condition", "")
+    
+    # Calculate target date
+    if trigger_type == "days_before_session":
+        target_date = (datetime.now(timezone.utc) + timedelta(days=trigger_days)).strftime("%Y-%m-%d")
+        query = {"booking_date": target_date, "status": {"$in": ["confirmed", "pending"]}}
+    else:  # days_after_booking
+        target_date = (datetime.now(timezone.utc) - timedelta(days=trigger_days)).strftime("%Y-%m-%d")
+        query = {"created_at": {"$regex": f"^{target_date}"}, "status": {"$in": ["confirmed", "pending", "awaiting_payment"]}}
+    
+    # Add condition filters
+    if condition == "questionnaire_incomplete":
+        query["questionnaire_completed"] = {"$ne": True}
+    elif condition == "payment_pending":
+        query["payment_status"] = {"$in": ["pending", "", None]}
+    
+    # Track sent reminders to avoid duplicates
+    reminder_key = f"reminder_sent_{reminder.get('id', 'unknown')}"
+    query[reminder_key] = {"$ne": True}
+    
+    bookings = await db.bookings.find(query, {"_id": 0}).to_list(100)
+    
+    sent_count = 0
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', '').replace('/api', '')
+    
+    for booking in bookings:
+        if not booking.get("client_email"):
+            continue
+        
+        try:
+            # Replace template variables
+            manage_token = booking.get("manage_token") or booking.get("token", "")
+            subject = reminder.get("subject", "Reminder")
+            body = reminder.get("body", "")
+            
+            replacements = {
+                "{{client_name}}": booking.get("client_name", ""),
+                "{{session_type}}": booking.get("session_type", "").replace("-", " ").title(),
+                "{{booking_date}}": booking.get("booking_date", ""),
+                "{{booking_time}}": booking.get("booking_time", ""),
+                "{{package_name}}": booking.get("package_name", ""),
+                "{{manage_link}}": f"{frontend_url}/manage/{manage_token}" if manage_token else "",
+                "{{payment_link}}": f"{frontend_url}/complete-payment/{booking.get('id', '')}",
+                "{{amount_due}}": str(booking.get("total_price", 0) - booking.get("amount_paid", 0)),
+            }
+            
+            for key, val in replacements.items():
+                subject = subject.replace(key, val)
+                body = body.replace(key, val)
+            
+            # Convert plain text body to HTML
+            html_body = body.replace("\n", "<br>")
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                {html_body}
+            </body>
+            </html>
+            """
+            
+            message = Mail(
+                from_email=SENDER_EMAIL,
+                to_emails=booking["client_email"],
+                subject=subject,
+                html_content=html_content
+            )
+            sg = SendGridAPIClient(SENDGRID_API_KEY)
+            sg.send(message)
+            
+            # Mark as sent for this reminder
+            await db.bookings.update_one(
+                {"id": booking["id"]},
+                {"$set": {reminder_key: True}}
+            )
+            sent_count += 1
+            
+        except Exception as e:
+            logger.error(f"Failed to send reminder to {booking.get('client_email')}: {e}")
+    
+    return sent_count
+
 # Include the router
 app.include_router(api_router)
 

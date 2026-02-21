@@ -2598,6 +2598,184 @@ async def admin_delete_message(message_id: str, admin=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="Message not found")
     return {"message": "Message deleted"}
 
+# ==================== EMAIL SETTINGS ====================
+
+@api_router.get("/admin/email-settings")
+async def get_email_settings(admin=Depends(verify_token)):
+    """Get email provider settings"""
+    settings = await db.email_settings.find_one({"id": "default"}, {"_id": 0})
+    return settings or {}
+
+@api_router.put("/admin/email-settings")
+async def save_email_settings(data: dict, admin=Depends(verify_token)):
+    """Save email provider settings"""
+    await db.email_settings.update_one(
+        {"id": "default"},
+        {"$set": {
+            "id": "default",
+            "provider": data.get("provider", "sendgrid"),
+            "sendgrid_api_key": data.get("sendgrid_api_key", ""),
+            "sendgrid_sender_email": data.get("sendgrid_sender_email", ""),
+            "sendgrid_sender_name": data.get("sendgrid_sender_name", "Silwer Lining Photography"),
+            "microsoft_tenant_id": data.get("microsoft_tenant_id", ""),
+            "microsoft_client_id": data.get("microsoft_client_id", ""),
+            "microsoft_client_secret": data.get("microsoft_client_secret", ""),
+            "microsoft_sender_email": data.get("microsoft_sender_email", ""),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "Settings saved"}
+
+@api_router.post("/admin/email-settings/test")
+async def test_email_settings(data: dict, admin=Depends(verify_token)):
+    """Send a test email using configured provider"""
+    test_email = data.get("email")
+    if not test_email:
+        raise HTTPException(status_code=400, detail="Email address required")
+    
+    success = await send_email(
+        to_email=test_email,
+        subject="Test Email - Silwer Lining Photography",
+        html_content="""
+        <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <h2 style="color: #A69F95;">Test Email Successful!</h2>
+            <p>Your email configuration is working correctly.</p>
+            <p style="color: #888; font-size: 12px; margin-top: 30px;">
+                Sent from Silwer Lining Photography booking system
+            </p>
+        </body>
+        </html>
+        """
+    )
+    
+    if success:
+        return {"message": "Test email sent successfully!"}
+    else:
+        raise HTTPException(status_code=500, detail="Failed to send email. Check your settings.")
+
+async def send_email(to_email: str, subject: str, html_content: str) -> bool:
+    """Send email using configured provider (Microsoft Graph or SendGrid)"""
+    try:
+        settings = await db.email_settings.find_one({"id": "default"}, {"_id": 0})
+        provider = settings.get("provider", "sendgrid") if settings else "sendgrid"
+        
+        if provider == "microsoft" and settings:
+            return await send_email_microsoft(
+                to_email=to_email,
+                subject=subject,
+                html_content=html_content,
+                settings=settings
+            )
+        else:
+            return await send_email_sendgrid(
+                to_email=to_email,
+                subject=subject,
+                html_content=html_content,
+                settings=settings
+            )
+    except Exception as e:
+        logger.error(f"Email send error: {e}")
+        return False
+
+async def send_email_microsoft(to_email: str, subject: str, html_content: str, settings: dict) -> bool:
+    """Send email via Microsoft Graph API"""
+    import httpx
+    
+    tenant_id = settings.get("microsoft_tenant_id")
+    client_id = settings.get("microsoft_client_id")
+    client_secret = settings.get("microsoft_client_secret")
+    sender_email = settings.get("microsoft_sender_email")
+    
+    if not all([tenant_id, client_id, client_secret, sender_email]):
+        logger.error("Microsoft Graph: Missing configuration")
+        return False
+    
+    try:
+        # Get access token
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+        token_data = {
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "scope": "https://graph.microsoft.com/.default",
+            "grant_type": "client_credentials"
+        }
+        
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(token_url, data=token_data)
+            if token_response.status_code != 200:
+                logger.error(f"Microsoft Graph token error: {token_response.text}")
+                return False
+            
+            access_token = token_response.json().get("access_token")
+            
+            # Send email
+            send_url = f"https://graph.microsoft.com/v1.0/users/{sender_email}/sendMail"
+            email_data = {
+                "message": {
+                    "subject": subject,
+                    "body": {
+                        "contentType": "HTML",
+                        "content": html_content
+                    },
+                    "toRecipients": [
+                        {"emailAddress": {"address": to_email}}
+                    ]
+                },
+                "saveToSentItems": "true"
+            }
+            
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            
+            send_response = await client.post(send_url, json=email_data, headers=headers)
+            
+            if send_response.status_code in [200, 202]:
+                logger.info(f"Microsoft Graph: Email sent to {to_email}")
+                return True
+            else:
+                logger.error(f"Microsoft Graph send error: {send_response.status_code} - {send_response.text}")
+                return False
+                
+    except Exception as e:
+        logger.error(f"Microsoft Graph exception: {e}")
+        return False
+
+async def send_email_sendgrid(to_email: str, subject: str, html_content: str, settings: dict = None) -> bool:
+    """Send email via SendGrid"""
+    # Get API key from settings or environment
+    api_key = settings.get("sendgrid_api_key") if settings else None
+    sender_email = settings.get("sendgrid_sender_email") if settings else None
+    sender_name = settings.get("sendgrid_sender_name", "Silwer Lining Photography") if settings else "Silwer Lining Photography"
+    
+    # Fallback to environment variables
+    if not api_key:
+        api_key = SENDGRID_API_KEY
+    if not sender_email:
+        sender_email = SENDER_EMAIL
+    
+    if not api_key:
+        logger.error("SendGrid: No API key configured")
+        return False
+    
+    try:
+        message = Mail(
+            from_email=(sender_email, sender_name) if sender_name else sender_email,
+            to_emails=to_email,
+            subject=subject,
+            html_content=html_content
+        )
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
+        logger.info(f"SendGrid: Email sent to {to_email}, status: {response.status_code}")
+        return response.status_code in [200, 202]
+    except Exception as e:
+        logger.error(f"SendGrid error: {e}")
+        return False
+
 # ==================== ADMIN - STATS ====================
 
 @api_router.get("/admin/stats")

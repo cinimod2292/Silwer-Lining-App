@@ -203,23 +203,120 @@ const PaymentSettingsPage = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-sm text-green-600 font-medium">Configured</span>
+                <Switch
+                  checked={settings.payfast_enabled}
+                  onCheckedChange={(checked) => handleChange("payfast_enabled", checked)}
+                />
               </div>
             </div>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-sm">Enable PayFast payments</span>
-              <Switch
-                checked={settings.payfast_enabled}
-                onCheckedChange={(checked) => handleChange("payfast_enabled", checked)}
-              />
-            </div>
 
-            <p className="text-xs text-muted-foreground mt-3">
-              PayFast credentials are configured in environment variables for security.
-              Currently in <span className="font-medium text-amber-600">Sandbox/Test mode</span>.
-            </p>
+            {settings.payfast_enabled && (
+              <>
+                {/* Live/Sandbox Toggle */}
+                <div className={`flex items-center justify-between p-4 rounded-lg mb-4 ${
+                  settings.payfast_sandbox 
+                    ? "bg-amber-50 border border-amber-200" 
+                    : "bg-green-50 border border-green-200"
+                }`}>
+                  <div className="flex items-center gap-3">
+                    {settings.payfast_sandbox ? (
+                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    ) : (
+                      <Shield className="w-5 h-5 text-green-600" />
+                    )}
+                    <div>
+                      <p className={`font-medium ${settings.payfast_sandbox ? "text-amber-800" : "text-green-800"}`}>
+                        {settings.payfast_sandbox ? "Sandbox Mode" : "Live Mode"}
+                      </p>
+                      <p className={`text-xs ${settings.payfast_sandbox ? "text-amber-600" : "text-green-600"}`}>
+                        {settings.payfast_sandbox 
+                          ? "Test payments only - no real charges" 
+                          : "Real payments - customers will be charged"}
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={!settings.payfast_sandbox}
+                    onCheckedChange={(checked) => handleChange("payfast_sandbox", !checked)}
+                  />
+                </div>
+
+                {/* Sandbox Credentials */}
+                {settings.payfast_sandbox && (
+                  <div className="space-y-3 p-4 bg-gray-50 rounded-lg mb-4">
+                    <p className="text-sm font-medium text-gray-700">Sandbox Credentials</p>
+                    <div>
+                      <Label className="mb-1 block text-xs">Merchant ID</Label>
+                      <Input
+                        value={settings.payfast_sandbox_merchant_id}
+                        onChange={(e) => handleChange("payfast_sandbox_merchant_id", e.target.value)}
+                        placeholder="e.g., 10046060"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">Merchant Key</Label>
+                      <Input
+                        type="password"
+                        value={settings.payfast_sandbox_merchant_key}
+                        onChange={(e) => handleChange("payfast_sandbox_merchant_key", e.target.value)}
+                        placeholder="Your sandbox merchant key"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">Passphrase (Salt)</Label>
+                      <Input
+                        type="password"
+                        value={settings.payfast_sandbox_passphrase}
+                        onChange={(e) => handleChange("payfast_sandbox_passphrase", e.target.value)}
+                        placeholder="Your sandbox passphrase"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Credentials */}
+                {!settings.payfast_sandbox && (
+                  <div className="space-y-3 p-4 bg-green-50 rounded-lg mb-4 border border-green-200">
+                    <p className="text-sm font-medium text-green-800">Live Credentials</p>
+                    <div>
+                      <Label className="mb-1 block text-xs">Merchant ID</Label>
+                      <Input
+                        value={settings.payfast_merchant_id}
+                        onChange={(e) => handleChange("payfast_merchant_id", e.target.value)}
+                        placeholder="Your live merchant ID"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">Merchant Key</Label>
+                      <Input
+                        type="password"
+                        value={settings.payfast_merchant_key}
+                        onChange={(e) => handleChange("payfast_merchant_key", e.target.value)}
+                        placeholder="Your live merchant key"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-1 block text-xs">Passphrase (Salt)</Label>
+                      <Input
+                        type="password"
+                        value={settings.payfast_passphrase}
+                        onChange={(e) => handleChange("payfast_passphrase", e.target.value)}
+                        placeholder="Your live passphrase"
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <strong>Warning:</strong> Live mode will process real payments. Ensure credentials are correct.
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* PayFlex */}

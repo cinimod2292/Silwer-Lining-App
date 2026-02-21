@@ -3112,16 +3112,12 @@ async def verify_payfast_signature_async(data: dict, signature: str) -> bool:
     return calculated.lower() == signature.lower()
 
 def verify_payfast_signature(data: dict, signature: str) -> bool:
-    """Verify ITN signature from PayFast"""
-    # For ITN verification, we need to build the string from the received data
-    # excluding the signature field, in the order received
-    # PayFast ITN signature is calculated WITHOUT merchant_key
-    
+def verify_payfast_signature(data: dict, signature: str) -> bool:
+    """Verify ITN signature from PayFast (sync version using env vars)"""
     # Build parameter string (excluding signature)
     params = []
     for key, value in data.items():
         if key != "signature" and value is not None and str(value).strip() != "":
-            # URL encode the value
             encoded_value = urllib.parse.quote_plus(str(value).strip())
             params.append(f"{key}={encoded_value}")
     
@@ -3132,11 +3128,8 @@ def verify_payfast_signature(data: dict, signature: str) -> bool:
     if passphrase:
         pf_string += f"&passphrase={urllib.parse.quote_plus(passphrase)}"
     
-    # Generate MD5 hash
     calculated = hashlib.md5(pf_string.encode()).hexdigest()
-    
     logger.info(f"ITN Signature verification - Received: {signature}, Calculated: {calculated}")
-    
     return calculated.lower() == signature.lower()
 
 @api_router.post("/payments/payfast-itn")
@@ -3155,18 +3148,24 @@ async def handle_payfast_itn(request: Request):
             logger.error("PayFast ITN: No booking ID (m_payment_id)")
             return Response(content="No booking ID", status_code=400)
         
-        # Verify merchant ID
-        if data.get("merchant_id") != PAYFAST_MERCHANT_ID:
-            logger.error(f"PayFast ITN: Invalid merchant ID. Expected {PAYFAST_MERCHANT_ID}, got {data.get('merchant_id')}")
+        # Get PayFast credentials from database
+        pf_creds = await get_payfast_credentials()
+        
+        # Verify merchant ID matches the configured one
+        received_merchant_id = data.get("merchant_id")
+        if received_merchant_id != pf_creds["merchant_id"]:
+            logger.error(f"PayFast ITN: Invalid merchant ID. Expected {pf_creds['merchant_id']}, got {received_merchant_id}")
             return Response(content="Invalid merchant", status_code=400)
         
-        # Verify signature (optional for sandbox, but log it)
+        # Verify signature using credentials from database
         signature = data.get("signature", "")
-        sig_valid = verify_payfast_signature(data, signature)
+        sig_valid = await verify_payfast_signature_async(data, signature)
         if not sig_valid:
-            logger.warning(f"PayFast ITN: Signature mismatch for booking {booking_id} - proceeding anyway for sandbox")
-            # In sandbox mode, we'll proceed even if signature doesn't match
-            # In production, you should return 400 here
+            if pf_creds["is_sandbox"]:
+                logger.warning(f"PayFast ITN: Signature mismatch for booking {booking_id} - proceeding anyway (sandbox mode)")
+            else:
+                logger.error(f"PayFast ITN: Signature mismatch for booking {booking_id} - rejecting (live mode)")
+                return Response(content="Invalid signature", status_code=400)
         
         # Get booking
         booking = await db.bookings.find_one({"id": booking_id})

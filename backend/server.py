@@ -2369,6 +2369,208 @@ async def admin_delete_testimonial(item_id: str, admin=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="Testimonial not found")
     return {"message": "Testimonial deleted"}
 
+# ==================== GOOGLE REVIEWS ====================
+
+@api_router.get("/admin/google-reviews/settings")
+async def get_google_reviews_settings(admin=Depends(verify_token)):
+    """Get Google Reviews settings"""
+    settings = await db.google_reviews_settings.find_one({"id": "default"}, {"_id": 0})
+    return settings or {}
+
+@api_router.put("/admin/google-reviews/settings")
+async def save_google_reviews_settings(data: dict, admin=Depends(verify_token)):
+    """Save Google Reviews settings"""
+    await db.google_reviews_settings.update_one(
+        {"id": "default"},
+        {"$set": {
+            "id": "default",
+            "enabled": data.get("enabled", False),
+            "api_key": data.get("api_key", ""),
+            "place_id": data.get("place_id", ""),
+            "auto_fetch": data.get("auto_fetch", False),
+            "fetch_frequency": data.get("fetch_frequency", "daily"),
+            "last_fetched": data.get("last_fetched"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"message": "Settings saved"}
+
+@api_router.post("/admin/google-reviews/fetch")
+async def fetch_google_reviews(admin=Depends(verify_token)):
+    """Fetch reviews from Google Places API"""
+    import httpx
+    
+    settings = await db.google_reviews_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings or not settings.get("enabled"):
+        raise HTTPException(status_code=400, detail="Google Reviews not enabled")
+    
+    api_key = settings.get("api_key")
+    place_id = settings.get("place_id")
+    
+    if not api_key or not place_id:
+        raise HTTPException(status_code=400, detail="API key and Place ID required")
+    
+    try:
+        # Fetch place details including reviews
+        url = f"https://maps.googleapis.com/maps/api/place/details/json"
+        params = {
+            "place_id": place_id,
+            "fields": "reviews,rating,user_ratings_total",
+            "key": api_key
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10.0)
+            data = response.json()
+        
+        if data.get("status") != "OK":
+            error_msg = data.get("error_message", data.get("status", "Unknown error"))
+            raise HTTPException(status_code=400, detail=f"Google API error: {error_msg}")
+        
+        reviews = data.get("result", {}).get("reviews", [])[:5]  # Get only 5 most recent
+        
+        # Store reviews as testimonials
+        count = 0
+        for review in reviews:
+            review_id = f"google_{review.get('time', '')}"
+            
+            # Check if already exists
+            existing = await db.testimonials.find_one({"id": review_id})
+            if existing:
+                continue
+            
+            await db.testimonials.insert_one({
+                "id": review_id,
+                "source": "google",
+                "client_name": review.get("author_name", "Google User"),
+                "author_name": review.get("author_name", ""),
+                "profile_photo_url": review.get("profile_photo_url", ""),
+                "rating": review.get("rating", 5),
+                "content": review.get("text", ""),
+                "text": review.get("text", ""),
+                "relative_time_description": review.get("relative_time_description", ""),
+                "time": review.get("time", 0),
+                "session_type": "google",
+                "approved": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            count += 1
+        
+        # Update last fetched time
+        await db.google_reviews_settings.update_one(
+            {"id": "default"},
+            {"$set": {"last_fetched": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"count": count, "message": f"Fetched {count} new reviews"}
+        
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to connect to Google: {str(e)}")
+
+@api_router.get("/google-reviews/public")
+async def get_public_google_reviews():
+    """Get Google reviews for public display"""
+    settings = await db.google_reviews_settings.find_one({"id": "default"}, {"_id": 0})
+    
+    # Get approved Google reviews
+    reviews = await db.testimonials.find(
+        {"source": "google", "approved": True},
+        {"_id": 0}
+    ).sort("time", -1).limit(5).to_list(5)
+    
+    place_id = settings.get("place_id", "") if settings else ""
+    
+    return {
+        "reviews": reviews,
+        "place_id": place_id,
+        "google_url": f"https://search.google.com/local/reviews?placeid={place_id}" if place_id else ""
+    }
+
+@api_router.post("/cron/fetch-google-reviews")
+async def cron_fetch_google_reviews():
+    """Cron endpoint to auto-fetch Google reviews"""
+    settings = await db.google_reviews_settings.find_one({"id": "default"}, {"_id": 0})
+    
+    if not settings or not settings.get("enabled") or not settings.get("auto_fetch"):
+        return {"message": "Auto-fetch not enabled"}
+    
+    # Check frequency
+    last_fetched = settings.get("last_fetched")
+    frequency = settings.get("fetch_frequency", "daily")
+    
+    if last_fetched:
+        from datetime import timedelta
+        last_dt = datetime.fromisoformat(last_fetched.replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        
+        if frequency == "daily" and (now - last_dt) < timedelta(days=1):
+            return {"message": "Already fetched today"}
+        elif frequency == "weekly" and (now - last_dt) < timedelta(weeks=1):
+            return {"message": "Already fetched this week"}
+        elif frequency == "monthly" and (now - last_dt) < timedelta(days=30):
+            return {"message": "Already fetched this month"}
+    
+    # Fetch using existing logic (without auth)
+    import httpx
+    
+    api_key = settings.get("api_key")
+    place_id = settings.get("place_id")
+    
+    if not api_key or not place_id:
+        return {"message": "Missing API credentials"}
+    
+    try:
+        url = f"https://maps.googleapis.com/maps/api/place/details/json"
+        params = {
+            "place_id": place_id,
+            "fields": "reviews",
+            "key": api_key
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, params=params, timeout=10.0)
+            data = response.json()
+        
+        if data.get("status") != "OK":
+            return {"message": f"Google API error: {data.get('status')}"}
+        
+        reviews = data.get("result", {}).get("reviews", [])[:5]
+        count = 0
+        
+        for review in reviews:
+            review_id = f"google_{review.get('time', '')}"
+            existing = await db.testimonials.find_one({"id": review_id})
+            if existing:
+                continue
+            
+            await db.testimonials.insert_one({
+                "id": review_id,
+                "source": "google",
+                "client_name": review.get("author_name", "Google User"),
+                "author_name": review.get("author_name", ""),
+                "profile_photo_url": review.get("profile_photo_url", ""),
+                "rating": review.get("rating", 5),
+                "content": review.get("text", ""),
+                "text": review.get("text", ""),
+                "relative_time_description": review.get("relative_time_description", ""),
+                "time": review.get("time", 0),
+                "session_type": "google",
+                "approved": True,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
+            count += 1
+        
+        await db.google_reviews_settings.update_one(
+            {"id": "default"},
+            {"$set": {"last_fetched": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        return {"message": f"Fetched {count} new reviews", "count": count}
+        
+    except Exception as e:
+        return {"message": f"Error: {str(e)}"}
+
 # ==================== ADMIN - MESSAGES ====================
 
 @api_router.get("/admin/messages")

@@ -67,6 +67,31 @@ async def get_booking_settings_public():
     return settings
 
 
+# ==================== PAYMENT SETTINGS (Public) ====================
+
+@router.get("/payment-settings")
+async def get_payment_settings_public():
+    """Public endpoint for payment settings (bank details & enabled methods)"""
+    settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        settings = {
+            "bank_name": "", "account_holder": "", "account_number": "",
+            "branch_code": "", "account_type": "", "reference_format": "BOOKING-{booking_id}",
+            "payfast_enabled": True, "payflex_enabled": False
+        }
+    # Return only public-facing info (not sandbox credentials)
+    return {
+        "bank_name": settings.get("bank_name", ""),
+        "account_holder": settings.get("account_holder", ""),
+        "account_number": settings.get("account_number", ""),
+        "branch_code": settings.get("branch_code", ""),
+        "account_type": settings.get("account_type", ""),
+        "reference_format": settings.get("reference_format", "BOOKING-{booking_id}"),
+        "payfast_enabled": settings.get("payfast_enabled", True),
+        "payflex_enabled": settings.get("payflex_enabled", False)
+    }
+
+
 # ==================== AVAILABLE TIMES ====================
 
 @router.get("/bookings/available-times")

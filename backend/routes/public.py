@@ -151,6 +151,101 @@ async def get_available_times(date: str, session_type: Optional[str] = None):
     }
 
 
+# ==================== AVAILABLE DATES (Bulk Month) ====================
+
+@router.get("/bookings/available-dates")
+async def get_available_dates(month: str, session_type: Optional[str] = None):
+    """Return available slots for every day in a month. One call replaces ~30 per-date calls."""
+    settings = await db.booking_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        settings = BookingSettings().model_dump()
+
+    blocked_dates = set(settings.get("blocked_dates", []))
+    time_slot_schedule = settings.get("time_slot_schedule", {})
+    weekend_surcharge = settings.get("weekend_surcharge", 750)
+
+    try:
+        year, mon = int(month[:4]), int(month[5:7])
+    except (ValueError, IndexError):
+        return {"month": month, "dates": {}}
+
+    first_day = datetime(year, mon, 1)
+    num_days = cal_module.monthrange(year, mon)[1]
+    last_day_str = f"{year}-{mon:02d}-{num_days:02d}"
+    first_day_str = f"{year}-{mon:02d}-01"
+
+    # Batch-fetch bookings, blocked slots, and custom slots for the entire month
+    bookings_cursor = db.bookings.find(
+        {"booking_date": {"$gte": first_day_str, "$lte": last_day_str}, "status": {"$nin": ["cancelled"]}},
+        {"_id": 0, "booking_date": 1, "booking_time": 1}
+    )
+    all_bookings = await bookings_cursor.to_list(500)
+    booked_map = {}
+    for b in all_bookings:
+        booked_map.setdefault(b["booking_date"], set()).add(b["booking_time"])
+
+    blocked_slots_list = await db.blocked_slots.find(
+        {"date": {"$gte": first_day_str, "$lte": last_day_str}}, {"_id": 0}
+    ).to_list(500)
+    blocked_slot_map = {}
+    for s in blocked_slots_list:
+        blocked_slot_map.setdefault(s["date"], set()).add(s["time"])
+
+    custom_slots_list = await db.custom_slots.find(
+        {"date": {"$gte": first_day_str, "$lte": last_day_str}}, {"_id": 0}
+    ).to_list(500)
+    custom_slot_map = {}
+    for s in custom_slots_list:
+        custom_slot_map.setdefault(s["date"], set()).add(s["time"])
+
+    # Get cached calendar blocked times for the month
+    cal_blocked_map = await get_cached_calendar_blocked_times(first_day_str, last_day_str)
+
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    dates = {}
+    for day in range(1, num_days + 1):
+        date_str = f"{year}-{mon:02d}-{day:02d}"
+        if date_str < today:
+            continue
+        if date_str in blocked_dates:
+            continue
+
+        date_obj = datetime(year, mon, day)
+        day_of_week = date_obj.weekday()
+        day_id = (day_of_week + 1) % 7
+        is_weekend = day_id in [0, 6]
+
+        # Collect scheduled time slots
+        all_times = set()
+        if session_type and time_slot_schedule.get(session_type):
+            all_times.update(time_slot_schedule[session_type].get(str(day_id), []))
+        elif time_slot_schedule:
+            for st, schedule in time_slot_schedule.items():
+                all_times.update(schedule.get(str(day_id), []))
+
+        # Add custom slots
+        all_times.update(custom_slot_map.get(date_str, set()))
+
+        if not all_times:
+            continue
+
+        # Remove booked + blocked + calendar-blocked
+        booked = booked_map.get(date_str, set())
+        blocked = blocked_slot_map.get(date_str, set())
+        cal_blocked = set(cal_blocked_map.get(date_str, []))
+        available = sorted(all_times - booked - blocked - cal_blocked)
+
+        if available:
+            dates[date_str] = {
+                "slots": available,
+                "count": len(available),
+                "is_weekend": is_weekend,
+                "weekend_surcharge": weekend_surcharge if is_weekend else 0
+            }
+
+    return {"month": month, "dates": dates, "session_type": session_type}
+
+
 # ==================== CREATE BOOKING ====================
 
 @router.post("/bookings")

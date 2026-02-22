@@ -157,15 +157,16 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
     switch (field.type) {
       case "agree_disagree":
         return (
-          <div key={field.id} className="my-4">
-            <div className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-colors ${
-              hasError ? "border-red-300 bg-red-50" : fieldResponses[field.id] ? "border-green-300 bg-green-50" : "border-gray-200 bg-gray-50"
+          <div key={field.id} data-testid={`field-${field.id}`} className="my-5 rounded-lg border-2 border-amber-300 bg-amber-50 p-4 shadow-sm">
+            <div className={`flex items-start space-x-3 p-3 rounded-lg border transition-colors ${
+              hasError ? "border-red-400 bg-red-50" : fieldResponses[field.id] ? "border-green-400 bg-green-50" : "border-amber-200 bg-white"
             }`}>
               <Checkbox
                 id={field.id}
                 checked={fieldResponses[field.id] || false}
                 onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
                 className="mt-1"
+                data-testid={`checkbox-${field.id}`}
               />
               <div className="flex-1">
                 <Label htmlFor={field.id} className="font-medium cursor-pointer">
@@ -178,7 +179,7 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
               )}
             </div>
             {hasError && (
-              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" /> {hasError}
               </p>
             )}
@@ -187,22 +188,19 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
 
       case "initials":
         return (
-          <div key={field.id} className="my-4">
-            <Label className="mb-2 block font-medium">
-              {field.label}
-              {field.required && <span className="text-red-500 ml-1">*</span>}
-            </Label>
+          <div key={field.id} data-testid={`field-${field.id}`} className="my-5 inline-block rounded-lg border-2 border-yellow-400 bg-yellow-50 p-3 shadow-sm">
             <Input
               value={fieldResponses[field.id] || ""}
               onChange={(e) => handleFieldChange(field.id, e.target.value.toUpperCase())}
-              placeholder="Enter your initials"
-              className={`w-32 text-center text-xl font-semibold uppercase ${
-                hasError ? "border-red-300 focus:ring-red-500" : ""
+              placeholder="Initial"
+              className={`w-28 text-center text-lg font-bold uppercase bg-white border-2 ${
+                hasError ? "border-red-400 focus:ring-red-500" : "border-yellow-300 focus:border-yellow-500"
               }`}
               maxLength={5}
+              data-testid={`initials-input-${field.id}`}
             />
             {hasError && (
-              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" /> {hasError}
               </p>
             )}
@@ -211,30 +209,29 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
 
       case "date":
         return (
-          <div key={field.id} className="my-4">
-            <Label className="mb-2 block font-medium">{field.label}</Label>
-            <div className="inline-block px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-800">
-              📅 {new Date().toLocaleDateString("en-ZA", { 
+          <div key={field.id} data-testid={`field-${field.id}`} className="my-5 inline-block rounded-lg border-2 border-blue-300 bg-blue-50 px-5 py-3 shadow-sm">
+            <span className="text-blue-800 font-medium">
+              {new Date().toLocaleDateString("en-ZA", { 
                 year: "numeric", 
                 month: "long", 
                 day: "numeric" 
               })}
-            </div>
+            </span>
           </div>
         );
 
       case "signature":
         return (
-          <div key={field.id} className="my-6">
-            <Label className="mb-2 block font-medium">
+          <div key={field.id} data-testid={`field-${field.id}`} className="my-6 rounded-lg border-2 border-purple-300 bg-purple-50 p-4 shadow-sm">
+            <Label className="mb-3 block font-semibold text-purple-800">
               {field.label}
               {field.required && <span className="text-red-500 ml-1">*</span>}
             </Label>
-            <div className={`border-2 rounded-lg overflow-hidden ${
-              errors.signature ? "border-red-300" : signatureData ? "border-green-300" : "border-gray-300"
+            <div className={`border-2 rounded-lg overflow-hidden bg-white ${
+              errors.signature ? "border-red-400" : signatureData ? "border-green-400" : "border-purple-200"
             }`}>
-              <div className="bg-gray-50 px-4 py-2 border-b flex items-center justify-between">
-                <span className="text-sm text-muted-foreground flex items-center gap-2">
+              <div className="bg-purple-50 px-4 py-2 border-b border-purple-200 flex items-center justify-between">
+                <span className="text-sm text-purple-700 flex items-center gap-2 font-medium">
                   <PenTool className="w-4 h-4" />
                   Draw your signature below
                 </span>
@@ -243,7 +240,7 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
                   variant="ghost"
                   size="sm"
                   onClick={clearSignature}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-purple-600 hover:text-purple-800 hover:bg-purple-100"
                 >
                   <RotateCcw className="w-4 h-4 mr-1" />
                   Clear
@@ -261,10 +258,11 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
                 onTouchStart={startDrawing}
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
+                data-testid="signature-canvas"
               />
             </div>
             {errors.signature && (
-              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+              <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" /> {errors.signature}
               </p>
             )}

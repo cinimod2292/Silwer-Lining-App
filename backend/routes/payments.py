@@ -98,7 +98,7 @@ async def admin_update_payment_settings(data: dict, admin=Depends(verify_token))
 # ==================== INITIATE PAYMENT ====================
 
 @router.post("/payments/initiate")
-async def initiate_payment(data: dict):
+async def initiate_payment(data: dict, request: Request):
     booking_id = data.get("booking_id")
     payment_method = data.get("payment_method")
     payment_type = data.get("payment_type", "deposit")
@@ -120,8 +120,15 @@ async def initiate_payment(data: dict):
 
     if payment_method == "payfast":
         pf_creds = await get_payfast_credentials()
-        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', '').replace('/api', '')
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', '')
+        # Derive base URL from request origin/referer
+        origin = request.headers.get("origin", "")
+        if not origin:
+            referer = request.headers.get("referer", "")
+            if referer:
+                from urllib.parse import urlparse
+                parsed = urlparse(referer)
+                origin = f"{parsed.scheme}://{parsed.netloc}"
+        base_url = origin
 
         name_parts = booking.get("client_name", "").split(" ", 1)
         first_name = name_parts[0].strip() if name_parts else "Customer"

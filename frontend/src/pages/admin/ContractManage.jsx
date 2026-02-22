@@ -288,23 +288,20 @@ const ContractManage = () => {
       required: true,
     };
     
-    // Insert visual placeholder in editor FIRST
+    // Insert visual placeholder in editor
     const placeholder = `{{${fieldId}}}`;
     editor.chain().focus().insertContent(` ${placeholder} `).run();
     
-    // Then update state - use callback to ensure we get latest state
-    setSmartFields((prev) => {
-      const updated = [...prev, newField];
-      // Auto-save after adding field to prevent loss
-      setTimeout(() => {
-        autoSaveContract(updated);
-      }, 100);
-      return updated;
-    });
+    // Update state
+    const updatedFields = [...smartFields, newField];
+    setSmartFields(updatedFields);
+
+    // Auto-save with the latest editor content and new fields
+    autoSaveContract(updatedFields);
 
     setShowAddFieldModal(false);
     setNewFieldLabel("");
-    toast.success(`"${label}" field added - auto-saving...`);
+    toast.success(`"${label}" field added`);
   };
 
   const autoSaveContract = async (fields) => {

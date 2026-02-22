@@ -1,6 +1,7 @@
 from fastapi import APIRouter, BackgroundTasks, Query
 from typing import Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+import calendar as cal_module
 from db import db, logger
 from models import (
     BookingCreate, Booking, BookingSettings,
@@ -9,7 +10,7 @@ from models import (
 from services.email import send_booking_confirmation_email
 from services.contracts import generate_contract_pdf
 from services.email import send_contract_email
-from services.calendar import create_calendar_event, get_calendar_blocked_times
+from services.calendar import create_calendar_event, get_calendar_blocked_times, get_cached_calendar_blocked_times
 
 router = APIRouter()
 

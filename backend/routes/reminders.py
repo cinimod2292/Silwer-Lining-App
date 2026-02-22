@@ -228,12 +228,26 @@ async def process_reminder(reminder: dict) -> int:
 async def reminder_scheduler():
     """Background task that runs reminder processing every hour"""
     logger.info("Reminder scheduler started - checking every hour")
+    # Refresh calendar cache on startup
+    try:
+        from services.calendar import refresh_calendar_cache
+        await refresh_calendar_cache()
+    except Exception as e:
+        logger.error(f"Initial calendar cache refresh failed: {e}")
+
     while True:
         try:
-            await asyncio.sleep(3600)  # Wait 1 hour
-            logger.info("Running scheduled reminder check...")
+            await asyncio.sleep(600)  # Check every 10 minutes for calendar, reminders hourly
+            logger.info("Running scheduled checks...")
 
-            # Process automated reminders
+            # Refresh calendar cache every run (10 min)
+            try:
+                from services.calendar import refresh_calendar_cache
+                await refresh_calendar_cache()
+            except Exception as e:
+                logger.error(f"Scheduler: Calendar cache refresh error: {e}")
+
+            # Process automated reminders (check hourly by tracking last run)
             doc = await db.automated_reminders.find_one({"id": "default"}, {"_id": 0})
             if doc:
                 total_sent = 0

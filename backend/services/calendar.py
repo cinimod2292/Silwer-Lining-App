@@ -341,3 +341,116 @@ def parse_time_slot(time_str: str) -> tuple:
         return hour, minute
     except:
         return None, None
+
+
+async def refresh_calendar_cache():
+    """Refresh the calendar events cache in MongoDB. Called by background scheduler."""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return
+
+    try:
+        now = datetime.now(timezone.utc)
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=120)
+
+        cal_events = await get_events_from_all_calendars(start, end)
+
+        await db.calendar_events_cache.update_one(
+            {"id": "default"},
+            {"$set": {
+                "id": "default",
+                "events": cal_events,
+                "refreshed_at": now.isoformat(),
+                "range_start": start.isoformat(),
+                "range_end": end.isoformat()
+            }},
+            upsert=True
+        )
+        logger.info(f"Calendar cache refreshed: {len(cal_events)} events cached")
+    except Exception as e:
+        logger.error(f"Failed to refresh calendar cache: {e}")
+
+
+async def get_cached_calendar_blocked_times(start_date: str, end_date: str) -> dict:
+    """Get blocked time slots per date from cached calendar events. Returns {date_str: [blocked_slots]}"""
+    settings = await db.calendar_settings.find_one({"id": "default"})
+    if not settings or not settings.get("sync_enabled"):
+        return {}
+
+    cache = await db.calendar_events_cache.find_one({"id": "default"}, {"_id": 0})
+
+    # If no cache or stale (>15 min), refresh in-place
+    if not cache or not cache.get("refreshed_at"):
+        await refresh_calendar_cache()
+        cache = await db.calendar_events_cache.find_one({"id": "default"}, {"_id": 0})
+    else:
+        refreshed = datetime.fromisoformat(cache["refreshed_at"].replace("Z", "+00:00"))
+        if (datetime.now(timezone.utc) - refreshed) > timedelta(minutes=15):
+            await refresh_calendar_cache()
+            cache = await db.calendar_events_cache.find_one({"id": "default"}, {"_id": 0})
+
+    if not cache or not cache.get("events"):
+        return {}
+
+    # Build a map of date -> list of blocked hour ranges
+    cal_events_by_date = {}
+    for evt in cache["events"]:
+        summary = evt.get("summary", "")
+        if '\U0001f4f8' in summary or 'silwerlining' in summary.lower():
+            continue
+        try:
+            evt_start = datetime.fromisoformat(evt["start"].replace("Z", "+00:00"))
+            evt_end = datetime.fromisoformat(evt["end"].replace("Z", "+00:00"))
+            current = evt_start.date()
+            end_d = evt_end.date()
+            while current <= end_d:
+                ds = current.strftime("%Y-%m-%d")
+                if ds < start_date or ds > end_date:
+                    current += timedelta(days=1)
+                    continue
+                if current == evt_start.date() and current == evt_end.date():
+                    sh, sm, eh, em = evt_start.hour, evt_start.minute, evt_end.hour, evt_end.minute
+                elif current == evt_start.date():
+                    sh, sm, eh, em = evt_start.hour, evt_start.minute, 23, 59
+                elif current == evt_end.date():
+                    sh, sm, eh, em = 0, 0, evt_end.hour, evt_end.minute
+                else:
+                    sh, sm, eh, em = 0, 0, 23, 59
+                cal_events_by_date.setdefault(ds, []).append({"sh": sh, "sm": sm, "eh": eh, "em": em})
+                current += timedelta(days=1)
+        except Exception:
+            continue
+
+    # Now we need to know what time slots exist to check. Get booking settings.
+    bsettings = await db.booking_settings.find_one({"id": "default"}, {"_id": 0})
+    if not bsettings:
+        return {}
+    time_slot_schedule = bsettings.get("time_slot_schedule", {})
+
+    # Collect all possible time slots across all session types/days
+    all_slots = set()
+    for st, sched in time_slot_schedule.items():
+        for day_id, slots in sched.items():
+            all_slots.update(slots)
+
+    # For each date with calendar events, check which slots overlap
+    result = {}
+    for ds, ranges in cal_events_by_date.items():
+        blocked = []
+        for slot in all_slots:
+            sh, sm = parse_time_slot(slot)
+            if sh is None:
+                continue
+            slot_start = sh * 60 + sm
+            slot_end = (sh + 2) * 60 + sm
+            for r in ranges:
+                es = r["sh"] * 60 + r["sm"]
+                ee = r["eh"] * 60 + r["em"]
+                if not (slot_end <= es or slot_start >= ee):
+                    blocked.append(slot)
+                    break
+        if blocked:
+            result[ds] = blocked
+
+    return result

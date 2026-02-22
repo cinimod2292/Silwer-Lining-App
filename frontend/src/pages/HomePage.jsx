@@ -262,52 +262,6 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Featured Work */}
-      <section className="py-20 md:py-32" data-testid="featured-work-section">
-        <div className="max-w-7xl mx-auto px-6 md:px-12">
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-12">
-            <div>
-              <p className="text-primary font-medium tracking-widest uppercase text-sm mb-3">
-                Featured Work
-              </p>
-              <h2 className="font-display text-3xl md:text-4xl font-semibold text-foreground">
-                Recent Sessions
-              </h2>
-            </div>
-            <Link to="/portfolio" className="mt-4 md:mt-0">
-              <Button
-                variant="ghost"
-                className="text-primary gap-2 hover:bg-primary/10"
-                data-testid="view-all-btn"
-              >
-                View All
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredImages.map((item, index) => (
-              <div
-                key={item.id}
-                className={`img-zoom rounded-xl overflow-hidden ${
-                  index === 0 ? "md:col-span-2 md:row-span-2" : ""
-                }`}
-                data-testid={`featured-image-${index}`}
-              >
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className={`w-full object-cover ${
-                    index === 0 ? "h-full min-h-[400px]" : "h-64"
-                  }`}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Instagram Recent Shoots */}
       {instagramPosts.length > 0 && (
         <section className="py-20 md:py-32 bg-warm-beige" data-testid="instagram-section">

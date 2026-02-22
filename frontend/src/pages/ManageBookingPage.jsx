@@ -223,20 +223,29 @@ const ManageBookingPage = () => {
         )}
 
         {view === "questionnaire" && questionnaire && (
-          <div className="bg-white rounded-2xl shadow-soft p-6">
-            <h2 className="font-semibold text-lg mb-6">Session Questionnaire</h2>
-            <div className="space-y-6">
+          <div className="bg-white rounded-2xl shadow-soft p-6 md:p-8">
+            <div className="mb-8">
+              <h2 className="font-display text-xl font-semibold mb-2">{questionnaire.title || "Session Questionnaire"}</h2>
+              {questionnaire.description && (
+                <p className="text-muted-foreground text-sm">{questionnaire.description}</p>
+              )}
+            </div>
+            <div className="space-y-8">
               {questionnaire.questions?.map((q, idx) => (
-                <div key={q.id} className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    {idx + 1}. {q.question} {q.required && <span className="text-red-500">*</span>}
+                <div key={q.id} className="space-y-3">
+                  <Label className="text-base font-medium text-foreground block">
+                    {idx + 1}. {q.label || q.question} {q.required && <span className="text-red-500">*</span>}
                   </Label>
+                  {q.description && (
+                    <p className="text-sm text-muted-foreground -mt-1">{q.description}</p>
+                  )}
                   
                   {q.type === "text" && (
                     <Input
                       value={responses[q.id] || ""}
                       onChange={(e) => handleResponseChange(q.id, e.target.value)}
-                      placeholder="Your answer..."
+                      placeholder={q.placeholder || "Your answer..."}
+                      className="max-w-md"
                     />
                   )}
                   
@@ -244,31 +253,90 @@ const ManageBookingPage = () => {
                     <Textarea
                       value={responses[q.id] || ""}
                       onChange={(e) => handleResponseChange(q.id, e.target.value)}
-                      placeholder="Your answer..."
-                      rows={3}
+                      placeholder={q.placeholder || "Your answer..."}
+                      rows={4}
+                      className="max-w-lg"
                     />
                   )}
-                  
-                  {q.type === "select" && q.options && (
+
+                  {q.type === "email" && (
+                    <Input
+                      type="email"
+                      value={responses[q.id] || ""}
+                      onChange={(e) => handleResponseChange(q.id, e.target.value)}
+                      placeholder={q.placeholder || "email@example.com"}
+                      className="max-w-md"
+                    />
+                  )}
+
+                  {q.type === "phone" && (
+                    <Input
+                      type="tel"
+                      value={responses[q.id] || ""}
+                      onChange={(e) => handleResponseChange(q.id, e.target.value)}
+                      placeholder={q.placeholder || "+27 12 345 6789"}
+                      className="max-w-md"
+                    />
+                  )}
+
+                  {q.type === "number" && (
+                    <Input
+                      type="number"
+                      value={responses[q.id] || ""}
+                      onChange={(e) => handleResponseChange(q.id, e.target.value)}
+                      placeholder={q.placeholder || "0"}
+                      className="w-32"
+                    />
+                  )}
+
+                  {q.type === "date" && (
+                    <Input
+                      type="date"
+                      value={responses[q.id] || ""}
+                      onChange={(e) => handleResponseChange(q.id, e.target.value)}
+                      className="w-48"
+                    />
+                  )}
+
+                  {(q.type === "select" || q.type === "radio") && q.options && (
                     <RadioGroup
                       value={responses[q.id] || ""}
                       onValueChange={(val) => handleResponseChange(q.id, val)}
+                      className="space-y-2"
                     >
-                      {q.options.map((opt, i) => (
-                        <div key={i} className="flex items-center space-x-2">
-                          <RadioGroupItem value={opt} id={`${q.id}-${i}`} />
-                          <Label htmlFor={`${q.id}-${i}`} className="font-normal">{opt}</Label>
-                        </div>
-                      ))}
+                      {q.options.map((opt, i) => {
+                        const optValue = typeof opt === 'string' ? opt : opt.label;
+                        const optId = typeof opt === 'string' ? `${q.id}-${i}` : opt.id;
+                        return (
+                          <div key={optId} className="flex items-center space-x-3">
+                            <RadioGroupItem value={optValue} id={optId} />
+                            <Label htmlFor={optId} className="font-normal cursor-pointer">{optValue}</Label>
+                          </div>
+                        );
+                      })}
                     </RadioGroup>
+                  )}
+
+                  {q.type === "dropdown" && q.options && (
+                    <select
+                      value={responses[q.id] || ""}
+                      onChange={(e) => handleResponseChange(q.id, e.target.value)}
+                      className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    >
+                      <option value="">Select an option</option>
+                      {q.options.map((opt, i) => {
+                        const optValue = typeof opt === 'string' ? opt : opt.label;
+                        return <option key={i} value={optValue}>{optValue}</option>;
+                      })}
+                    </select>
                   )}
                 </div>
               ))}
             </div>
             
-            <div className="flex gap-3 mt-8">
+            <div className="flex gap-3 mt-10 pt-6 border-t">
               <Button variant="outline" onClick={() => setView("overview")}>Back</Button>
-              <Button onClick={saveQuestionnaire} disabled={saving} className="flex-1">
+              <Button onClick={saveQuestionnaire} disabled={saving} className="flex-1 max-w-xs">
                 {saving ? "Saving..." : "Save Questionnaire"}
               </Button>
             </div>

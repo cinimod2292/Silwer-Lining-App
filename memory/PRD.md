@@ -28,14 +28,14 @@ Build a premium photography website for "Silwer Lining Photography" with portfol
 ├── models.py          # All Pydantic models
 ├── routes/
 │   ├── admin.py       # All admin CRUD endpoints
-│   ├── public.py      # Public-facing endpoints (packages, portfolio, booking, etc.)
+│   ├── public.py      # Public endpoints (packages, portfolio, booking, available-dates)
 │   ├── client.py      # Client booking management endpoints
 │   ├── payments.py    # PayFast ITN, payment initiation/verification
 │   └── reminders.py   # Automated reminders CRUD + background scheduler
 ├── services/
 │   ├── email.py       # SendGrid + Microsoft Graph email sending
 │   ├── payments.py    # PayFast credential management + signature calc
-│   ├── calendar.py    # CalDAV integration
+│   ├── calendar.py    # CalDAV integration + calendar cache
 │   └── contracts.py   # Contract PDF generation (WeasyPrint)
 ```
 
@@ -46,6 +46,7 @@ Build a premium photography website for "Silwer Lining Photography" with portfol
 - **automated_reminders**: template_id, days_before, status
 - **contract_template**: WYSIWYG content with smart fields
 - **admins**, **contact_messages**, **email_templates**
+- **calendar_events_cache**: Cached CalDAV events for fast availability lookups
 
 ## Admin Credentials
 - Email: admin@silwerlining.com
@@ -57,15 +58,15 @@ Build a premium photography website for "Silwer Lining Photography" with portfol
 - Multi-step booking flow with contract signing
 - PayFast payment integration (sandbox + live toggle)
 - Client booking management portal (/manage/:token)
-- Automated reminders admin UI + background scheduler (cron job)
+- Automated reminders admin UI + background scheduler (cron job, 10-min interval)
 - Email provider switching UI (SendGrid/MS Graph)
 - Google Reviews integration (manual + API fetch)
 - Questionnaire flow (post-payment)
 - CalDAV calendar sync
 - Portfolio & testimonial management
 - Contract editor with WYSIWYG + smart fields
-- **Backend refactoring**: Monolithic 4364-line server.py → modular FastAPI routers (COMPLETED)
-- **Background scheduler**: Hourly reminder processing + Google Reviews auto-fetch
+- **Backend refactoring**: Monolithic 4364-line server.py → modular FastAPI routers (COMPLETED Feb 2026)
+- **Calendar availability optimization**: Bulk month availability endpoint, CalDAV event caching, green dot indicators on available dates, instant time slot rendering (COMPLETED Feb 2026)
 
 ## Pending/Upcoming
 - P1: Google Reviews API end-to-end testing (needs valid credentials from user)

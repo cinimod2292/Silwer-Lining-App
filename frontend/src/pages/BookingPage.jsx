@@ -58,6 +58,11 @@ const BookingPage = () => {
   const [payfastFormData, setPayfastFormData] = useState(null);
   const [bankDetails, setBankDetails] = useState(null);
   
+  // Calendar availability state
+  const [monthAvailability, setMonthAvailability] = useState({});
+  const [displayedMonth, setDisplayedMonth] = useState(startOfMonth(new Date()));
+  const [loadingMonth, setLoadingMonth] = useState(false);
+  
   // Weekend popup state
   const [showWeekendPopup, setShowWeekendPopup] = useState(false);
   const [pendingWeekendDate, setPendingWeekendDate] = useState(null);

@@ -813,20 +813,59 @@ const BookingPage = () => {
                     <Calendar className="w-5 h-5 inline mr-2" />
                     Select a date
                   </Label>
-                  <p className="text-sm text-muted-foreground mb-4">
+                  <p className="text-sm text-muted-foreground mb-2">
                     Note: Weekend sessions include an additional R{getWeekendSurcharge().toLocaleString()} fee
                   </p>
+                  <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+                      Available
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-gray-300 inline-block"></span>
+                      Unavailable
+                    </span>
+                  </div>
                   <div className="flex justify-center">
                     <CalendarComponent
                       mode="single"
                       selected={formData.booking_date}
                       onSelect={handleDateSelect}
                       disabled={isDateDisabled}
+                      month={displayedMonth}
+                      onMonthChange={setDisplayedMonth}
                       fromDate={new Date()}
+                      modifiers={{
+                        available: availableDates,
+                      }}
+                      modifiersClassNames={{
+                        available: "available-date",
+                      }}
                       className="rounded-xl border shadow-soft"
                       data-testid="booking-calendar"
                     />
                   </div>
+                  <style>{`
+                    .available-date:not([disabled]):not([aria-selected="true"]) {
+                      position: relative;
+                      font-weight: 600;
+                      color: #2D2A26;
+                    }
+                    .available-date:not([disabled]):not([aria-selected="true"])::after {
+                      content: '';
+                      position: absolute;
+                      bottom: 2px;
+                      left: 50%;
+                      transform: translateX(-50%);
+                      width: 5px;
+                      height: 5px;
+                      border-radius: 50%;
+                      background-color: #10B981;
+                    }
+                  `}</style>
+                  {loadingMonth && (
+                    <p className="text-center text-xs text-muted-foreground mt-2 animate-pulse">Loading availability...</p>
+                  )}
                   {formData.is_weekend && formData.booking_date && (
                     <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-amber-600" />

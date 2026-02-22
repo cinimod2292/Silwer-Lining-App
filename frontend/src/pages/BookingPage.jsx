@@ -733,7 +733,7 @@ const BookingPage = () => {
 
                 {/* Add-ons Section */}
                 {formData.package_name && (
-                  <div>
+                  <div className="mt-10 pt-8 border-t">
                     <Label className="text-base font-semibold mb-2 block">
                       <Plus className="w-5 h-5 inline mr-2" />
                       Enhance your session with add-ons

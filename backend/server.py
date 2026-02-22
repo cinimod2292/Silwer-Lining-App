@@ -3692,8 +3692,8 @@ async def initiate_payment(data: dict):
         pf_creds = await get_payfast_credentials()
         
         # Generate PayFast payment form data
-        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-mgmt-suite.preview.emergentagent.com').replace('/api', '')
-        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-mgmt-suite.preview.emergentagent.com')
+        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-biz-hub-3.preview.emergentagent.com').replace('/api', '')
+        backend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-biz-hub-3.preview.emergentagent.com')
         
         # Split name
         name_parts = booking.get("client_name", "").split(" ", 1)
@@ -3911,7 +3911,7 @@ async def send_payment_reminder(data: dict, admin=Depends(verify_token)):
         raise HTTPException(status_code=404, detail="Booking not found")
     
     # Generate payment link
-    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-mgmt-suite.preview.emergentagent.com').replace('/api', '')
+    frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://photo-biz-hub-3.preview.emergentagent.com').replace('/api', '')
     payment_link = f"{frontend_url}/complete-payment/{booking_id}"
     
     # Send reminder email

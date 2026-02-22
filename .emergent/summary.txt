@@ -1,93 +1,64 @@
 <analysis>**original_problem_statement:**
-The user wants to create a premium photography website for Silwer Lining Photography. The website should be clean, warm, and professional, showcasing a portfolio with galleries for maternity, newborn, family, and individual portraits. It must include a Pricing page, an integrated booking system (without third-party plug-ins), an About Me section, a Testimonials section, and contact information. The project has evolved to include scraping all content (logo, images, text, packages) from the user's existing website  and integrating it into the new build.
+The user wants to create a premium photography website for Silwer Lining Photography. The website should showcase a portfolio, have a pricing page, an integrated booking system, an About Me section, testimonials, and contact info.
 
 **PRODUCT REQUIREMENTS:**
-- **Admin Dashboard:**
-    - Manage bookings, including a full-size calendar view with click-to-action features (manual booking, block slot, add custom slot).
-    - Manage portfolio images, including bulk uploads from a device via Cloudflare R2.
-    - Manage testimonials (and add Google Reviews manually).
-    - Manage pricing packages (CRUD operations).
-    - Manage add-ons (CRUD, pricing, category assignment).
-    - Manage FAQs (CRUD operations).
-    - Configure booking settings with flexible time slots per session type and day, including features to copy schedules between days and session types.
-    - Configure email templates with a visual editor and raw HTML mode.
-    - Create Google Forms-style questionnaires per session type, integrated into the booking flow.
-    - Configure and manage 2-way Apple Calendar synchronization (CalDAV) with multi-calendar support.
-    - Manage credentials for third-party services (Cloudflare R2, Instagram).
-- **Frontend:**
-    - Display scraped content: logo, images, package details (in ZAR), About Me, and Contact Info.
-    - Filterable portfolio gallery with a masonry layout and lightbox navigation.
-    - Testimonials section to display client reviews.
-    - Recent Shoots section on the homepage powered by an Instagram feed.
-    - Integrated booking form with add-on selection, weekend surcharge popups, a final price breakdown, and a dynamic questionnaire step.
-    - A client-facing page to complete manually created bookings.
-- **Integrations:**
-    - SendGrid for email confirmations.
-    - 2-way Apple Calendar sync for booking availability (CalDAV).
-    - Instagram API for the homepage feed.
-    - Cloudflare R2 for image storage.
+The project has evolved into a full-fledged business management platform. Key requirements implemented and requested include:
+- **Admin Dashboard:** Full management of bookings, portfolio, testimonials, pricing, add-ons, FAQs, booking settings, and email templates.
+- **Contract System:** A legal contract template managed via a WYSIWYG editor, which clients must sign during the booking flow. Admins can download signed contracts.
+- **Payment System:** A multi-option payment step in the booking flow, integrating PayFast. Admin can toggle between sandbox and live modes and manage credentials.
+- **Client Booking Management:** Clients receive a unique link after booking to manage their session.
+- **Automated Reminders:** A user-friendly admin interface to set up automated email reminders for clients.
+- **Email Provider Choice:** Admin can choose between SendGrid and Microsoft Graph API for sending emails.
+- **Google Reviews Integration:** A system to fetch and display Google Reviews, with a manual entry fallback.
+- **Session Questionnaire:** A questionnaire presented to the client *after* a successful payment.
+- **Backend Refactoring:** The monolithic  should be refactored into a modular structure using FastAPI routers.
+- **Cron Job:** A background scheduler to process and send the automated email reminders.
 
 **User's preferred language**: English
 
 **what currently exists?**
-A feature-rich, full-stack photography business platform with a React frontend, FastAPI backend, and MongoDB database. All original content from the user's old site has been scraped and integrated.
-
-The application includes a comprehensive admin dashboard with advanced features:
-- **Full FAQ Management System:** Admins can perform full CRUD operations on FAQs, which are dynamically displayed on the homepage and contact page.
-- **Advanced Booking & Scheduling:** A sophisticated 2-way Apple Calendar (CalDAV) sync blocks off time from multiple personal/work calendars and adds new bookings to a designated work calendar. The admin dashboard features a full-sized calendar view showing bookings, personal events, and available slots. Admins can click any time slot to manually book a client (generating a unique payment link), block the slot, or add a custom one-off availability.
-- **Flexible Booking Configuration:** Admins can set time slots per session type and day, with efficient tools to copy schedules to multiple days or other session types.
-- **Questionnaire Integration:** A Google Forms-style questionnaire builder is fully integrated into the booking flow.
-- **Other core features:** Portfolio and add-on management, an Instagram-powered Recent Shoots feed, and a dual-mode (visual/HTML) email editor are all implemented and functional.
+A full-stack application with a React frontend, a FastAPI backend, and a MongoDB database. The backend was previously a single large  file. In this session, a major refactoring was started to break it down into a modular, router-based architecture. All the new files for this structure have been created in , but the main  has not yet been updated to use them. The application is therefore in a non-functional state until this refactoring is completed. The frontend includes a comprehensive admin dashboard and a client booking flow.
 
 **Last working item**:
-    - Last item agent was working: Simplifying the Booking Settings page. The user requested to remove the Available Days checkboxes and the Default Session Duration input field. The logic was updated so that a day is considered available for booking if any time slots are configured for it.
+    - Last item agent was working: A major architectural refactoring of the monolithic backend () into a modular structure with services, models, and FastAPI routers. All the new files have been created under .
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? frontend testing agent
+    - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1:  (P0) Verify the simplification of the Booking Settings page.
-  
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: The agent has modified  to remove the UI elements and  to adjust the availability logic in the  and  endpoints.
-     - Next debug checklist: 
-        1. Take a screenshot of the  page to confirm the Available Days and Default Session Duration sections are gone.
-        2. Test adding time slots to a day and saving.
-        3. Verify the public booking page () correctly reflects the new availability.
-     - Why fix this issue and what will be achieved with the fix? This resolves the user's latest request, making the booking configuration more intuitive and streamlined.
-     - Status:  IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on other issue: No
+- None. The previous issues were resolved.
 
 **In progress Task List**:
-The last working item is the only in-progress task.
+  - Task 1:  (P0) Complete the backend refactoring.
+  
+ Task Detail:
+  - Task 1: 
+     - Where to resume: The agent has created all the necessary files for the new modular backend structure inside . The next critical step is to replace the contents of the original  with a new, slim version that initializes the FastAPI app and includes all the new routers from the  directory. After this, the old  logic will be obsolete. The backend service will need a restart, and extensive testing must be performed to ensure no regressions were introduced.
+     - What will be achieved with this? A more maintainable, scalable, and organized backend codebase, which was a specific user request and is necessary for future development.
+     - Status:  IN PROGRESS
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: No.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: **Test Cloudflare R2 Portfolio Upload**: The user has provided credentials, and the UI for bulk upload is complete. The end-to-end flow needs to be tested by the user.
-    - P2: **Google Reviews Integration Clarification**: The user previously expressed interest in this. The agent needs to clarify if a manual entry system (already covered by Testimonials) is sufficient, or if a more automated widget-based solution is desired.
+    - P0: **Set up Cron Job for Automated Reminders**: As requested by the user, a background scheduler (cron job) needs to be implemented to trigger the email sends based on the rules defined in the admin UI. The backend logic for this should be added within the new modular structure.
+    - P1: **Test Google Reviews API Fetch**: The UI to enter the API key and Place ID is implemented. The automated fetching logic needs to be tested once the user provides valid credentials.
+    - P2: **Verify Microsoft Graph API Integration**: The user stated that the credentials were entered and a test email worked. A quick verification should be performed to confirm this is fully functional.
 
     Future Tasks:
-    - **Shop Section**: Implement an e-commerce section for selling sublimation and personalized gifts.
-    - **Alternate Booking/Payment Options**: Propose adding a Book Now via WhatsApp button or integrating a payment gateway like PayFlex.
-    - **Automated Reminders**: Implement automated booking reminders (e.g., 24-hour SMS/email reminder before a session).
+    - **Payflex Integration**: The UI has a placeholder, but the backend integration needs to be implemented.
+    - **Shop Section**: Build an e-commerce section for selling gifts.
 
 **Completed work in this session**
-- **FAQ Management System**: Completed the feature by implementing dynamic rendering on frontend pages (, ) and verifying the admin CRUD functionality.
-- **Questionnaire-Booking Integration**: Successfully integrated the questionnaire builder into the public , adding it as a dynamic step in the booking flow.
-- **Apple Calendar 2-Way Sync (CalDAV)**: Implemented a robust 2-way sync. It now reads events from all of the user's calendars (e.g., Home, Work) to block availability and writes new bookings to a user-designated calendar.
-- **Admin Calendar View & Manual Booking**:
-    - Created a full-page calendar () showing bookings, personal events from all synced calendars, blocked time, and open/available slots.
-    - Implemented click-to-action on calendar slots:
-        - **Create Manual Booking**: Generates a unique link for a client to complete their booking ().
-        - **Block Slot**: Manually blocks a time slot.
-        - **Add Custom Slot**: Adds a one-off available time slot on any day.
-- **Booking Settings Enhancements**:
-    - Added modals to copy time slot schedules to multiple days or other session types.
-    - Simplified the UI by removing the Available Days and Default Session Duration settings per the user's request.
+- **Contract Editor Fixes (Verified)**:
+  - Fixed an issue where smart fields would disappear in the admin contract editor after being inserted.
+  - Corrected the client-facing initials field to remove the label and extra text.
+  - Improved the visibility of all smart fields (signature, initials, date) on the client-facing contract by adding background and border styling.
+- **Backend Refactoring (In Progress)**:
+  - Analyzed the 4300+ line  file.
+  - Created a new modular directory structure at  with subdirectories for , , , and .
+  - Migrated all logic from the monolithic  into the respective new modules.
 
 **Earlier issues found/mentioned but not fixed**
    - None.
@@ -95,94 +66,100 @@ The last working item is the only in-progress task.
 **Known issue recurrence from previous fork**
   - **Issue recurrence in previous fork**: Admin login failing.
   - **Recurrence count**: 2+
-  - **Status**: RESOLVED (via a scripted workaround that deletes and recreates the admin account). This might be needed again in a new environment.
+  - **Status**: RESOLVED (via a scripted workaround). May reoccur in a new environment.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, MongoDB (), Pydantic, , .
-- **Frontend**: React, Tailwind CSS, .
-- **Integrations**: SendGrid, Instagram Graph API, Cloudflare R2, Apple Calendar (CalDAV).
-- **Process Management**: .
+- **Backend**: FastAPI (now using  for modularity), MongoDB, SendGrid, CalDAV, PayFast, 
+-----
+
+WeasyPrint could not import some external libraries. Please carefully follow the installation steps before reporting an issue:
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#installation
+https://doc.courtbouillon.org/weasyprint/stable/first_steps.html#troubleshooting 
+
+-----, , .
+- **Frontend**: React, Tailwind CSS, Shadcn/UI, , .
+- **Architecture**: Transitioning from a monolithic backend to a modular, service-oriented architecture.
 
 **key DB schema**
-- **custom_slots**: 
-- **manual_bookings**: 
-- **settings**: Now stores , , .
+  - No changes were made to the database schema in this session.
 
 **changes in tech stack**
-- **Backend**: Added  library for Apple Calendar integration.
-- **Frontend**: Added  packages (, , , , ) for the admin calendar view.
+  - No new libraries or technologies were added. The primary change is the architectural refactoring of the backend.
 
 **All files of reference**
-- : Heavily modified to add logic for FAQs, Questionnaire integration, and a comprehensive CalDAV 2-way sync and calendar view data generation.
-- : New page implementing the  component for a complete schedule overview.
-- : New page for clients to complete bookings created manually by the admin.
-- : Updated to manage CalDAV credentials and allow the user to select a target calendar for new bookings.
-- : Rewritten to include copy to days and copy to session modals, and then simplified by removing the Available Days and Default Session Duration fields.
-- : Updated to include the dynamic questionnaire step.
--  & : Updated to fetch and display FAQs dynamically.
--  & : Updated with routes and navigation links for the new calendar pages.
+- **To be modified/replaced**: 
+- **New files created**:
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+- **Files modified for bug fixes**:
+  - 
+  - 
 
 **Areas that need refactoring**:
-- **Critical**: The  file is now exceedingly large and handles all application logic. It should be broken down into a modular structure using FastAPI's  (e.g., , , ).
+- **Critical**: The backend refactoring is the current task. The  file must be replaced with the new modular entrypoint to complete the work.
 
 **key api endpoints**
-- : GETs all data (bookings, personal events, open slots) for the admin calendar.
-- : POST to create a manual booking and get a client completion link.
-- : GET/POST for the client-facing booking completion page.
-- : POST to test the CalDAV connection.
-- : POST to trigger a manual sync.
-- : GET to list available calendars from the user's Apple account.
-- : POST/DELETE to manage one-off available time slots.
-- : POST to create a blocked time entry.
+The API endpoints remain the same, but their implementation has been moved from  to the respective files in .
 
 **Critical Info for New Agent**
-- Your first priority is to complete the simplification of the Booking Settings page. This involves verifying that the UI is correct and that booking availability works as expected without the old Available Days configuration.
-- The calendar system is now a core, complex part of the application. Be mindful of the interactions between , , and the various backend functions in  that calculate availability.
-- The recurring admin login issue was fixed with a script. If login fails ( / ), you may need to run the reset script again (visible in the message history).
+- **IMMEDIATE BLOCKER**: The backend is in a broken, non-functional state. Your first and only priority is to complete the refactoring initiated by the previous agent.
+- **Action Plan**:
+    1.  Create a new  that initializes the FastAPI app and includes all the routers from the  directory.
+    2.  Ensure all dependencies and paths are correct.
+    3.  Restart the backend service (backend: stopped
+backend: started).
+    4.  Thoroughly test the entire application using both frontend and backend testing agents to ensure the refactoring did not introduce any regressions. The application must be fully functional before moving on.
+- Once the refactoring is complete and verified, the next priority is to implement the cron job for automated reminders, as requested by the user.
 
 **documents and test reports created in this job**
-  - /app/test_reports/iteration_5.json
-  - /app/test_reports/iteration_6.json
-  - /app/memory/PRD.md (updated)
+  -  (Verification for contract editor fixes)
+  -  (The agent was interrupted before it could update this file)
 
 **Last 10 User Messages and any pending HUMAN messages** 
- -  10. **User:**  (Status: In Progress)
- -  9. **User:**  (Status: Completed)
- -  8. **User:** 
-wtmp begins Thu Feb 19 10:22:57 2026 (Status: Completed)
- -  7. **User:** Corrected the agent on missing features: the only thing is the open slots that I said must show are not there... (Status: Completed)
- -  6. **User:**  (Status: Completed)
- -  5. **User:**  (Status: Completed)
- -  4. **User:**  (Status: Completed)
- -  3. **User:**  (Status: Completed)
- -  2. **User:**  (Status: Completed, agent clarified status)
- -  1. **User:** Confirmed the plan:  (Status: Completed)
+ -  2. **User:** On next items, Microsoft graph credentials were entered on admin panel and test email worked. Please implement the cron job scheduler and do the refactor of server.py into modular fastAPI routers. Please use as little credits as possible (Status: **Refactoring IN PROGRESS**, Cron Job **NOT STARTED**)
+ -  1. **User:** Yes, coninue (Approval to proceed with fixing contract issues). (Status: **Completed**)
 
 **Project Health Check:**
-- **Broken**: The simplification of the  is incomplete pending testing and verification.
-- **Mocked**: No features are currently mocked. R2 upload and Calendar Sync are implemented but await final user testing to be considered fully verified.
+- **Broken**: The backend is non-functional due to the in-progress refactoring. This is the highest priority to resolve.
+- **Mocked**: Payflex integration is mocked in the UI but has no backend implementation.
 
 **3rd Party Integrations**
-- **SendGrid**: For transactional emails.
-- **Instagram Graph API**: For the Recent Shoots homepage feed.
-- **Cloudflare R2**: For image hosting.
-- **Apple CalDAV**: For 2-way calendar synchronization.
+- **SendGrid**: Configured, works.
+- **Instagram Graph API**: In place.
+- **Cloudflare R2**: In place.
+- **Apple CalDAV**: In place.
+- **PayFast**: Fully integrated and working in Sandbox mode.
+- **Google Places API**: Integrated for fetching reviews. Backend logic is present but requires user credentials and end-to-end testing.
+- **Microsoft Graph API**: Integrated for sending emails. User reports it as working, pending final verification.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: YES (for the contract fixes).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: []
+  - Known regressions: Unknown. High risk of regressions due to major backend refactoring. Extensive testing is required.
 
 **Credentials to test flow:**
-To test the admin flow, log in via :
-- **Email:** 
-- **Password:** 
-(Note: This account may need to be reset in a new environment if login fails.)
+- **Admin Email:** 
+- **Admin Password:** 
 
 **What agent forgot to execute**
-- The agent initially forgot to add the open time slots to the admin calendar view but implemented it correctly after the user pointed it out.
-- The agent has not yet performed a final verification/test of the last user request to simplify the booking settings page.</analysis>
+- The agent was in the middle of a multi-step task (backend refactoring) and did not complete it. The final, critical step of wiring up the new modular code in  was not executed.
+- The agent did not start the user's other request to implement the cron job scheduler.
+- The agent did not update  after completing the contract fixes.</analysis>

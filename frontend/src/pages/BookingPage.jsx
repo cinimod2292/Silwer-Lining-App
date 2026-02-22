@@ -221,20 +221,6 @@ const BookingPage = () => {
     }
   };
 
-  const fetchAvailableTimes = async (date, sessionType = null) => {
-    try {
-      let url = `${API}/bookings/available-times?date=${date}`;
-      if (sessionType) {
-        url += `&session_type=${sessionType}`;
-      }
-      const res = await axios.get(url);
-      setAvailableTimes(res.data.available_times || []);
-    } catch (e) {
-      console.error("Failed to fetch times");
-      setAvailableTimes([]);
-    }
-  };
-
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

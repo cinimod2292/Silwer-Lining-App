@@ -340,8 +340,20 @@ const BookingPage = () => {
   };
 
   const isDateDisabled = (date) => {
-    return isBefore(date, startOfDay(new Date()));
+    if (isBefore(date, startOfDay(new Date()))) return true;
+    // Disable dates with no available slots (based on pre-fetched data)
+    const dateStr = format(date, "yyyy-MM-dd");
+    const monthStr = format(date, "yyyy-MM");
+    const currentMonthStr = format(displayedMonth, "yyyy-MM");
+    // Only disable for the currently loaded month's data
+    if (monthStr === currentMonthStr && Object.keys(monthAvailability).length > 0) {
+      return !monthAvailability[dateStr];
+    }
+    return false;
   };
+
+  // Dates that have available slots (for the green dot indicator)
+  const availableDates = Object.keys(monthAvailability).map(d => new Date(d + "T12:00:00"));
 
   const validateStep = (currentStep) => {
     const hasQuestionnaire = questionnaire?.questions?.length > 0;

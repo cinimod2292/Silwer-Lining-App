@@ -308,17 +308,42 @@ const ContractManage = () => {
       label: label,
       required: true,
     };
-    setSmartFields((prev) => [...prev, newField]);
-
-    // Insert visual placeholder in editor
-    const fieldTypeInfo = smartFieldTypes.find((t) => t.id === fieldType);
-    const placeholder = `{{${fieldId}}}`;
     
-    editor.chain().focus().insertContent(placeholder).run();
+    // Insert visual placeholder in editor FIRST
+    const placeholder = `{{${fieldId}}}`;
+    editor.chain().focus().insertContent(` ${placeholder} `).run();
+    
+    // Then update state - use callback to ensure we get latest state
+    setSmartFields((prev) => {
+      const updated = [...prev, newField];
+      // Auto-save after adding field to prevent loss
+      setTimeout(() => {
+        autoSaveContract(updated);
+      }, 100);
+      return updated;
+    });
 
     setShowAddFieldModal(false);
     setNewFieldLabel("");
-    toast.success(`"${label}" field added`);
+    toast.success(`"${label}" field added - auto-saving...`);
+  };
+
+  const autoSaveContract = async (fields) => {
+    if (!editor) return;
+    const token = localStorage.getItem("admin_token");
+    try {
+      await axios.put(
+        `${API}/admin/contract`,
+        {
+          title: contractTitle,
+          content: editor.getHTML(),
+          smart_fields: fields,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (e) {
+      console.error("Auto-save failed", e);
+    }
   };
 
   const removeSmartField = (fieldId) => {

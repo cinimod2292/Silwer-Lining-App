@@ -62,13 +62,16 @@ class BookingCreate(BaseModel):
     booking_date: str
     booking_time: str
     notes: str = ""
-    selected_addons: List[dict] = []
+    selected_addons: list = []
     addons_total: float = 0
     total_price: float = 0
+    is_weekend: bool = False
     weekend_surcharge: float = 0
     contract_signed: bool = False
     contract_data: dict = {}
     questionnaire_responses: dict = {}
+    payment_method: str = ""
+    payment_type: str = ""
 
 class PaymentSettings(BaseModel):
     id: str = "default"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
@@ -212,11 +212,7 @@ const ContractManage = () => {
     fetchContract();
   }, []);
 
-  useEffect(() => {
-    if (editor && !loading) {
-      // Re-render smart field placeholders whenever smartFields change
-    }
-  }, [smartFields, editor, loading]);
+  const contractDataRef = useRef(null);
 
   const fetchContract = async () => {
     const token = localStorage.getItem("admin_token");
@@ -226,17 +222,10 @@ const ContractManage = () => {
       });
       setContractTitle(res.data.title || "Photography Session Contract");
       setSmartFields(res.data.smart_fields || []);
+      contractDataRef.current = res.data.content || "";
       
-      // Set editor content after it's ready
       if (editor) {
         editor.commands.setContent(res.data.content || "");
-      } else {
-        // Wait for editor to be ready
-        setTimeout(() => {
-          if (editor) {
-            editor.commands.setContent(res.data.content || "");
-          }
-        }, 100);
       }
     } catch (e) {
       console.error("Failed to fetch contract", e);
@@ -245,23 +234,13 @@ const ContractManage = () => {
     }
   };
 
-  // Update editor content when it becomes available
+  // Set editor content once editor is ready (only if data was fetched before editor initialized)
   useEffect(() => {
-    if (editor && !loading) {
-      const fetchAndSetContent = async () => {
-        const token = localStorage.getItem("admin_token");
-        try {
-          const res = await axios.get(`${API}/admin/contract`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          editor.commands.setContent(res.data.content || "");
-        } catch (e) {
-          console.error("Failed to set content", e);
-        }
-      };
-      fetchAndSetContent();
+    if (editor && contractDataRef.current !== null && !loading) {
+      editor.commands.setContent(contractDataRef.current);
+      contractDataRef.current = null; // Only set once
     }
-  }, [editor]);
+  }, [editor, loading]);
 
   const handleSave = async () => {
     if (!editor) return;

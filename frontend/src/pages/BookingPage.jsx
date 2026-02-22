@@ -95,14 +95,39 @@ const BookingPage = () => {
     }
   }, [payfastFormData]);
 
-  // Fetch available times when date OR session type changes
-  useEffect(() => {
-    if (formData.booking_date && formData.session_type) {
-      fetchAvailableTimes(format(formData.booking_date, "yyyy-MM-dd"), formData.session_type);
-    } else if (formData.booking_date) {
-      fetchAvailableTimes(format(formData.booking_date, "yyyy-MM-dd"));
+  // Fetch month availability when displayed month or session type changes
+  const fetchMonthAvailability = useCallback(async (month, sessionType) => {
+    const monthStr = format(month, "yyyy-MM");
+    setLoadingMonth(true);
+    try {
+      let url = `${API}/bookings/available-dates?month=${monthStr}`;
+      if (sessionType) url += `&session_type=${sessionType}`;
+      const res = await axios.get(url);
+      setMonthAvailability(res.data.dates || {});
+    } catch (e) {
+      console.error("Failed to fetch month availability");
+      setMonthAvailability({});
+    } finally {
+      setLoadingMonth(false);
     }
-  }, [formData.booking_date, formData.session_type]);
+  }, []);
+
+  useEffect(() => {
+    fetchMonthAvailability(displayedMonth, formData.session_type);
+  }, [displayedMonth, formData.session_type, fetchMonthAvailability]);
+
+  // When a date is selected, use pre-fetched data for instant slot display
+  useEffect(() => {
+    if (formData.booking_date) {
+      const dateStr = format(formData.booking_date, "yyyy-MM-dd");
+      const dateInfo = monthAvailability[dateStr];
+      if (dateInfo) {
+        setAvailableTimes(dateInfo.slots || []);
+      } else {
+        setAvailableTimes([]);
+      }
+    }
+  }, [formData.booking_date, monthAvailability]);
 
   // Re-fetch add-ons when session type changes
   useEffect(() => {

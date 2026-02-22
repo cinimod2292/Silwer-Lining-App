@@ -148,9 +148,9 @@ async def initiate_payment(data: dict, request: Request):
         amount_str = f"{float(amount):.2f}"
         form_data = {
             "merchant_id": pf_creds["merchant_id"], "merchant_key": pf_creds["merchant_key"],
-            "return_url": f"{frontend_url}/payment/return?booking_id={booking_id}",
-            "cancel_url": f"{frontend_url}/payment/cancel?booking_id={booking_id}",
-            "notify_url": f"{backend_url}/api/payments/payfast-itn",
+            "return_url": f"{base_url}/payment/return?booking_id={booking_id}",
+            "cancel_url": f"{base_url}/payment/cancel?booking_id={booking_id}",
+            "notify_url": f"{base_url}/api/payments/payfast-itn",
             "name_first": first_name, "name_last": last_name,
             "email_address": booking.get("client_email", ""),
             "m_payment_id": booking_id, "amount": amount_str,

@@ -881,6 +881,11 @@ const BookingPage = () => {
                     <Label className="text-base font-semibold mb-4 block">
                       <Clock className="w-5 h-5 inline mr-2" />
                       Choose a time
+                      {availableTimes.length > 0 && (
+                        <span className="ml-2 text-sm font-normal text-muted-foreground">
+                          ({availableTimes.length} slot{availableTimes.length !== 1 ? 's' : ''} available)
+                        </span>
+                      )}
                     </Label>
                     <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
                       {availableTimes.map((time) => (
@@ -900,7 +905,7 @@ const BookingPage = () => {
                     </div>
                     {availableTimes.length === 0 && (
                       <p className="text-muted-foreground text-center py-4">
-                        No available times for this date. Please select another date.
+                        No available times for this date. Please select a date with a green dot.
                       </p>
                     )}
                   </div>

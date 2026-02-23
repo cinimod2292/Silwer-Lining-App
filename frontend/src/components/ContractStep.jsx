@@ -115,22 +115,26 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
   const validateAndComplete = () => {
     const newErrors = {};
     let hasErrors = false;
+    let firstErrorFieldId = null;
 
     contract.smart_fields.forEach((field) => {
       if (field.required) {
         if (field.type === "signature") {
           if (!signatureData) {
             newErrors.signature = "Please sign the contract";
+            if (!firstErrorFieldId) firstErrorFieldId = field.id;
             hasErrors = true;
           }
         } else if (field.type === "agree_disagree") {
           if (!fieldResponses[field.id]) {
             newErrors[field.id] = "You must agree to continue";
+            if (!firstErrorFieldId) firstErrorFieldId = field.id;
             hasErrors = true;
           }
         } else if (field.type === "initials") {
           if (!fieldResponses[field.id] || fieldResponses[field.id].trim().length === 0) {
             newErrors[field.id] = "Please enter your initials";
+            if (!firstErrorFieldId) firstErrorFieldId = field.id;
             hasErrors = true;
           }
         }
@@ -139,6 +143,11 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Auto-scroll to first error field
+      if (firstErrorFieldId) {
+        const el = document.querySelector(`[data-testid="field-${firstErrorFieldId}"]`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 

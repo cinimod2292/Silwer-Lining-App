@@ -194,21 +194,49 @@ async def create_calendar_event(booking: dict) -> Optional[str]:
 
 
 async def delete_calendar_event(event_uid: str):
-    """Delete a calendar event"""
+    """Delete a calendar event by UID"""
     settings = await db.calendar_settings.find_one({"id": "default"})
     if not settings or not settings.get("sync_enabled"):
         return False
 
-    _, calendar = await get_caldav_client()
+    calendar = await get_booking_calendar()
     if not calendar:
         return False
 
     try:
-        events = calendar.search(uid=event_uid)
-        for event in events:
-            event.delete()
-            logger.info(f"Calendar event deleted: {event_uid}")
-        return True
+        # Try search by UID first
+        try:
+            events = calendar.search(uid=event_uid)
+            for event in events:
+                event.delete()
+                logger.info(f"Calendar event deleted via search: {event_uid}")
+                return True
+        except Exception:
+            pass
+
+        # Fallback: iterate recent events and match UID
+        start = datetime.now(timezone.utc) - timedelta(days=30)
+        end = datetime.now(timezone.utc) + timedelta(days=365)
+        try:
+            all_events = calendar.date_search(start, end, expand=True)
+        except Exception:
+            all_events = calendar.date_search(start, end)
+
+        for event in all_events:
+            try:
+                ical = event.icalendar_instance
+                for component in ical.walk():
+                    if component.name == "VEVENT":
+                        uid = str(component.get("uid", ""))
+                        if uid == event_uid:
+                            event.delete()
+                            logger.info(f"Calendar event deleted via scan: {event_uid}")
+                            return True
+            except Exception:
+                continue
+
+        logger.warning(f"Calendar event not found for deletion: {event_uid}")
+        return False
     except Exception as e:
         logger.error(f"Failed to delete calendar event: {e}")
         return False

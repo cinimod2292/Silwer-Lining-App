@@ -20,7 +20,7 @@ from services.email import send_booking_confirmation_email, send_manual_booking_
 from services.contracts import generate_contract_pdf
 from services.calendar import (
     get_caldav_client, get_all_caldav_calendars, get_events_from_all_calendars,
-    create_calendar_event, get_booking_calendar, parse_time_slot
+    create_calendar_event, get_booking_calendar, parse_time_slot, delete_calendar_event
 )
 
 router = APIRouter()

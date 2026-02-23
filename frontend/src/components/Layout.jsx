@@ -104,7 +104,7 @@ export const Layout = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 glass border-t border-border animate-fadeIn">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-warm-cream border-t border-border animate-fadeIn z-50">
             <div className="px-6 py-6 space-y-4">
               {navLinks.map((link) => (
                 <Link

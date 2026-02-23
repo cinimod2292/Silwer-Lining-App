@@ -154,16 +154,44 @@ async def admin_get_booking(booking_id: str, admin=Depends(verify_token)):
 async def admin_update_booking(booking_id: str, data: BookingUpdate, admin=Depends(verify_token)):
     update_data = {k: v for k, v in data.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+    # Check if date or time changed — if so, remove old calendar event and create new one
+    date_or_time_changed = "booking_date" in update_data or "booking_time" in update_data
+    old_booking = None
+    if date_or_time_changed:
+        old_booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+
     result = await db.bookings.update_one({"id": booking_id}, {"$set": update_data})
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Booking not found")
+
+    if date_or_time_changed and old_booking:
+        # Delete old calendar event
+        old_uid = old_booking.get("calendar_event_id")
+        if old_uid:
+            await delete_calendar_event(old_uid)
+        # Create new calendar event with updated booking
+        updated_booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+        if updated_booking:
+            new_uid = await create_calendar_event(updated_booking)
+            if new_uid:
+                await db.bookings.update_one({"id": booking_id}, {"$set": {"calendar_event_id": new_uid}})
+
     return {"message": "Booking updated"}
 
 @router.delete("/admin/bookings/{booking_id}")
 async def admin_delete_booking(booking_id: str, admin=Depends(verify_token)):
-    result = await db.bookings.delete_one({"id": booking_id})
-    if result.deleted_count == 0:
+    # Get booking first to find calendar event ID
+    booking = await db.bookings.find_one({"id": booking_id}, {"_id": 0})
+    if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
+
+    # Delete from calendar
+    event_uid = booking.get("calendar_event_id")
+    if event_uid:
+        await delete_calendar_event(event_uid)
+
+    await db.bookings.delete_one({"id": booking_id})
     return {"message": "Booking deleted"}
 
 

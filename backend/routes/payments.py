@@ -108,7 +108,17 @@ async def initiate_payment(data: dict):
         raise HTTPException(status_code=404, detail="Booking not found")
 
     total_price = booking.get("total_price", 0)
-    amount = total_price if payment_type == "full" else int(total_price * 0.5)
+    if payment_type == "full":
+        amount = total_price
+    else:
+        # Get deposit settings
+        bsettings = await db.booking_settings.find_one({"id": "default"}, {"_id": 0})
+        deposit_type = bsettings.get("deposit_type", "percentage") if bsettings else "percentage"
+        deposit_value = bsettings.get("deposit_value", 50) if bsettings else 50
+        if deposit_type == "fixed":
+            amount = min(int(deposit_value), int(total_price))
+        else:
+            amount = int(total_price * deposit_value / 100)
 
     pay_later = data.get("pay_later", False)
 

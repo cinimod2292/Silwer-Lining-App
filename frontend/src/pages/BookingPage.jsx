@@ -56,6 +56,7 @@ const BookingPage = () => {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentType, setPaymentType] = useState("deposit");
   const [payfastFormData, setPayfastFormData] = useState(null);
+  const [payfastUrl, setPayfastUrl] = useState("");
   const [bankDetails, setBankDetails] = useState(null);
   
   // Calendar availability state

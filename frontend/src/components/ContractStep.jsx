@@ -350,7 +350,7 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
   }
 
   return (
-    <div ref={containerRef} className="contract-step">
+    <div ref={containerRef} className="contract-step mx-auto w-full max-w-[210mm]">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-display font-semibold text-charcoal">
           {contract.title || "Photography Session Contract"}
@@ -360,7 +360,7 @@ const ContractStep = ({ contract, onComplete, clientName }) => {
         </p>
       </div>
 
-      <div className="bg-white border rounded-xl p-6 md:p-8 max-h-[60vh] overflow-y-auto">
+      <div className="bg-white border rounded-xl p-6 md:p-10">
         {renderContractContent()}
       </div>
 

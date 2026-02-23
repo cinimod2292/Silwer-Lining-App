@@ -120,15 +120,17 @@ async def initiate_payment(data: dict, request: Request):
 
     if payment_method == "payfast":
         pf_creds = await get_payfast_credentials()
-        # Derive base URL from request origin/referer
-        origin = request.headers.get("origin", "")
-        if not origin:
-            referer = request.headers.get("referer", "")
-            if referer:
-                from urllib.parse import urlparse
-                parsed = urlparse(referer)
-                origin = f"{parsed.scheme}://{parsed.netloc}"
-        base_url = origin
+        # Read public frontend URL from frontend .env
+        import pathlib
+        frontend_env = pathlib.Path(__file__).parent.parent.parent / "frontend" / ".env"
+        base_url = ""
+        try:
+            for line in frontend_env.read_text().splitlines():
+                if line.startswith("REACT_APP_BACKEND_URL="):
+                    base_url = line.split("=", 1)[1].strip()
+                    break
+        except Exception:
+            pass
 
         name_parts = booking.get("client_name", "").split(" ", 1)
         first_name = name_parts[0].strip() if name_parts else "Customer"

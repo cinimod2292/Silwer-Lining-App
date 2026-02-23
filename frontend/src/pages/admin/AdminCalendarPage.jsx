@@ -202,15 +202,16 @@ const AdminCalendarPage = () => {
     }
   };
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+
   const handleDeleteBooking = async (bookingId) => {
     const token = localStorage.getItem("admin_token");
-    if (!confirm("Are you sure you want to delete this booking?")) return;
-    
     try {
       await axios.delete(`${API}/admin/bookings/${bookingId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success("Booking deleted");
+      setConfirmDeleteId(null);
       setShowEventModal(false);
       fetchCalendarEvents(new Date());
     } catch (e) {

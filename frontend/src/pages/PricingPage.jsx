@@ -196,7 +196,7 @@ const PricingPage = () => {
                 data-testid={`addon-${index}`}
               >
                 <span className="text-foreground">{addon.name}</span>
-                <span className="font-semibold text-primary">{addon.price}</span>
+                <span className="font-semibold text-primary">R{addon.price?.toLocaleString()}</span>
               </div>
             ))}
           </div>

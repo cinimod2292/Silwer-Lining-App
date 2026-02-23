@@ -28,6 +28,7 @@ import FAQManage from "./FAQManage";
 import ContractManage from "./ContractManage";
 import PaymentSettingsPage from "./PaymentSettingsPage";
 import AutomatedRemindersPage from "./AutomatedRemindersPage";
+import HeroBuilderPage from "./HeroBuilderPage";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 

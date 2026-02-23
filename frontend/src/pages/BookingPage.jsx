@@ -491,12 +491,30 @@ const BookingPage = () => {
     }
   };
 
+  const [payLaterDetails, setPayLaterDetails] = useState(null);
+
   const handleSkipPayment = async () => {
+    if (!paymentMethod) {
+      toast.error("Please select a payment method first");
+      return;
+    }
     setLoading(true);
     try {
-      await createBooking();
-      setBookingComplete(true);
-      toast.success("Booking saved! Complete payment to confirm.");
+      const booking = await createBooking();
+      const bookingId = booking.id;
+      // Call initiate to get EFT details / payment link
+      const res = await axios.post(`${API}/payments/initiate`, {
+        booking_id: bookingId,
+        payment_method: paymentMethod,
+        payment_type: paymentType,
+        pay_later: true
+      });
+      setPayLaterDetails({
+        method: paymentMethod,
+        booking_id: bookingId,
+        manage_token: booking.manage_token,
+        ...res.data
+      });
     } catch (e) {
       toast.error("Failed to save booking");
     } finally {

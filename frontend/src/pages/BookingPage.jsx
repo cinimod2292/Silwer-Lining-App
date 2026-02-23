@@ -1343,28 +1343,28 @@ const BookingPage = () => {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleSkipPayment}
-                    className="flex-1"
-                    disabled={loading}
-                  >
-                    Pay Later
-                  </Button>
+                <div className="flex flex-col gap-3 pt-4">
                   <Button
                     onClick={handlePayment}
                     disabled={!paymentMethod || loading}
-                    className="flex-1 bg-primary hover:bg-primary/90 text-white gap-2"
+                    className="w-full bg-primary hover:bg-primary/90 text-white gap-2 disabled:opacity-40"
                     data-testid="proceed-payment-btn"
                   >
                     {loading ? (
                       "Processing..."
                     ) : (
                       <>
-                        Pay R{(paymentType === "deposit" ? Math.round(calculateTotal() / 2) : calculateTotal()).toLocaleString()}
+                        Pay R{(paymentType === "deposit" ? Math.round(calculateTotal() / 2) : calculateTotal()).toLocaleString()} Now
                       </>
                     )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleSkipPayment}
+                    className="w-full disabled:opacity-40"
+                    disabled={!paymentMethod || loading}
+                  >
+                    Pay Later
                   </Button>
                 </div>
 

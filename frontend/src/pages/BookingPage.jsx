@@ -670,6 +670,18 @@ const BookingPage = () => {
 
       {/* Form */}
       <section className="pb-20 md:pb-28" data-testid="booking-form">
+        {/* Contract step gets wider container for A4 feel */}
+        {step === getContractStep() && contract ? (
+          <div className="max-w-[210mm] mx-auto px-4 md:px-6">
+            <div data-testid="step-contract">
+              <ContractStep
+                contract={contract}
+                onComplete={handleContractComplete}
+                clientName={formData.client_name || "Client"}
+              />
+            </div>
+          </div>
+        ) : (
         <div className="max-w-3xl mx-auto px-6 md:px-12">
           <div className="bg-white rounded-2xl shadow-soft p-8 md:p-12">
             {/* Step 1: Session Type, Package & Add-ons */}

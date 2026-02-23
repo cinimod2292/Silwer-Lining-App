@@ -87,6 +87,7 @@ const AdminDashboard = () => {
     { icon: FileText, label: "Email Templates", path: "/admin/email-templates" },
     { icon: Settings, label: "Email Provider", path: "/admin/email-settings" },
     { icon: Image, label: "Portfolio", path: "/admin/portfolio" },
+    { icon: Camera, label: "Hero Section", path: "/admin/hero-builder" },
     { icon: Users, label: "Testimonials", path: "/admin/testimonials" },
     { icon: HelpCircle, label: "FAQs", path: "/admin/faqs" },
     { icon: MessageSquare, label: "Messages", path: "/admin/messages" },

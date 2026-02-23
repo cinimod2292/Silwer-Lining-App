@@ -848,22 +848,36 @@ const BookingPage = () => {
                         return (
                           <div
                             key={pkg.id}
-                            className={`rounded-xl border-2 transition-all overflow-hidden ${
+                            className={`relative rounded-xl border-2 transition-all overflow-hidden ${
                               isSelected
                                 ? "border-primary bg-primary/5"
-                                : "border-border hover:border-primary/50"
+                                : pkg.popular
+                                  ? "border-primary/40 hover:border-primary/70"
+                                  : "border-border hover:border-primary/50"
                             }`}
                           >
+                            {pkg.popular && (
+                              <div className="absolute top-0 right-0 bg-primary text-white text-xs font-semibold px-3 py-1 rounded-bl-lg">
+                                Most Popular
+                              </div>
+                            )}
                             <button
                               onClick={() => handleInputChange("package_name", pkg.name)}
                               className="w-full p-5 text-left flex items-center justify-between"
                               data-testid={`package-option-${pkg.id}`}
                             >
-                              <div>
-                                <span className="font-semibold block">{pkg.name}</span>
-                                <span className="text-sm text-muted-foreground">
-                                  {pkg.duration}
-                                </span>
+                              <div className="flex items-center gap-3">
+                                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                                  isSelected ? "bg-emerald-500 border-emerald-500" : "border-gray-300"
+                                }`}>
+                                  {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                                </div>
+                                <div>
+                                  <span className="font-semibold block">{pkg.name}</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {pkg.duration}
+                                  </span>
+                                </div>
                               </div>
                               <span className="font-display text-xl font-semibold text-primary">
                                 R{pkg.price?.toLocaleString()}

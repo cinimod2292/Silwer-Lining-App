@@ -560,6 +560,36 @@ const BookingSettingsPage = () => {
                 Additional fee for Saturday/Sunday bookings
               </p>
             </div>
+
+            <div className="border-t pt-4">
+              <Label className="mb-2 block">Deposit Amount</Label>
+              <div className="flex items-center gap-3">
+                <select
+                  value={settings.deposit_type}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, deposit_type: e.target.value }))}
+                  className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  data-testid="deposit-type-select"
+                >
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount (R)</option>
+                </select>
+                <Input
+                  type="number"
+                  value={settings.deposit_value}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, deposit_value: parseFloat(e.target.value) || 0 }))}
+                  className="w-28"
+                  data-testid="deposit-value-input"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {settings.deposit_type === "percentage" ? "%" : "ZAR"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {settings.deposit_type === "percentage"
+                  ? `Clients pay ${settings.deposit_value}% of the total as deposit`
+                  : `Clients pay a fixed R${settings.deposit_value} deposit`}
+              </p>
+            </div>
           </div>
         </div>
 

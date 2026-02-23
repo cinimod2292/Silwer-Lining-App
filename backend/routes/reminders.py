@@ -258,6 +258,48 @@ async def reminder_scheduler():
                 if total_sent > 0:
                     logger.info(f"Scheduler: Sent {total_sent} reminders")
 
+            # Auto-cancel expired pay_later bookings (24h deadline)
+            try:
+                now = datetime.now(timezone.utc).isoformat()
+                expired = await db.bookings.find(
+                    {"pay_later": True, "pay_later_deadline": {"$lt": now}, "status": {"$nin": ["cancelled", "confirmed"]}}
+                ).to_list(100)
+                for booking in expired:
+                    await db.bookings.update_one(
+                        {"id": booking["id"]},
+                        {"$set": {"status": "cancelled", "cancel_reason": "Payment not received within 24 hours", "updated_at": now}}
+                    )
+                    # Delete calendar event
+                    try:
+                        from services.calendar import delete_calendar_event
+                        if booking.get("calendar_event_id"):
+                            await delete_calendar_event(booking["calendar_event_id"])
+                    except Exception:
+                        pass
+                    # Send cancellation email
+                    try:
+                        from services.email import send_email
+                        await send_email(
+                            to_email=booking.get("client_email", ""),
+                            subject="Booking Cancelled - Payment Not Received",
+                            html_content=f"""
+                            <h2>Booking Cancelled</h2>
+                            <p>Hi {booking.get('client_name', '')},</p>
+                            <p>Unfortunately, your booking for <strong>{booking.get('session_type', '').title()}</strong> on 
+                            <strong>{booking.get('booking_date', '')}</strong> at <strong>{booking.get('booking_time', '')}</strong> 
+                            has been automatically cancelled as payment was not received within 24 hours.</p>
+                            <p>If you'd still like to book a session, please visit our website to rebook when you're ready to pay.</p>
+                            <p>Kind regards,<br>Silwer Lining Photography</p>
+                            """
+                        )
+                    except Exception as email_err:
+                        logger.error(f"Failed to send cancellation email: {email_err}")
+                    logger.info(f"Auto-cancelled expired booking: {booking['id']}")
+                if expired:
+                    logger.info(f"Scheduler: Auto-cancelled {len(expired)} expired pay-later bookings")
+            except Exception as e:
+                logger.error(f"Scheduler: Auto-cancel error: {e}")
+
             # Auto-fetch Google reviews
             try:
                 import httpx

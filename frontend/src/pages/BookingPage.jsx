@@ -350,6 +350,14 @@ const BookingPage = () => {
     return basePrice + addonsTotal + weekendCharge;
   };
 
+  const calculateDeposit = () => {
+    const total = calculateTotal();
+    const type = bookingSettings?.deposit_type || "percentage";
+    const value = bookingSettings?.deposit_value ?? 50;
+    if (type === "fixed") return Math.min(value, total);
+    return Math.round(total * value / 100);
+  };
+
   const isDateDisabled = (date) => {
     if (isBefore(date, startOfDay(new Date()))) return true;
     // Disable dates with no available slots (based on pre-fetched data)

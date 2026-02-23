@@ -110,7 +110,7 @@ const HeroBuilderPage = () => {
             </p>
             <h1 className="font-display text-3xl font-semibold text-foreground leading-tight mb-3">
               {settings.title_line1}{" "}
-              <span className="italic text-primary">{settings.title_highlight}</span>{" "}
+              <span className="italic" style={{ color: settings.highlight_color || "#C6A87C" }}>{settings.title_highlight}</span>{" "}
               {settings.title_line2}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">

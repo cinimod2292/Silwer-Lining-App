@@ -98,7 +98,7 @@ const BookingPage = () => {
 
   // Scroll to top of booking section on step change
   useEffect(() => {
-    const el = document.querySelector('[data-testid="booking-steps"]');
+    const el = document.querySelector('[data-testid="booking-form"]');
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {

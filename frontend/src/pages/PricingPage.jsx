@@ -87,7 +87,7 @@ const PricingPage = () => {
       <section className="py-16 md:py-24" data-testid="packages-section">
         <div className="max-w-7xl mx-auto px-6 md:px-12">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full max-w-xl mx-auto grid-cols-3 mb-12 bg-warm-sand rounded-full p-1">
+            <TabsList className={`grid w-full max-w-xl mx-auto mb-12 bg-warm-sand rounded-full p-1`} style={{ gridTemplateColumns: `repeat(${sessionTypes.length}, 1fr)` }}>
               {sessionTypes.map((type) => (
                 <TabsTrigger
                   key={type.id}

@@ -1321,6 +1321,7 @@ const BookingPage = () => {
             )}
           </div>
         </div>
+        )}
       </section>
     </div>
   );

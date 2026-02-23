@@ -1226,12 +1226,12 @@ const BookingPage = () => {
                           className="w-4 h-4 text-primary"
                         />
                         <div>
-                          <p className="font-medium">50% Deposit</p>
+                          <p className="font-medium">Deposit</p>
                           <p className="text-sm text-muted-foreground">Secure your booking now, pay the rest later</p>
                         </div>
                       </div>
                       <span className="text-xl font-display font-semibold text-primary">
-                        R{Math.round(calculateTotal() / 2).toLocaleString()}
+                        R{calculateDeposit().toLocaleString()}
                       </span>
                     </label>
                     

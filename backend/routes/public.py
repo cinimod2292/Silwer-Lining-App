@@ -342,6 +342,26 @@ async def get_public_contract():
     return contract
 
 
+@router.get("/hero-settings")
+async def get_public_hero_settings():
+    settings = await db.hero_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        return {
+            "subtitle": "Luxury Studio Photoshoots",
+            "title_line1": "More Than Photos —",
+            "title_highlight": "Capturing",
+            "title_line2": "the Glow, the Love & the Memory",
+            "description": "Professional studio photography in Roodepoort, Johannesburg. Specializing in maternity, newborn, family & portrait sessions with beautiful, styled shoots and outfits provided.",
+            "image_url": "https://images-pw.pixieset.com/elementfield/1znyRr9/White-Fabric-Podium-1-84dab3dc-1500.jpg",
+            "image_opacity": 100,
+            "overlay_opacity": 70,
+            "overlay_color": "warm-cream",
+            "button1_text": "Book Your Session",
+            "button2_text": "View Portfolio"
+        }
+    return settings
+
+
 # ==================== BOOKING TOKEN (Manual Booking) ====================
 
 @router.get("/booking-token/{token}")

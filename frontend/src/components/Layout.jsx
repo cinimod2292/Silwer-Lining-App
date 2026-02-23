@@ -58,10 +58,7 @@ export const Layout = () => {
               className="flex items-center gap-2 group"
               data-testid="logo-link"
             >
-              <span className="font-display text-xl md:text-2xl font-semibold text-foreground tracking-tight">
-                Silwer Lining
-              </span>
-              <span className="text-primary font-display text-sm hidden sm:inline">Photography</span>
+              <img src="/logo-black.png" alt="Silwer Lining Photography" className="h-10 md:h-12" />
             </Link>
 
             {/* Desktop Navigation */}

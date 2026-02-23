@@ -142,11 +142,8 @@ export const Layout = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             {/* Brand */}
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="font-display text-2xl font-semibold">
-                  Silwer Lining
-                </span>
-                <span className="text-primary font-display text-sm">Photography</span>
+              <div className="mb-4">
+                <img src="/logo-white.png" alt="Silwer Lining Photography" className="h-12" />
               </div>
               <p className="text-white/60 leading-relaxed max-w-md">
                 More than photos - capturing the glow, the love and the memory.

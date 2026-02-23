@@ -922,6 +922,36 @@ async def admin_upload_multiple_images(files: List[UploadFile] = File(...), cate
     import boto3
     from botocore.config import Config
     settings = await db.storage_settings.find_one({"id": "default"})
+
+
+# ==================== ADMIN - HERO SETTINGS ====================
+
+@router.get("/admin/hero-settings")
+async def admin_get_hero_settings(admin=Depends(verify_token)):
+    settings = await db.hero_settings.find_one({"id": "default"}, {"_id": 0})
+    if not settings:
+        return {
+            "id": "default",
+            "subtitle": "Luxury Studio Photoshoots",
+            "title_line1": "More Than Photos —",
+            "title_highlight": "Capturing",
+            "title_line2": "the Glow, the Love & the Memory",
+            "description": "Professional studio photography in Roodepoort, Johannesburg. Specializing in maternity, newborn, family & portrait sessions with beautiful, styled shoots and outfits provided.",
+            "image_url": "https://images-pw.pixieset.com/elementfield/1znyRr9/White-Fabric-Podium-1-84dab3dc-1500.jpg",
+            "image_opacity": 100,
+            "overlay_opacity": 70,
+            "overlay_color": "warm-cream",
+            "button1_text": "Book Your Session",
+            "button2_text": "View Portfolio"
+        }
+    return settings
+
+@router.put("/admin/hero-settings")
+async def admin_update_hero_settings(data: dict, admin=Depends(verify_token)):
+    data["id"] = "default"
+    data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.hero_settings.update_one({"id": "default"}, {"$set": data}, upsert=True)
+    return {"message": "Hero settings updated"}
     if not settings or not settings.get("access_key_id"):
         raise HTTPException(status_code=400, detail="Storage not configured")
     try:

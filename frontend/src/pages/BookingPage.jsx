@@ -559,6 +559,105 @@ const BookingPage = () => {
     }
   };
 
+  if (payLaterDetails) {
+    const paymentLink = `${window.location.origin}/manage/${payLaterDetails.manage_token}`;
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" data-testid="pay-later-success">
+        <div className="max-w-lg w-full">
+          <div className="text-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-10 h-10 text-amber-600" />
+            </div>
+            <h1 className="font-display text-3xl font-semibold mb-2">Booking Reserved</h1>
+            <p className="text-muted-foreground">
+              Your booking is held but <strong>not yet confirmed</strong>. Payment must be received within 24 hours.
+            </p>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-300 rounded-xl p-5 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+              <div className="text-sm text-amber-800">
+                <p className="font-semibold mb-1">Important:</p>
+                <p>Your booking will only be confirmed once payment is received. If payment is not received within <strong>24 hours</strong>, the booking will be automatically cancelled.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Always show EFT details */}
+          {payLaterDetails.bank_details && (
+            <div className="bg-white border rounded-xl p-6 mb-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-green-600" />
+                Bank Transfer Details
+              </h3>
+              <div className="space-y-2 text-sm">
+                <p><strong>Bank:</strong> {payLaterDetails.bank_details.bank_name}</p>
+                <p><strong>Account Holder:</strong> {payLaterDetails.bank_details.account_holder}</p>
+                <p><strong>Account Number:</strong> {payLaterDetails.bank_details.account_number}</p>
+                <p><strong>Branch Code:</strong> {payLaterDetails.bank_details.branch_code}</p>
+                <p><strong>Account Type:</strong> {payLaterDetails.bank_details.account_type}</p>
+                <div className="mt-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                  <p className="text-xs text-muted-foreground mb-1">Use this reference:</p>
+                  <p className="font-mono font-bold text-lg">{payLaterDetails.bank_details.reference}</p>
+                </div>
+              </div>
+              <p className="text-sm mt-3">
+                <strong>Amount Due:</strong> R{payLaterDetails.amount?.toLocaleString()}
+              </p>
+            </div>
+          )}
+
+          {/* PayFast payment link option */}
+          {payLaterDetails.method === "payfast" && (
+            <div className="bg-white border rounded-xl p-6 mb-6">
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-primary" />
+                Pay Online via PayFast
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                You can also complete your payment online. A payment link has been emailed to you, or use the button below:
+              </p>
+              <Button
+                onClick={() => {
+                  setPayfastUrl(payLaterDetails.payment_url);
+                  setPayfastFormData(payLaterDetails.form_data);
+                }}
+                className="w-full bg-primary hover:bg-primary/90 text-white"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Pay R{payLaterDetails.amount?.toLocaleString()} Now
+              </Button>
+            </div>
+          )}
+
+          <div className="bg-warm-sand rounded-xl p-5 mb-6">
+            <h3 className="font-semibold mb-3">Booking Details:</h3>
+            <div className="space-y-1 text-sm">
+              <p><strong>Session:</strong> {formData.session_type}</p>
+              <p><strong>Date:</strong> {format(formData.booking_date, "MMMM d, yyyy")}</p>
+              <p><strong>Time:</strong> {formData.booking_time}</p>
+              <div className="border-t border-border pt-2 mt-2">
+                <p className="font-semibold">Total: R{calculateTotal().toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm text-center text-muted-foreground">
+            A confirmation email with payment details has been sent to <strong>{formData.client_email}</strong>.
+          </p>
+        </div>
+        {payfastFormData && (
+          <form ref={payfastFormRef} action={payfastUrl} method="POST" style={{ display: 'none' }}>
+            {Object.entries(payfastFormData).map(([key, value]) => (
+              <input key={key} type="hidden" name={key} value={value} />
+            ))}
+          </form>
+        )}
+      </div>
+    );
+  }
+
   if (bookingComplete) {
     const selectedPackage = getSelectedPackage();
     const selectedAddons = getSelectedAddons();

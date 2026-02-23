@@ -1362,7 +1362,7 @@ const BookingPage = () => {
                       "Processing..."
                     ) : (
                       <>
-                        Pay R{(paymentType === "deposit" ? Math.round(calculateTotal() / 2) : calculateTotal()).toLocaleString()} Now
+                        Pay R{(paymentType === "deposit" ? calculateDeposit() : calculateTotal()).toLocaleString()} Now
                       </>
                     )}
                   </Button>

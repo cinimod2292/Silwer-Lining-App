@@ -181,25 +181,30 @@ const HomePage = () => {
       <section className="relative min-h-[90vh] flex items-center" data-testid="hero-section">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images-pw.pixieset.com/elementfield/1znyRr9/White-Fabric-Podium-1-84dab3dc-1500.jpg"
+            src={hero.image_url}
             alt="Silwer Lining Photography Studio"
             className="w-full h-full object-cover"
+            style={{ opacity: (hero.image_opacity ?? 100) / 100 }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-warm-cream/95 via-warm-cream/70 to-transparent" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to right, rgba(250,247,242,${(hero.overlay_opacity ?? 70) / 100}) 0%, rgba(250,247,242,${(hero.overlay_opacity ?? 70) / 100 * 0.7}) 50%, transparent 100%)`
+            }}
+          />
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
           <div className="max-w-2xl">
             <p className="text-primary font-medium tracking-widest uppercase text-sm mb-4 animate-fade-in-up">
-              Luxury Studio Photoshoots
+              {hero.subtitle}
             </p>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight mb-6 animate-fade-in-up delay-100">
-              More Than Photos —{" "}
-              <span className="italic text-primary">Capturing</span> the Glow, the Love & the Memory
+              {hero.title_line1}{" "}
+              <span className="italic text-primary">{hero.title_highlight}</span> {hero.title_line2}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 animate-fade-in-up delay-200">
-              Professional studio photography in Roodepoort, Johannesburg. Specializing in maternity, 
-              newborn, family & portrait sessions with beautiful, styled shoots and outfits provided.
+              {hero.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up delay-300">
               <Link to="/booking">
@@ -208,7 +213,7 @@ const HomePage = () => {
                   className="bg-primary hover:bg-primary/90 text-white rounded-full px-8 gap-2"
                   data-testid="hero-book-btn"
                 >
-                  Book Your Session
+                  {hero.button1_text}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
@@ -219,7 +224,7 @@ const HomePage = () => {
                   className="border-2 border-foreground/20 rounded-full px-8 hover:bg-foreground/5"
                   data-testid="hero-portfolio-btn"
                 >
-                  View Portfolio
+                  {hero.button2_text}
                 </Button>
               </Link>
             </div>

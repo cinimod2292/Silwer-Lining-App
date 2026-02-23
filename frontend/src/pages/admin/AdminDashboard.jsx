@@ -210,6 +210,7 @@ const AdminDashboard = () => {
             <Route path="email-templates" element={<EmailTemplatesManage />} />
             <Route path="email-settings" element={<EmailSettingsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="hero-builder" element={<HeroBuilderPage />} />
             <Route path="*" element={<DashboardHome />} />
           </Routes>
         </main>

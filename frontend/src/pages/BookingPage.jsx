@@ -925,13 +925,15 @@ const BookingPage = () => {
                 {/* Add-ons Section */}
                 {formData.package_name && (
                   <div className="mt-10 pt-8 border-t">
-                    <Label className="text-base font-semibold mb-2 block">
-                      <Plus className="w-5 h-5 inline mr-2" />
-                      Enhance your session with add-ons
-                    </Label>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Optional extras to make your session even more special
-                    </p>
+                    <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
+                      <Label className="text-lg font-semibold block text-primary">
+                        <Plus className="w-5 h-5 inline mr-2" />
+                        Enhance your session with add-ons
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Optional extras to make your session even more special
+                      </p>
+                    </div>
                     <div className="grid gap-3">
                       {availableAddOns.map((addon) => (
                         <div

@@ -1250,7 +1250,7 @@ const BookingPage = () => {
             {payfastFormData && (
               <form 
                 ref={payfastFormRef}
-                action="https://sandbox.payfast.co.za/eng/process" 
+                action={payfastUrl}
                 method="POST"
                 style={{ display: 'none' }}
               >

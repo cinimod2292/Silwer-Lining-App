@@ -96,6 +96,16 @@ const BookingPage = () => {
     }
   }, [payfastFormData]);
 
+  // Scroll to top of booking section on step change
+  useEffect(() => {
+    const el = document.querySelector('[data-testid="booking-steps"]');
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [step]);
+
   // Fetch month availability when displayed month or session type changes
   const fetchMonthAvailability = useCallback(async (month, sessionType) => {
     const monthStr = format(month, "yyyy-MM");

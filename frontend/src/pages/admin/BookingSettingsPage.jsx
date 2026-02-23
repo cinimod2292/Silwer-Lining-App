@@ -83,6 +83,8 @@ const BookingSettingsPage = () => {
     max_advance_days: 90,
     blocked_dates: [],
     weekend_surcharge: 750,
+    deposit_type: "percentage",
+    deposit_value: 50,
   });
 
   useEffect(() => {

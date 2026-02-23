@@ -145,6 +145,14 @@ const HeroBuilderPage = () => {
           </div>
 
           <div>
+            <Label>Highlight Color</Label>
+            <div className="flex items-center gap-3 mt-1">
+              <input type="color" value={settings.highlight_color || "#C6A87C"} onChange={e => update("highlight_color", e.target.value)} className="w-10 h-10 rounded cursor-pointer border-0 p-0" />
+              <Input value={settings.highlight_color || "#C6A87C"} onChange={e => update("highlight_color", e.target.value)} className="flex-1" placeholder="#C6A87C" />
+            </div>
+          </div>
+
+          <div>
             <Label>Heading Line 2</Label>
             <Input value={settings.title_line2} onChange={e => update("title_line2", e.target.value)} data-testid="hero-title2" />
           </div>

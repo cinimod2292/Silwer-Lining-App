@@ -469,6 +469,7 @@ const BookingPage = () => {
       });
 
       if (paymentMethod === "payfast") {
+        setPayfastUrl(res.data.payment_url);
         setPayfastFormData(res.data.form_data);
       } else if (paymentMethod === "eft") {
         setBankDetails(res.data.bank_details);

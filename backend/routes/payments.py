@@ -98,7 +98,7 @@ async def admin_update_payment_settings(data: dict, admin=Depends(verify_token))
 # ==================== INITIATE PAYMENT ====================
 
 @router.post("/payments/initiate")
-async def initiate_payment(data: dict, request: Request):
+async def initiate_payment(data: dict):
     booking_id = data.get("booking_id")
     payment_method = data.get("payment_method")
     payment_type = data.get("payment_type", "deposit")

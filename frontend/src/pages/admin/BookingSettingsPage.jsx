@@ -111,6 +111,8 @@ const BookingSettingsPage = () => {
         max_advance_days: data.max_advance_days || 90,
         blocked_dates: data.blocked_dates || [],
         weekend_surcharge: data.weekend_surcharge || 750,
+        deposit_type: data.deposit_type || "percentage",
+        deposit_value: data.deposit_value ?? 50,
       });
     } catch (e) {
       console.error("Failed to fetch settings");

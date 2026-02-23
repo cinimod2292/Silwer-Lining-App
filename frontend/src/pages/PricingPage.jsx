@@ -7,36 +7,44 @@ import axios from "axios";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-const sessionTypes = [
-  { id: "maternity", name: "Maternity" },
-  { id: "newborn", name: "Newborn" },
-  { id: "studio", name: "Studio Portraits" },
-];
-
-const addOns = [
-  { name: "Makeup artist", price: "Inquire" },
-  { name: "Additional edited images", price: "Inquire" },
-  { name: "Weekend/Public holiday session", price: "R500" },
-  { name: "Rush editing", price: "Inquire" },
-  { name: "Additional prints", price: "Inquire" },
-];
-
 const PricingPage = () => {
   const [packages, setPackages] = useState([]);
-  const [activeTab, setActiveTab] = useState("maternity");
+  const [activeTab, setActiveTab] = useState("");
+  const [addOns, setAddOns] = useState([]);
 
   useEffect(() => {
     fetchPackages();
+    fetchAddOns();
   }, []);
 
   const fetchPackages = async () => {
     try {
       const res = await axios.get(`${API}/packages`);
       setPackages(res.data);
+      // Set first tab from actual data
+      if (res.data.length > 0 && !activeTab) {
+        const types = [...new Set(res.data.map(p => p.session_type))];
+        setActiveTab(types[0]);
+      }
     } catch (e) {
       console.error("Failed to fetch packages", e);
     }
   };
+
+  const fetchAddOns = async () => {
+    try {
+      const res = await axios.get(`${API}/addons`);
+      setAddOns(res.data);
+    } catch (e) {
+      console.error("Failed to fetch addons", e);
+    }
+  };
+
+  // Derive session types from packages
+  const sessionTypes = [...new Set(packages.map(p => p.session_type))].map(t => ({
+    id: t,
+    name: t.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+  }));
 
   const getPackagesByType = (type) => {
     return packages.filter((pkg) => pkg.session_type === type);

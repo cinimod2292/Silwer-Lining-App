@@ -201,7 +201,7 @@ const HomePage = () => {
             </p>
             <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-foreground leading-tight mb-6 animate-fade-in-up delay-100">
               {hero.title_line1}{" "}
-              <span className="italic text-primary">{hero.title_highlight}</span> {hero.title_line2}
+              <span className="italic" style={{ color: hero.highlight_color || undefined }}>{hero.title_highlight}</span> {hero.title_line2}
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8 animate-fade-in-up delay-200">
               {hero.description}

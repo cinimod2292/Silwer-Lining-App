@@ -110,13 +110,32 @@ async def initiate_payment(data: dict):
     total_price = booking.get("total_price", 0)
     amount = total_price if payment_type == "full" else int(total_price * 0.5)
 
-    await db.bookings.update_one(
-        {"id": booking_id},
-        {"$set": {"payment_method": payment_method, "payment_type": payment_type,
-                   "payment_status": "pending",
-                   "status": "awaiting_payment" if payment_method != "eft" else "awaiting_eft",
-                   "updated_at": datetime.now(timezone.utc).isoformat()}}
-    )
+    pay_later = data.get("pay_later", False)
+
+    status = "awaiting_payment" if payment_method != "eft" else "awaiting_eft"
+    update_fields = {
+        "payment_method": payment_method, "payment_type": payment_type,
+        "payment_status": "pending",
+        "status": status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    if pay_later:
+        update_fields["pay_later"] = True
+        update_fields["pay_later_deadline"] = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+
+    await db.bookings.update_one({"id": booking_id}, {"$set": update_fields})
+
+    # Always get bank details for pay_later
+    bank_details = None
+    if pay_later or payment_method == "eft":
+        settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+        if settings:
+            reference = settings.get("reference_format", "BOOKING-{booking_id}").replace("{booking_id}", booking_id[:8].upper())
+            bank_details = {
+                "bank_name": settings.get("bank_name", ""), "account_holder": settings.get("account_holder", ""),
+                "account_number": settings.get("account_number", ""), "branch_code": settings.get("branch_code", ""),
+                "account_type": settings.get("account_type", ""), "reference": reference
+            }
 
     if payment_method == "payfast":
         pf_creds = await get_payfast_credentials()

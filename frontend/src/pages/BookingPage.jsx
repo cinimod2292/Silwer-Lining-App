@@ -937,17 +937,6 @@ const BookingPage = () => {
               </div>
             )}
 
-            {/* Contract Step - Now Step 3 */}
-            {step === getContractStep() && contract && (
-              <div data-testid="step-contract">
-                <ContractStep
-                  contract={contract}
-                  onComplete={handleContractComplete}
-                  clientName={formData.client_name || "Client"}
-                />
-              </div>
-            )}
-
             {/* Details Step: Contact Details & Summary */}
             {step === getDetailsStep() && (
               <div className="space-y-6" data-testid="step-details">

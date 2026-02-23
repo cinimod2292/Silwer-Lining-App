@@ -353,13 +353,22 @@ const AdminCalendarPage = () => {
                     >
                       View Details
                     </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteBooking(selectedEvent.bookingId)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
+                    {confirmDeleteId === selectedEvent.bookingId ? (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteBooking(selectedEvent.bookingId)}>
+                          Confirm Delete
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        onClick={() => setConfirmDeleteId(selectedEvent.bookingId)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    )}
                   </DialogFooter>
                 </>
               )}

@@ -182,17 +182,22 @@ async def initiate_payment(data: dict):
             form_data["cell_number"] = cell_number
         form_data["signature"] = calculate_payfast_signature_with_creds(form_data, pf_creds["passphrase"])
 
-        return {"payment_method": "payfast", "payment_url": pf_creds["url"],
+        result = {"payment_method": "payfast", "payment_url": pf_creds["url"],
                 "form_data": form_data, "amount": amount, "is_sandbox": pf_creds["is_sandbox"]}
+        if bank_details:
+            result["bank_details"] = bank_details
+        return result
 
     elif payment_method == "eft":
-        settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
-        reference = settings.get("reference_format", "BOOKING-{booking_id}").replace("{booking_id}", booking_id[:8].upper())
-        return {"payment_method": "eft", "bank_details": {
-            "bank_name": settings.get("bank_name", ""), "account_holder": settings.get("account_holder", ""),
-            "account_number": settings.get("account_number", ""), "branch_code": settings.get("branch_code", ""),
-            "account_type": settings.get("account_type", ""), "reference": reference
-        }, "amount": amount}
+        if not bank_details:
+            settings = await db.payment_settings.find_one({"id": "default"}, {"_id": 0})
+            reference = settings.get("reference_format", "BOOKING-{booking_id}").replace("{booking_id}", booking_id[:8].upper())
+            bank_details = {
+                "bank_name": settings.get("bank_name", ""), "account_holder": settings.get("account_holder", ""),
+                "account_number": settings.get("account_number", ""), "branch_code": settings.get("branch_code", ""),
+                "account_type": settings.get("account_type", ""), "reference": reference
+            }
+        return {"payment_method": "eft", "bank_details": bank_details, "amount": amount}
 
     elif payment_method == "payflex":
         return {"payment_method": "payflex", "message": "PayFlex integration coming soon", "amount": amount}

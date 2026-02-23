@@ -1185,7 +1185,7 @@ const BookingPage = () => {
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-4">
-                    * A 50% deposit (R{(calculateTotal() / 2).toLocaleString()}) is required to secure your booking
+                    * A {bookingSettings?.deposit_type === "fixed" ? `R${bookingSettings?.deposit_value}` : `${bookingSettings?.deposit_value || 50}%`} deposit (R{calculateDeposit().toLocaleString()}) is required to secure your booking
                   </p>
                 </div>
               </div>

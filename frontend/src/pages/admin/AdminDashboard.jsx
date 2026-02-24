@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Camera, LayoutDashboard, Calendar, Image, MessageSquare,
   Mail, LogOut, Menu, X, ChevronRight, Package, Settings, CalendarDays,
-  Tag, Users, Clock, RefreshCcw, ClipboardList, HelpCircle, CalendarRange, FileSignature, CreditCard, FileText
+  Tag, Users, Clock, ClipboardList, HelpCircle, CalendarRange,
+  FileSignature, CreditCard, FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -35,26 +36,18 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminName, setAdminName] = useState("");
 
-  useEffect(() => {
-    const token = localStorage.getItem("admin_token");
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
-    
-    const name = localStorage.getItem("admin_name");
-    setAdminName(name || "Admin");
-    
-    // Verify token
-    verifyAuth();
-  }, [navigate]);
+  /* =========================
+     VERIFY AUTH
+  ========================== */
 
-  const verifyAuth = async () => {
+  const verifyAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem("admin_token");
+
       await axios.get(`${API}/admin/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -63,7 +56,29 @@ const AdminDashboard = () => {
       localStorage.removeItem("admin_name");
       navigate("/admin/login");
     }
-  };
+  }, [navigate]);
+
+  /* =========================
+     INITIAL LOAD
+  ========================== */
+
+  useEffect(() => {
+    const token = localStorage.getItem("admin_token");
+
+    if (!token) {
+      navigate("/admin/login");
+      return;
+    }
+
+    const name = localStorage.getItem("admin_name");
+    setAdminName(name || "Admin");
+
+    verifyAuth();
+  }, [navigate, verifyAuth]);
+
+  /* =========================
+     LOGOUT
+  ========================== */
 
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
@@ -71,6 +86,10 @@ const AdminDashboard = () => {
     toast.success("Logged out successfully");
     navigate("/admin/login");
   };
+
+  /* =========================
+     NAV ITEMS
+  ========================== */
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
@@ -96,8 +115,13 @@ const AdminDashboard = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  /* =========================
+     UI
+  ========================== */
+
   return (
     <div className="min-h-screen bg-warm-sand flex" data-testid="admin-dashboard">
+
       {/* Sidebar */}
       <aside
         className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-warm-charcoal text-white transform transition-transform duration-300 lg:translate-x-0 ${
@@ -105,11 +129,14 @@ const AdminDashboard = () => {
         }`}
       >
         <div className="flex flex-col h-full">
+
           {/* Logo */}
           <div className="p-6 border-b border-white/10">
             <Link to="/" className="flex items-center gap-2">
               <Camera className="w-6 h-6 text-primary" />
-              <span className="font-display text-xl font-semibold">Silwer Lining</span>
+              <span className="font-display text-xl font-semibold">
+                Silwer Lining
+              </span>
             </Link>
             <p className="text-white/50 text-sm mt-1">Admin Panel</p>
           </div>
@@ -126,7 +153,6 @@ const AdminDashboard = () => {
                     ? "bg-primary text-white"
                     : "text-white/70 hover:bg-white/10 hover:text-white"
                 }`}
-                data-testid={`nav-${item.label.toLowerCase().replace(/\s/g, '-')}`}
               >
                 <item.icon className="w-5 h-5" />
                 <span className="text-sm">{item.label}</span>
@@ -134,17 +160,17 @@ const AdminDashboard = () => {
             ))}
           </nav>
 
-          {/* User & Logout */}
+          {/* User */}
           <div className="p-4 border-t border-white/10">
             <div className="px-4 py-2 mb-2">
               <p className="text-white/50 text-xs">Logged in as</p>
               <p className="font-medium">{adminName}</p>
             </div>
+
             <Button
               variant="ghost"
               onClick={handleLogout}
               className="w-full justify-start gap-3 text-white/70 hover:text-white hover:bg-white/10"
-              data-testid="logout-btn"
             >
               <LogOut className="w-5 h-5" />
               Logout
@@ -153,7 +179,7 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* Mobile Overlay */}
+      {/* Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -161,27 +187,26 @@ const AdminDashboard = () => {
         />
       )}
 
-      {/* Main Content */}
+      {/* Content */}
       <div className="flex-1 flex flex-col min-h-screen">
+
         {/* Top Bar */}
         <header className="bg-white shadow-soft px-6 py-4 flex items-center justify-between lg:justify-end">
           <button
             className="lg:hidden p-2"
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            data-testid="mobile-menu-btn"
           >
-            {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {sidebarOpen ? <X /> : <Menu />}
           </button>
-          
-          {/* Breadcrumb */}
+
           <div className="hidden lg:flex items-center gap-2 text-sm">
-            <Link to="/admin/dashboard" className="text-muted-foreground hover:text-foreground">
+            <Link to="/admin/dashboard" className="text-muted-foreground">
               Dashboard
             </Link>
             {location.pathname !== "/admin/dashboard" && (
               <>
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                <span className="text-foreground capitalize">
+                <span className="capitalize">
                   {location.pathname.split("/").pop().replace("-", " ")}
                 </span>
               </>
@@ -189,7 +214,7 @@ const AdminDashboard = () => {
           </div>
         </header>
 
-        {/* Page Content */}
+        {/* Routes */}
         <main className="flex-1 p-6">
           <Routes>
             <Route path="dashboard" element={<DashboardHome />} />
@@ -220,3 +245,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

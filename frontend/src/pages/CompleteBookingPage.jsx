@@ -106,7 +106,7 @@ const CompleteBookingPage = () => {
   }, [fetchBookingData]);
 
   /* =========================
-     SUBMIT BOOKING
+     HELPERS
   ========================== */
 
   const calculateTotal = () => {
@@ -115,41 +115,6 @@ const CompleteBookingPage = () => {
       formData.addons_total
     );
   };
-
-  const handleSubmit = useCallback(async () => {
-    if (!formData.package_id) {
-      toast.error("Please select a package");
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      await axios.post(
-        `${API}/booking-token/${token}/complete`,
-        {
-          ...formData,
-          total_price: calculateTotal(),
-        }
-      );
-
-      setCompleted(true);
-      toast.success(
-        "Booking completed successfully!"
-      );
-    } catch (e) {
-      toast.error(
-        e.response?.data?.detail ||
-          "Failed to complete booking"
-      );
-    } finally {
-      setSubmitting(false);
-    }
-  }, [token, formData]);
-
-  /* =========================
-     HELPERS (unchanged)
-  ========================== */
 
   const handlePackageSelect = (pkg) => {
     setFormData((prev) => ({
@@ -219,6 +184,43 @@ const CompleteBookingPage = () => {
   };
 
   /* =========================
+     SUBMIT BOOKING
+  ========================== */
+
+  const handleSubmit = useCallback(async () => {
+    if (!formData.package_id) {
+      toast.error("Please select a package");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      await axios.post(
+        `${API}/booking-token/${token}/complete`,
+        {
+          ...formData,
+          total_price:
+            formData.package_price +
+            formData.addons_total,
+        }
+      );
+
+      setCompleted(true);
+      toast.success(
+        "Booking completed successfully!"
+      );
+    } catch (e) {
+      toast.error(
+        e.response?.data?.detail ||
+          "Failed to complete booking"
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }, [token, formData]);
+
+  /* =========================
      STATES
   ========================== */
 
@@ -247,8 +249,7 @@ const CompleteBookingPage = () => {
   }
 
   /* =========================
-     UI (trimmed for brevity)
-     — Your JSX remains unchanged
+     UI
   ========================== */
 
   return (
@@ -259,6 +260,27 @@ const CompleteBookingPage = () => {
           Complete Your Booking
         </h1>
 
+        {/* Package Example */}
+        {packages.map((pkg) => (
+          <div
+            key={pkg.id}
+            onClick={() =>
+              handlePackageSelect(pkg)
+            }
+            className="border p-4 mb-3 cursor-pointer"
+          >
+            {pkg.name} — R
+            {pkg.price?.toLocaleString()}
+          </div>
+        ))}
+
+        {/* Total */}
+        <div className="mb-6 font-semibold">
+          Total: R
+          {calculateTotal().toLocaleString()}
+        </div>
+
+        {/* Submit */}
         <Button
           onClick={handleSubmit}
           disabled={
@@ -277,3 +299,4 @@ const CompleteBookingPage = () => {
 };
 
 export default CompleteBookingPage;
+

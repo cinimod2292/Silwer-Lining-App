@@ -96,19 +96,31 @@ const QuestionnairesManage = () => {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("admin_token");
-    setSaving(true);
-    try {
-      await axios.post(`${API}/admin/questionnaires`, questionnaire, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      toast.success("Questionnaire saved");
-    } catch (e) {
-      toast.error("Failed to save questionnaire");
-    } finally {
-      setSaving(false);
-    }
-  };
+  const token = localStorage.getItem("admin_token");
+  setSaving(true);
+  try {
+    // Use PUT if questionnaire has an id, POST otherwise
+    const endpoint = questionnaire?.id 
+      ? `${API}/admin/questionnaires/${questionnaire.id}`
+      : `${API}/admin/questionnaires`;
+    
+    const method = questionnaire?.id ? 'put' : 'post';
+    
+    await axios({
+      method,
+      url: endpoint,
+      data: questionnaire,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    
+    toast.success("Questionnaire saved");
+  } catch (e) {
+    toast.error("Failed to save questionnaire");
+    console.error(e);
+  } finally {
+    setSaving(false);
+  }
+};
 
   const addQuestion = (type = "text") => {
     const newQuestion = {

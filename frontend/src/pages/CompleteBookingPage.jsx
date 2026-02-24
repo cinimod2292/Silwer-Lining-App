@@ -1,19 +1,25 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 const CompleteBookingPage = () => {
-    const [bookingData, setBookingData] = useState(null);
-
     const fetchBookingData = useCallback(async () => {
-        // Fetch booking data logic here
+        try {
+            const response = await fetch('/api/booking');
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            console.log(data);
+        } catch (error) {
+            console.error('There has been a problem with your fetch operation:', error);
+        }
     }, []);
 
-    useEffect(() => {
-        fetchBookingData();
-    }, [fetchBookingData]); // added fetchBookingData to deps
+    // Call fetchBookingData whenever needed
 
     return (
         <div>
-            {/* Your component JSX here */}
+            <h1>Complete Booking</h1>
+            {/* More UI components */}
         </div>
     );
 };
